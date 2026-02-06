@@ -11,7 +11,7 @@
 | TASK-05 | List Command | completed | feat: implement list command |
 | TASK-06 | Update (Done) Command | completed | feat: implement done command |
 | TASK-07 | Delete Command | completed | feat: implement delete command |
-| TASK-08 | CLI Entry Point | pending | - |
+| TASK-08 | CLI Entry Point | completed | feat: wire up CLI with Commander.js |
 | TASK-09 | Error Handling | pending | - |
 | TASK-10 | README Documentation | pending | - |
 
@@ -23,3 +23,4 @@
 - **2026-02-06** — TASK-05 completed: Implemented list command handler. Displays all todos in formatted output with status icons ([✓] for completed, [ ] for pending), shortened id (first 8 chars), and title. Shows "No todos found" message if empty, and displays total count. Build passes.
 - **2026-02-06** — TASK-06 completed: Implemented done command handler. Toggles completed status of todos by full id or prefix match. Validates input, loads existing todos, finds matching todo, toggles status, persists to storage, and provides user confirmation with current status. Shows error if no match found. Build passes.
 - **2026-02-06** — TASK-07 completed: Implemented delete command handler. Permanently removes todos by full id or prefix match. Validates input, loads existing todos, finds matching todo, removes from array, persists to storage, and provides user confirmation with deleted todo title. Shows error if no match found. Build passes.
+- **2026-02-06** — TASK-08 completed: Wired up CLI entry point using Commander.js. Configured program name (todo), version (1.0.0), and description. Registered all 4 commands (add, list, done, delete) with proper action handlers and error handling. Added shebang line for direct execution. package.json bin field already configured. Build passes.
