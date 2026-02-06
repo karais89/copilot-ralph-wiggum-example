@@ -176,6 +176,33 @@ interface Todo {
 - Node.js version 18 or higher
 - npm (comes with Node.js)
 
+## About This Project
+
+This project was built using the **Ralph Wiggum technique** — an orchestration pattern that leverages VS Code Copilot's `runSubagent` tool to autonomously implement projects through a coordinated system of orchestrator and subagent AI agents.
+
+### How It Works
+
+- **Orchestrator**: Manages the overall workflow, calling subagents sequentially
+- **Subagents**: Each implements a single task independently
+- **Progress Tracking**: All work tracked through `.ai/PROGRESS.md`
+
+This approach provides:
+- ⚡ **Cost efficiency**: 1 premium request for the entire project
+- 🔄 **Context isolation**: Prevents "message too big" errors
+- 📊 **Full traceability**: Every step logged and committed
+- 🎯 **Autonomous execution**: Can run for hours without supervision
+
+### Learn More
+
+Want to use this technique for your own projects? Check out the comprehensive guides:
+
+- 📘 **[Korean Guide](.ai/GUIDE.md)**: 한글 상세 가이드
+- 📗 **[English Guide](.ai/GUIDE-EN.md)**: Full English documentation
+- 🎭 **[Orchestrator Prompt](.ai/PROMPT_ORCHESTRATOR.md)**: Ready-to-use orchestrator template
+- 🤖 **[Subagent Prompt](.ai/PROMPT_SUBAGENT.md)**: Subagent workflow template
+
+The `.ai/` folder contains all the planning documents, task breakdowns, and progress tracking used during this project's development.
+
 ## License
 
 MIT
