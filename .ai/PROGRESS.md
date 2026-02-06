@@ -13,7 +13,7 @@
 | TASK-07 | Delete Command | completed | feat: implement delete command |
 | TASK-08 | CLI Entry Point | completed | feat: wire up CLI with Commander.js |
 | TASK-09 | Error Handling | completed | feat: add comprehensive error handling |
-| TASK-10 | README Documentation | pending | - |
+| TASK-10 | README Documentation | completed | docs: write README |
 
 ## Log
 
@@ -25,3 +25,4 @@
 - **2026-02-06** — TASK-07 completed: Implemented delete command handler. Permanently removes todos by full id or prefix match. Validates input, loads existing todos, finds matching todo, removes from array, persists to storage, and provides user confirmation with deleted todo title. Shows error if no match found. Build passes.
 - **2026-02-06** — TASK-08 completed: Wired up CLI entry point using Commander.js. Configured program name (todo), version (1.0.0), and description. Registered all 4 commands (add, list, done, delete) with proper action handlers and error handling. Added shebang line for direct execution. package.json bin field already configured. Build passes.
 - **2026-02-06** — TASK-09 completed: Added comprehensive error handling across all commands and entry point. Implemented global uncaught exception and unhandled rejection handlers in index.ts. Wrapped all command functions in try/catch blocks with user-friendly error messages. Enhanced storage layer with specific error handling for permission errors (EACCES/EPERM), disk full errors (ENOSPC), and read-only file system errors (EROFS). Added input validation with usage hints for missing arguments in all commands. All error messages now use ❌ emoji prefix and avoid raw stack traces. Build passes.
+- **2026-02-06** — TASK-10 completed: Created comprehensive README.md documentation with project title, description, installation instructions, usage examples for all 4 commands (add, list, done, delete), example output with formatted todo list, tech stack section, project structure, data storage details, development scripts, and MIT license. Includes features list, ID prefix matching examples, and help command documentation. Build passes.
