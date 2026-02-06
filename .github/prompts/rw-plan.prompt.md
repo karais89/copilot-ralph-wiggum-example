@@ -19,7 +19,7 @@ Rules:
 - Do not implement product code.
 
 Workflow:
-1) Read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and existing `.ai/tasks/TASK-*.md`.
+1) Read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and list existing `.ai/tasks/TASK-*.md` filenames. Open only the needed task files.
 2) Ask up to 3 short clarification questions only if needed. If details are sufficient, proceed immediately.
 3) Append one new Feature Notes line to PLAN.md in this format:
    - YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.
@@ -27,7 +27,6 @@ Workflow:
 5) Create 3~8 new atomic task files for the feature under `.ai/tasks/` as `TASK-XX-<slug>.md`.
    Each file must include:
    - Title
-   - Status: pending
    - Dependencies
    - Description
    - Acceptance Criteria
