@@ -6,7 +6,7 @@
 |------|-------|--------|--------|
 | TASK-01 | Project Initialization | completed | feat: init project |
 | TASK-02 | Data Model Definition | completed | feat: define Todo model |
-| TASK-03 | Storage Layer | pending | - |
+| TASK-03 | Storage Layer | completed | feat: implement storage layer |
 | TASK-04 | Add Command | pending | - |
 | TASK-05 | List Command | pending | - |
 | TASK-06 | Update (Done) Command | pending | - |
@@ -18,4 +18,4 @@
 ## Log
 
 - **2026-02-06** — TASK-01 completed: Initialized project with package.json (ESM), tsconfig.json (strict), .gitignore, installed commander/nanoid + dev deps, created src/ directory structure with placeholder files. Build passes.
-- **2026-02-06** — TASK-02 completed: Defined Todo interface (id, title, completed, createdAt) and createTodo() helper using nanoid. Exported from src/models/todo.ts. Build passes.
+- **2026-02-06** — TASK-02 completed: Defined Todo interface (id, title, completed, createdAt) and createTodo() helper using nanoid. Exported from src/models/todo.ts. Build passes.- **2026-02-06** — TASK-03 completed: Implemented JSON storage layer with loadTodos() and saveTodos() functions. Auto-creates data/ directory and todos.json file. Handles missing files and parse errors gracefully. Build passes.
