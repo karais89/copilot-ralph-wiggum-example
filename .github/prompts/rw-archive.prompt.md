@@ -19,6 +19,7 @@ Rules:
 - Move:
   - completed rows -> STATUS archive (append-only)
   - older logs -> LOG archive (append-only)
+- If there are no completed rows in PROGRESS, skip STATUS archive and archive logs only (if needed).
 - Leave pointers in PROGRESS.md to the latest archive files.
 
 Now perform the archive if needed and save the files.

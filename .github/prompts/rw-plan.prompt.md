@@ -5,6 +5,8 @@ agent: agent
 argument-hint: "Required: feature summary (goal, constraints, acceptance)."
 ---
 
+Feature summary: ${input:featureSummary:goal/constraints/acceptance}
+
 You are adding a new feature to an existing Ralph-style orchestration workspace.
 
 Target files:
