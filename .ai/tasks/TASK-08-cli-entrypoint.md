@@ -1,7 +1,5 @@
 # TASK-08: CLI Entry Point
 
-## Status: pending
-
 ## Dependencies: TASK-04, TASK-05, TASK-06, TASK-07
 
 ## Description

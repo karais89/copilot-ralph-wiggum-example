@@ -1,7 +1,5 @@
 # TASK-06: Update (Done) Command
 
-## Status: pending
-
 ## Dependencies: TASK-03
 
 ## Description

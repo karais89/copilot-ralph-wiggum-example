@@ -1,7 +1,5 @@
 # TASK-03: Storage Layer
 
-## Status: pending
-
 ## Dependencies: TASK-01, TASK-02
 
 ## Description

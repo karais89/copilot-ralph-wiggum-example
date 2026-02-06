@@ -1,7 +1,5 @@
 # TASK-10: README Documentation
 
-## Status: pending
-
 ## Dependencies: TASK-08
 
 ## Description

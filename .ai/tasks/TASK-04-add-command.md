@@ -1,7 +1,5 @@
 # TASK-04: Add Command
 
-## Status: pending
-
 ## Dependencies: TASK-03
 
 ## Description

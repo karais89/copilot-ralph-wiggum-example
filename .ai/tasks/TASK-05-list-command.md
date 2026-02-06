@@ -1,7 +1,5 @@
 # TASK-05: List Command
 
-## Status: pending
-
 ## Dependencies: TASK-03
 
 ## Description

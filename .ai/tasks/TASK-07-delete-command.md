@@ -1,7 +1,5 @@
 # TASK-07: Delete Command
 
-## Status: pending
-
 ## Dependencies: TASK-03
 
 ## Description

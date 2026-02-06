@@ -1,7 +1,5 @@
 # TASK-02: Data Model Definition
 
-## Status: pending
-
 ## Dependencies: TASK-01
 
 ## Description

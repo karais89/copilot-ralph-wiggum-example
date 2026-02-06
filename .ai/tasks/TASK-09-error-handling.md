@@ -1,7 +1,5 @@
 # TASK-09: Error Handling
 
-## Status: pending
-
 ## Dependencies: TASK-08
 
 ## Description

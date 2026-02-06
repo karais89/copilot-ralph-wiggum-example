@@ -1,7 +1,5 @@
 # TASK-01: Project Initialization
 
-## Status: pending
-
 ## Dependencies: none
 
 ## Description
