@@ -18,9 +18,18 @@ async function ensureDataDir(): Promise<void> {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
   } catch (error) {
-    throw new Error(
-      `Failed to create data directory: ${error instanceof Error ? error.message : String(error)}`
-    );
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes("EACCES") || errorMessage.includes("EPERM")) {
+      throw new Error(
+        "Permission denied: Cannot create data directory. Please check file permissions."
+      );
+    }
+    if (errorMessage.includes("ENOSPC")) {
+      throw new Error(
+        "Disk full: Cannot create data directory. Please free up disk space."
+      );
+    }
+    throw new Error(`Failed to create data directory: ${errorMessage}`);
   }
 }
 
@@ -36,17 +45,21 @@ export async function loadTodos(): Promise<Todo[]> {
     const todos: Todo[] = JSON.parse(data);
     return Array.isArray(todos) ? todos : [];
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
     // File doesn't exist or is invalid JSON — return empty array
-    if (
-      error instanceof Error &&
-      (error.message.includes("ENOENT") ||
-        error.message.includes("Unexpected token"))
-    ) {
+    if (errorMessage.includes("ENOENT") || errorMessage.includes("Unexpected token")) {
       return [];
     }
-    throw new Error(
-      `Failed to load todos: ${error instanceof Error ? error.message : String(error)}`
-    );
+    
+    // Specific file system errors
+    if (errorMessage.includes("EACCES") || errorMessage.includes("EPERM")) {
+      throw new Error(
+        "Permission denied: Cannot read todo file. Please check file permissions."
+      );
+    }
+    
+    throw new Error(`Failed to load todos: ${errorMessage}`);
   }
 }
 
@@ -59,8 +72,25 @@ export async function saveTodos(todos: Todo[]): Promise<void> {
     const json = JSON.stringify(todos, null, 2);
     await fs.writeFile(TODOS_FILE, json, "utf-8");
   } catch (error) {
-    throw new Error(
-      `Failed to save todos: ${error instanceof Error ? error.message : String(error)}`
-    );
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Specific file system errors
+    if (errorMessage.includes("EACCES") || errorMessage.includes("EPERM")) {
+      throw new Error(
+        "Permission denied: Cannot write to todo file. Please check file permissions."
+      );
+    }
+    if (errorMessage.includes("ENOSPC")) {
+      throw new Error(
+        "Disk full: Cannot save todos. Please free up disk space."
+      );
+    }
+    if (errorMessage.includes("EROFS")) {
+      throw new Error(
+        "Read-only file system: Cannot save todos. Check if the disk is mounted as read-only."
+      );
+    }
+    
+    throw new Error(`Failed to save todos: ${errorMessage}`);
   }
 }
