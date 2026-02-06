@@ -194,12 +194,12 @@ This approach provides:
 
 ### Learn More
 
-Want to use this technique for your own projects? Check out the comprehensive guides:
+Want to use this technique for your own projects? Check out the guides:
 
-- 📘 **[Korean Guide](.ai/GUIDE.md)**: 한글 상세 가이드
-- 📗 **[English Guide](.ai/GUIDE-EN.md)**: Full English documentation
-- 🎭 **[Orchestrator Prompt](.ai/PROMPT_ORCHESTRATOR.md)**: Ready-to-use orchestrator template
-- 🤖 **[Subagent Prompt](.ai/PROMPT_SUBAGENT.md)**: Subagent workflow template
+- 📘 **[가이드](.ai/GUIDE.md)**: Ralph Wiggum 기법 사용법
+- 🎭 **[오케스트레이터](.ai/ORCHESTRATOR.md)**: 오케스트레이터 + 서브에이전트 프롬프트
+- 📋 **[플랜](.ai/PLAN.md)**: 프로젝트 PRD
+- 📊 **[진행 추적](.ai/PROGRESS.md)**: 태스크 완료 상태
 
 The `.ai/` folder contains all the planning documents, task breakdowns, and progress tracking used during this project's development.
 
