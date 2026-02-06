@@ -1,5 +1,5 @@
 ---
-name: orchestrate
+name: rw-run
 description: "Ralph-style orchestration loop using PLAN/TASKS/PROGRESS and subagents + reviewer"
 agent: agent
 argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
@@ -19,24 +19,27 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 중요:
 - #tool:agent/runSubagent 도구가 없으면 즉시 실패 처리: "runSubagent unavailable"
 - 오케스트레이터는 절대 src/ 이하 코드를 직접 수정하지 않습니다.
-- 오케스트레이터가 수정 가능한 파일은 기본적으로 <PROGRESS> 및 .ai/progress-archive/* 뿐입니다.
+- 오케스트레이터가 수정 가능한 파일은 기본적으로 <PROGRESS>, <PLAN>(Feature Notes 섹션 append-only), 및 .ai/progress-archive/* 뿐입니다.
 
 ## 루프
 반복:
   1) .ai/PAUSE.md가 존재하면 → "⏸️ PAUSE.md 발견. 삭제하면 재개됩니다." 출력 후 중지
   2) <PROGRESS>가 없으면 생성: <TASKS> 폴더의 TASK-*.md를 나열하여 전부 pending으로 초기화
-  3) <PROGRESS>를 읽어 미완료 태스크가 있는지 확인
-  4) 모든 태스크 completed → "✅ 모든 태스크 완료." 출력 후 종료
-  5) #tool:agent/runSubagent 호출 (아래 SUBAGENT_PROMPT를 그대로 전달)
-  6) 서브에이전트 완료 후 <PROGRESS> 재확인
-  7) #tool:agent/runSubagent 호출 (아래 REVIEWER_PROMPT를 그대로 전달)
-  8) <PROGRESS> 재확인 후 반복
+  3) <TASKS>에 있고 <PROGRESS> Task Status 표에 없는 TASK-*.md가 있으면 해당 태스크 행을 pending으로 추가
+  4) <PROGRESS>를 읽어 미완료 태스크가 있는지 확인
+  5) 모든 태스크 completed → "✅ 모든 태스크 완료." 출력 후 종료
+  6) #tool:agent/runSubagent 호출 (아래 SUBAGENT_PROMPT를 그대로 전달)
+  7) 서브에이전트 완료 후 <PROGRESS> 재확인
+  8) #tool:agent/runSubagent 호출 (아래 REVIEWER_PROMPT를 그대로 전달)
+  9) <PROGRESS> 재확인 후 반복
 
 ## 규칙
 - runSubagent는 순차적으로 (한 번에 하나씩) 호출
 - 태스크를 직접 선택하지 않음 — 서브에이전트가 선택
 - 직접 코딩하지 않음 — 오직 루프만 관리
 - 서브에이전트/리뷰어의 “완료” 주장보다 <PROGRESS> 내용을 우선한다
+- If a requirement is missing/changed, propose a small edit to .ai/PLAN.md (Feature Notes only) and add a new TASK-XX file. Do not rewrite the whole PLAN.
+- Keep PLAN.md concise; put details into task files.
 
 ## PROGRESS.md 정리 규칙 (필수, 단순 버전)
 - Task Status 표는 활성 태스크만 유지(pending/in-progress)

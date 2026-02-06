@@ -4,6 +4,11 @@
 
 A command-line Todo application built with Node.js and TypeScript. Users can manage their tasks directly from the terminal with simple, intuitive commands.
 
+## Feature Notes (append-only)
+
+- 2026-02-07: [todo-cli-baseline] Initial baseline shipped (add/list/done/delete, JSON storage, error handling, docs). Related tasks: TASK-01~TASK-10.
+
+
 ## Tech Stack
 
 - **Runtime**: Node.js (>=18)

@@ -22,12 +22,14 @@
 ```
 반복:
   1. .ai/PAUSE.md가 존재하면 → "⏸️ PAUSE.md 발견. 삭제하면 재개됩니다." 출력 후 중지
-  2. PROGRESS.md를 읽어 미완료 태스크 확인
-  3. 모든 태스크 completed → "✅ 모든 태스크 완료." 출력 후 종료
-  4. runSubagent 호출 (아래 SUBAGENT_PROMPT 전달)
-  5. 서브에이전트 완료 후 PROGRESS.md 재확인
-  6. runSubagent로 REVIEWER_PROMPT 전달하여 구현 검증
-  7. 반복
+  2. PROGRESS.md가 없으면 TASKS를 기준으로 pending 초기화
+  3. TASKS에 있고 PROGRESS Task Status에 없는 TASK-*.md가 있으면 pending 행 추가
+  4. PROGRESS.md를 읽어 미완료 태스크 확인
+  5. 모든 태스크 completed → "✅ 모든 태스크 완료." 출력 후 종료
+  6. runSubagent 호출 (아래 SUBAGENT_PROMPT 전달)
+  7. 서브에이전트 완료 후 PROGRESS.md 재확인
+  8. runSubagent로 REVIEWER_PROMPT 전달하여 구현 검증
+  9. 반복
 ```
 
 ## 규칙
@@ -36,6 +38,8 @@
 - runSubagent는 순차적으로 (한 번에 하나씩) 호출
 - 태스크를 직접 선택하지 않음 — 서브에이전트가 선택
 - 직접 코딩하지 않음 — 오직 루프만 관리
+- 요구사항이 바뀌면 PLAN 전체를 재작성하지 말고 Feature Notes만 소규모로 수정하고 TASK-XX 파일을 추가
+- PLAN.md는 간결하게 유지하고 상세는 task 파일에 기록
 
 ---
 

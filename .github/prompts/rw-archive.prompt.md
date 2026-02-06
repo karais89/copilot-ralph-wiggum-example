@@ -1,5 +1,5 @@
 ---
-name: archive-progress
+name: rw-archive
 description: "Slim down .ai/PROGRESS.md by archiving completed rows and older logs"
 agent: agent
 ---
