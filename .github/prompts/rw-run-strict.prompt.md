@@ -23,7 +23,7 @@ Your job is orchestration and verification, not direct implementation.
 
 Master plan is at <PLAN>, task files are in <TASKS>, and progress tracking is at <PROGRESS>.
 
-Step 0 (Mandatory preflight):
+Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
 2) If the file is missing or unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
 3) Before any file change, output exactly one line: `LANGUAGE_POLICY_LOADED: <single-line summary>`
