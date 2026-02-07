@@ -197,7 +197,10 @@ This approach provides:
 Want to use this technique for your own projects? Check out the guides:
 
 - 📘 **[가이드](.ai/GUIDE.md)**: Ralph Wiggum 기법 사용법
-- 🎭 **[오케스트레이터 프롬프트](.github/prompts/rw-run.prompt.md)**: 메인 오케스트레이션 루프 (SSOT)
+- 🧭 **[Lite Plan](.github/prompts/rw-plan-lite.prompt.md)**: 단순/빠른 계획 생성용
+- 🎭 **[Lite Orchestrator](.github/prompts/rw-run-lite.prompt.md)**: 단순/빠른 실행용
+- 🧾 **[Strict Plan](.github/prompts/rw-plan-strict.prompt.md)**: 보수적 계획 생성용
+- 🛡️ **[Strict Orchestrator](.github/prompts/rw-run-strict.prompt.md)**: reviewer + archive 포함
 - 📋 **[플랜](.ai/PLAN.md)**: 프로젝트 PRD
 - 📊 **[진행 추적](.ai/PROGRESS.md)**: 태스크 완료 상태
 

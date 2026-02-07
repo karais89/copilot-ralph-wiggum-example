@@ -11,14 +11,35 @@
 └── tasks/
 
 .github/prompts/
-├── rw-plan.prompt.md
-└── rw-run.prompt.md
+├── rw-plan-lite.prompt.md
+├── rw-run-lite.prompt.md
+├── rw-plan-strict.prompt.md
+└── rw-run-strict.prompt.md
 ```
+
+## 모드 선택
+
+- `Lite`:
+  - 계획: `.github/prompts/rw-plan-lite.prompt.md`
+  - 실행: `.github/prompts/rw-run-lite.prompt.md`
+  - 특징: 빠르고 단순함, 단일 세션 가정
+- `Strict`:
+  - 계획: `.github/prompts/rw-plan-strict.prompt.md`
+  - 실행: `.github/prompts/rw-run-strict.prompt.md`
+  - 특징: reviewer 루프 + PROGRESS archive 규칙 포함
+
+## 사용 방법
+
+1. VS Code Copilot Chat에서 새 대화를 연다.
+2. 선택한 모드의 `rw-plan-*.prompt.md` 내용을 붙여넣고 실행해 태스크를 만든다.
+3. 같은 모드의 `rw-run-*.prompt.md` 내용을 붙여넣고 실행해 오케스트레이션 루프를 돌린다.
+4. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
+5. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
 
 ## 실행 순서
 
-1. 기능 추가 계획: `.github/prompts/rw-plan.prompt.md`
-2. 태스크 구현 루프: `.github/prompts/rw-run.prompt.md`
+1. 기능 추가 계획: 선택한 모드의 `rw-plan-*.prompt.md`
+2. 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
 3. 상태 확인: `.ai/PROGRESS.md`
 
 ## Lite 운영 규칙
@@ -57,5 +78,5 @@
 ## 자주 있는 실패
 
 - `runSubagent unavailable`: 실행 환경/모델에서 도구 지원 여부 확인
-- TASK 번호 충돌: 최신 브랜치로 업데이트 후 `rw-plan` 재실행
-- PROGRESS 누락: Task Status 행과 Log를 수동 보정 후 `rw-run` 재개
+- TASK 번호 충돌: 최신 브랜치로 업데이트 후 선택 모드의 `rw-plan-*` 재실행
+- PROGRESS 누락: Task Status 행과 Log를 수동 보정 후 선택 모드의 `rw-run-*` 재개

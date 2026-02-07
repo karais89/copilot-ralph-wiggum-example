@@ -1,5 +1,5 @@
 ---
-name: rw-run
+name: rw-run-lite
 description: "Ralph Lite: orchestration loop using PLAN/TASKS/PROGRESS with one implementation subagent"
 agent: agent
 argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
