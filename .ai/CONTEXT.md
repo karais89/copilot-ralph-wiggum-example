@@ -27,9 +27,12 @@
 - 리뷰 로그 마커:
   - `REVIEW_FAIL`
   - `REVIEW-ESCALATE`
-- 프롬프트 사전 점검 출력 토큰:
+- 프롬프트 사전 점검 오류 토큰:
   - `LANG_POLICY_MISSING`
-  - `LANGUAGE_POLICY_LOADED: <single-line summary>`
+- feature 파일 입력 오류 토큰:
+  - `FEATURES_DIR_MISSING`
+  - `FEATURE_FILE_MISSING`
+  - `FEATURE_NOT_READY`
 - fallback 출력 토큰:
   - `MANUAL_FALLBACK_REQUIRED`
 - 파일/경로 계약:

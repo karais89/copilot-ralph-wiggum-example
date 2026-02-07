@@ -26,7 +26,7 @@ Master plan is at <PLAN>, task files are in <TASKS>, and progress tracking is at
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
 2) If the file is missing or unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
-3) Before any file change, output exactly one line: `LANGUAGE_POLICY_LOADED: <single-line summary>`
+3) Validate language policy internally and proceed silently (no confirmation line).
 4) Do not modify any file before Step 0 completes.
 
 Important:

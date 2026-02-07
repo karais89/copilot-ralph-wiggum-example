@@ -2,7 +2,7 @@
 name: rw-plan-strict
 description: "Ralph Strict: add feature notes + create TASK-XX files with archive-safe PROGRESS sync"
 agent: agent
-argument-hint: "Optional: one-line feature summary. Leave blank to use latest READY_FOR_PLAN file in .ai/features."
+argument-hint: "No inline input. Prepare .ai/features/YYYYMMDD-HHMM-<slug>.md with Status: READY_FOR_PLAN."
 ---
 
 Language policy reference: `.ai/CONTEXT.md`
@@ -15,10 +15,8 @@ Quick summary:
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
 2) If the file is missing or unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
-3) Before any file change, output exactly one line: `LANGUAGE_POLICY_LOADED: <single-line summary>`
+3) Validate language policy internally and proceed silently (no confirmation line).
 4) Do not modify any file before Step 0 completes.
-
-Feature summary: ${input:featureSummary:Optional one-line feature summary (example: add export command). Leave blank to use latest READY_FOR_PLAN file in .ai/features.}
 
 You are adding a new feature to an existing Ralph-style orchestration workspace.
 
@@ -26,7 +24,7 @@ Target files:
 - .ai/PLAN.md
 - .ai/tasks/TASK-XX-*.md
 - .ai/PROGRESS.md
-- .ai/features/*.md (only selected READY_FOR_PLAN file, status update to PLANNED when file-based input is used)
+- .ai/features/*.md (selected READY_FOR_PLAN file, status update to PLANNED)
 
 Rules:
 - Do not rewrite the whole PLAN.md.
@@ -35,12 +33,31 @@ Rules:
 - Do not implement product code.
 
 Feature input resolution (required):
-1) If `featureSummary` is non-empty, use it as the primary feature input.
-2) If `featureSummary` is empty, scan `.ai/features/*.md` and select candidates with an explicit line:
-   - `Status: READY_FOR_PLAN`
-   - If multiple candidates exist, select the lexicographically greatest filename.
-   - Expected filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
-3) If both are unavailable, stop immediately and output exactly: `FEATURE_INPUT_MISSING`.
+1) Read `.ai/features/`.
+2) If `.ai/features/` is missing or unreadable, stop immediately and print:
+   - first line exactly: `FEATURES_DIR_MISSING`
+   - then a short fix guide:
+     - create directory `.ai/features/`
+     - create one feature file from `.ai/features/FEATURE-TEMPLATE.md`
+     - save as `YYYYMMDD-HHMM-<slug>.md`
+     - set `Status: READY_FOR_PLAN`
+3) Build input-file candidates from `.ai/features/*.md`, excluding:
+   - `FEATURE-TEMPLATE.md`
+   - `README.md`
+4) If no input-file candidates exist, stop immediately and print:
+   - first line exactly: `FEATURE_FILE_MISSING`
+   - then a short fix guide:
+     - copy `.ai/features/FEATURE-TEMPLATE.md` to `.ai/features/YYYYMMDD-HHMM-<slug>.md`
+     - set `Status: READY_FOR_PLAN`
+5) From input-file candidates, select files with exact line: `Status: READY_FOR_PLAN`.
+6) If no READY candidates exist, stop immediately and print:
+   - first line exactly: `FEATURE_NOT_READY`
+   - then a short fix guide:
+     - open the latest `YYYYMMDD-HHMM-<slug>.md`
+     - change `Status: DRAFT` (or current value) to `Status: READY_FOR_PLAN`
+7) If multiple READY candidates exist, select the lexicographically greatest filename.
+8) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
+9) In any error case above, stop immediately without clarification questions.
 
 Normalization rules:
 1) Backward compatibility: if resolved input already includes structured sections (`goal`, `constraints`, `acceptance`), preserve and use them.
@@ -58,7 +75,7 @@ Normalization rules:
 Workflow:
 1) Read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and list existing `.ai/tasks/TASK-*.md` filenames. Open only the needed task files.
 2) Resolve feature input using the required precedence rules above.
-3) Ask up to 2 short clarification questions only for high-impact ambiguity. If details are sufficient, proceed immediately.
+3) Ask up to 2 short clarification questions only for high-impact ambiguity after feature input is resolved. If details are sufficient, proceed immediately.
 4) Build a normalized feature spec (`Goal`, `Constraints`, `Acceptance`) using resolved input + defaults.
 5) Append one new Feature Notes line to PLAN.md in this format:
    - YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.
@@ -76,14 +93,14 @@ Workflow:
    - If PROGRESS table is archived/compact, still ensure new pending rows are present in the active Task Status section.
 9) Add one new log entry in PROGRESS Log:
    - YYYY-MM-DD — Added feature planning tasks TASK-XX~TASK-YY for [feature-slug].
-10) If feature input came from `.ai/features/<filename>`, update that file:
+10) Update selected `.ai/features/<filename>` file:
    - `Status: READY_FOR_PLAN` -> `Status: PLANNED`
    - Append a short plan output note including task range (`TASK-XX~TASK-YY`) and date.
 
 Output format at end:
-- Feature input source (`featureSummary` or `.ai/features/<filename>`)
+- Feature input source (`.ai/features/<filename>`)
 - Feature note added (exact line)
 - New task range (TASK-XX~TASK-YY)
 - Created task files list
 - PROGRESS rows added count
-- Feature file status update result (if file-based input was used)
+- Feature file status update result
