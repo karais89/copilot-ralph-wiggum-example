@@ -8,10 +8,12 @@
 .ai/
 ├── PLAN.md
 ├── PROGRESS.md
+├── features/
 └── tasks/
 
 .github/prompts/
 ├── rw-init.prompt.md
+├── rw-feature.prompt.md
 ├── rw-archive.prompt.md
 ├── rw-plan-lite.prompt.md
 ├── rw-run-lite.prompt.md
@@ -44,17 +46,19 @@
 
 1. VS Code Copilot Chat에서 새 대화를 연다.
 2. `.ai/` 구조가 없으면 `rw-init.prompt.md`를 먼저 실행해 초기화한다(초기 1회).
-3. 선택한 모드의 `rw-plan-*.prompt.md` 내용을 붙여넣고 실행해 태스크를 만든다.
-4. 같은 모드의 `rw-run-*.prompt.md` 내용을 붙여넣고 실행해 오케스트레이션 루프를 돌린다.
-5. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
-6. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
+3. `rw-feature.prompt.md`를 실행해 `.ai/features/`에 `READY_FOR_PLAN` 파일을 만든다.
+4. 선택한 모드의 `rw-plan-*.prompt.md` 내용을 붙여넣고 실행해 태스크를 만든다.
+5. 같은 모드의 `rw-run-*.prompt.md` 내용을 붙여넣고 실행해 오케스트레이션 루프를 돌린다.
+6. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
+7. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
 
 ## 실행 순서
 
 1. 초기화(필요 시): `rw-init.prompt.md`
-2. 기능 추가 계획: 선택한 모드의 `rw-plan-*.prompt.md`
-3. 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
-4. 상태 확인: `.ai/PROGRESS.md`
+2. feature 파일 생성: `rw-feature.prompt.md`
+3. 기능 추가 계획: 선택한 모드의 `rw-plan-*.prompt.md`
+4. 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
+5. 상태 확인: `.ai/PROGRESS.md`
 
 ## Feature 파일 입력 규칙
 
@@ -82,6 +86,13 @@
 - `rw-init.prompt.md`:
   - 새 프로젝트이거나 `.ai/` 폴더가 없을 때만 실행한다.
   - 이미 운영 중인 프로젝트에서는 재초기화 대신 `rw-plan-*`으로 기능을 추가한다.
+- `rw-feature.prompt.md`:
+  - `rw-plan-*` 실행 전에 feature 입력 파일을 만들 때 사용한다.
+  - feature 파일 생성 전에 **선택형 질문 2개(Q1/Q2)**를 고정으로 수행한다.
+  - 각 질문은 `A/B/C` 3지선다이며, 답변 형식은 `Q1:A, Q2:B` 또는 `A,B` 또는 `A B`를 허용한다(대소문자 무관).
+  - 1회 파싱 실패 시 `FEATURE_CHOICE_REQUIRED`를 출력하고 질문을 1회 재시도한다.
+  - 재시도에도 실패하면 기본값 `Q1:B, Q2:B`로 진행한다(무한 재질문 금지).
+  - 질문 후 `Status: READY_FOR_PLAN` 파일을 생성한다.
 - `rw-archive.prompt.md`:
   - `Lite`/`Strict` 모두에서 `PROGRESS.md`가 커졌을 때 수동 실행한다.
   - 기준: `PROGRESS.md > 8000 chars` 또는 `completed > 20` 또는 `log > 40`.
