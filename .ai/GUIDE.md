@@ -148,6 +148,12 @@
 - **YYYY-MM-DD** — TASK-XX completed: ...
 ```
 
+## E2E 테스트 teardown 규칙
+
+- 시나리오 재현을 위해 `PROGRESS`에 synthetic `TASK-XX`/`REVIEW_*` 로그를 수동 주입했다면, 테스트 종료 시 반드시 정리한다.
+- `Task Status`에 남아 있는 `pending`/`in-progress` 행은 모두 실제 `.ai/tasks/TASK-XX-*.md` 파일과 매칭되어야 한다.
+- synthetic 데이터 정리 후 `rw-run-*`를 재실행해 정상 루프 재개 여부를 확인한다.
+
 ## 자주 있는 실패
 
 - `runSubagent unavailable`: 실행 환경/모델에서 도구 지원 여부 확인
