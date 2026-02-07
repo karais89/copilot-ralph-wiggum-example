@@ -56,6 +56,22 @@
 3. 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
 4. 상태 확인: `.ai/PROGRESS.md`
 
+## featureSummary 간소화 규칙
+
+- `rw-plan-lite`/`rw-plan-strict` 입력은 기본적으로 **한 줄 기능 요약**만 넣는다.
+  - 예: `todo export 명령 추가`
+- `featureSummary`를 비우면 `.ai/features/*.md`에서 `Status: READY_FOR_PLAN` 파일만 후보로 사용한다.
+  - 후보가 여러 개면 최신 파일(파일명 사전순 마지막)을 선택한다.
+  - 권장 파일명: `YYYYMMDD-HHMM-<slug>.md`
+- `featureSummary`와 features 파일이 모두 없으면 `FEATURE_INPUT_MISSING`으로 중단한다.
+- 파일 기반 입력으로 plan이 완료되면 해당 feature 파일 상태를 `PLANNED`로 갱신한다.
+- 권장 상태값: `DRAFT` -> `READY_FOR_PLAN` -> `PLANNED` -> `DONE` (필요 시 `BLOCKED`)
+- 필요 시 보완 질문은 최대 2개만 한다.
+- 보완이 부족해도 안전 기본값으로 계획을 진행한다:
+  - Constraints: 기존 동작 비파괴, 범위 최소화, `npm run build` 통과
+  - Acceptance: 사용자 기능 동작, 오류 메시지 명확성, `npm run build` 통과
+- 기존 구조형 입력(`goal/constraints/acceptance`)도 하위 호환으로 계속 지원한다.
+
 ## 보조 프롬프트 사용 시점
 
 - `rw-init.prompt.md`:
