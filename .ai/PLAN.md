@@ -9,6 +9,7 @@ Node.js와 TypeScript로 만든 커맨드라인 Todo 애플리케이션입니다
 
 - 2026-02-07: [todo-cli-baseline] 초기 베이스라인(추가/조회/완료/삭제, JSON 저장소, 에러 처리, 문서화) 적용. Related tasks: TASK-01~TASK-10.
 - 2026-02-07: [stats-json-output] `todo stats` 명령과 선택적 `--json` 플래그 추가. 텍스트 출력은 total/completed/pending 통계를 표시하고, JSON 출력은 total/completed/pending/completionRate(0-100) 객체를 반환. Related tasks: TASK-11~TASK-13.
+ - 2026-02-07: [add-stats-command-json-output-mode] `stats` 명령에 `--json` 출력 모드 추가. 기존 사람 친화 출력은 유지하고, 최소 JSON 스키마(total/completed/pending/overdue/generated_at)를 제공. Related tasks: TASK-14~TASK-17.
 
 ## 기술 스택
 

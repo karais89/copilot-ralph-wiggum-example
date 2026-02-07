@@ -20,7 +20,7 @@
 | TASK-14 | Add stats --json flag | completed | feat(stats): add -j/--json flag to stats command |
 | TASK-15 | Define stats JSON schema | completed | feat(stats): add stats JSON schema and type |
 | TASK-16 | Add tests for stats JSON | pending | - |
-| TASK-17 | Docs/examples and integration check | completed | feat(docs): add examples and integration check script |
+| TASK-17 | Docs/examples and integration check | pending | feat(docs): add examples and integration check script |
 
 ## Log
 
@@ -42,3 +42,7 @@
  - **2026-02-07** — TASK-15 completed: Added a formal JSON Schema at `src/schemas/stats.schema.json`, introduced the `Stats` TypeScript type at `src/models/stats.ts`, and ensured `todo stats --json` emits the canonical fields (`total`, `completed`, `pending`, `overdue`, `completionRate`, `generated_at`). Build passed.
  - **2026-02-07** — TASK-14 completed: Added `-j, --json` short alias for the `stats` command in `src/index.ts`. Verified build and manual run: `node dist/index.js stats -j` prints JSON when built. Commit: `feat(stats): add -j/--json flag to stats command`.
  - **2026-02-07** — TASK-17 completed: Added `EXAMPLES.md` with usage examples and a small `scripts/integration-check.mjs` script that builds the project and validates `todo stats --json` output against the canonical fields. Ran the integration check locally; it passed. Commit: `feat(docs): add examples and integration check script`.
+ - **2026-02-07** — REVIEW_FAIL TASK-17 (1/3): README missing example JSON output and timezone note (UTC recommended); examples were added to `EXAMPLES.md` instead of `README.md`. Reverted TASK-17 status to `pending` for correction.
+| TASK-16 | Add tests for stats JSON | completed | test(stats): add tests for stats JSON output |
+
+- **2026-02-07** — TASK-16 completed: Added `vitest`-based tests at `test/stats-json.test.ts` covering normal, empty, partial/malformed, and error cases for `todo stats --json`. Updated `package.json` test script and `tsconfig.json` to include tests. `npm test` passes locally. Commit: `test(stats): add tests for stats JSON output`.
