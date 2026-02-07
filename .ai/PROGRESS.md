@@ -17,8 +17,8 @@
 | TASK-11 | Stats 명령 핸들러 | completed | feat: add stats command with text and JSON output |
 | TASK-12 | Stats 명령 CLI 연결 | completed | feat: register stats command in CLI |
 | TASK-13 | Stats 통합 테스트 | completed | test: verify stats command integration |
-| TASK-14 | Add stats --json flag | pending | - |
-| TASK-15 | Define stats JSON schema | completed | feat: define stats JSON schema |
+| TASK-14 | Add stats --json flag | completed | feat(stats): add -j/--json flag to stats command |
+| TASK-15 | Define stats JSON schema | pending | - |
 | TASK-16 | Add tests for stats JSON | pending | - |
 | TASK-17 | Docs/examples and integration check | pending | - |
 
@@ -40,3 +40,6 @@
 - **2026-02-07** — TASK-13 completed: stats 명령 통합 검증을 수행했습니다. 빈 상태(0개), 혼합 상태(2개 중 1개 완료), 텍스트/JSON 출력, `jq` 파싱, 도움말 노출을 확인했고 모든 완료 기준을 충족했습니다. 빌드 통과.
 - **2026-02-07** — Added feature planning tasks TASK-14~TASK-17 for [add-stats-command-json-output-mode].
 - **2026-02-07** — TASK-15 completed: Defined minimal JSON schema for `stats --json` and implemented schema fields (`total`, `completed`, `pending`, `overdue`, `generated_at`) in `src/commands/stats.ts`. CLI now emits structured JSON errors when `--json` is requested. Build passed.
+ - **2026-02-07** — TASK-15 completed: Defined minimal JSON schema for `stats --json` and implemented schema fields (`total`, `completed`, `pending`, `overdue`, `generated_at`) in `src/commands/stats.ts`. CLI now emits structured JSON errors when `--json` is requested. Build passed.
+ - **2026-02-07** — REVIEW_FAIL TASK-15 (1/3): Missing README example and missing unit tests verifying JSON keys/types; reverting TASK-15 to `pending` for follow-up.
+ - **2026-02-07** — TASK-14 completed: Added `-j, --json` short alias for the `stats` command in `src/index.ts`. Verified build and manual run: `node dist/index.js stats -j` prints JSON when built. Commit: `feat(stats): add -j/--json flag to stats command`.

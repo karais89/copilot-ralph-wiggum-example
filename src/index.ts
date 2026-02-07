@@ -100,7 +100,7 @@ program
 program
   .command("stats")
   .description("Display todo statistics")
-  .option("--json", "Output stats as JSON")
+  .option("-j, --json", "Output stats as JSON")
   .action(async (options: { json?: boolean }) => {
     try {
       const jsonOutput = options.json ?? false;
