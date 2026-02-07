@@ -20,7 +20,7 @@
 | TASK-14 | Add stats --json flag | completed | feat(stats): add -j/--json flag to stats command |
 | TASK-15 | Define stats JSON schema | completed | feat(stats): add stats JSON schema and type |
 | TASK-16 | Add tests for stats JSON | pending | - |
-| TASK-17 | Docs/examples and integration check | pending | - |
+| TASK-17 | Docs/examples and integration check | completed | feat(docs): add examples and integration check script |
 
 ## Log
 
@@ -41,3 +41,4 @@
 - **2026-02-07** — Added feature planning tasks TASK-14~TASK-17 for [add-stats-command-json-output-mode].
  - **2026-02-07** — TASK-15 completed: Added a formal JSON Schema at `src/schemas/stats.schema.json`, introduced the `Stats` TypeScript type at `src/models/stats.ts`, and ensured `todo stats --json` emits the canonical fields (`total`, `completed`, `pending`, `overdue`, `completionRate`, `generated_at`). Build passed.
  - **2026-02-07** — TASK-14 completed: Added `-j, --json` short alias for the `stats` command in `src/index.ts`. Verified build and manual run: `node dist/index.js stats -j` prints JSON when built. Commit: `feat(stats): add -j/--json flag to stats command`.
+ - **2026-02-07** — TASK-17 completed: Added `EXAMPLES.md` with usage examples and a small `scripts/integration-check.mjs` script that builds the project and validates `todo stats --json` output against the canonical fields. Ran the integration check locally; it passed. Commit: `feat(docs): add examples and integration check script`.
