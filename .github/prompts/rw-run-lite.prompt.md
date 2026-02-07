@@ -39,11 +39,16 @@ Repeat:
   1) If `.ai/PAUSE.md` exists, print "⏸️ PAUSE.md detected. Remove it to resume." and stop
   2) If `.ai/ARCHIVE_LOCK` exists, print "⛔ Archive lock detected (.ai/ARCHIVE_LOCK). Wait for archive completion, then retry." and stop
   3) If <PROGRESS> does not exist, create it by listing all `TASK-*.md` from <TASKS> as `pending`
-  4) Scan `TASK-*.md` in <TASKS> and append missing task rows to the Task Status table in <PROGRESS> as `pending`
+  4) Scan `TASK-*.md` in <TASKS>; add as `pending` only task IDs that are missing from both:
+     - active Task Status table in <PROGRESS>
+     - every `.ai/progress-archive/STATUS-*.md` file (glob)
   5) Read <PROGRESS> to determine whether unfinished tasks remain
   6) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars:
      print "⚠️ PROGRESS is growing large. The loop will continue. Recommended: create .ai/PAUSE.md, then run rw-archive.prompt.md manually."
-  7) If no `pending` or `in-progress` rows exist in Task Status, print "✅ All tasks completed." and exit
+  7) If active Task Status has no `pending`/`in-progress` rows, and every TASK ID from <TASKS> exists in either:
+     - active <PROGRESS> Task Status table, or
+     - any `.ai/progress-archive/STATUS-*.md` file (glob),
+     then print "✅ All tasks completed." and exit
   8) If `#tool:agent/runSubagent` is unavailable:
      - print `runSubagent unavailable`
      - print `MANUAL_FALLBACK_REQUIRED`
@@ -64,6 +69,7 @@ Repeat:
 - Do not choose tasks directly; the subagent chooses
 - Do not implement code directly; manage the loop only
 - Trust <PROGRESS> over any verbal "done" claim
+- Never resurrect archived completed tasks to `pending`
 - In Lite mode, archive thresholds produce warnings only; no automatic stop/archive
 - If requirements are missing/changed, propose a small update in `PLAN.md` Feature Notes and add a new `TASK-XX` file; do not rewrite the whole PLAN
 - Keep `PLAN.md` concise; place details in task files

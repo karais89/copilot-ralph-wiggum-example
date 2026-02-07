@@ -122,6 +122,7 @@
 - Strict 추가 규칙:
   - 수동 리뷰 실패 시 `REVIEW_FAIL TASK-XX (n/3)`를 기록하고 상태를 `pending`으로 되돌린다.
   - 3회 실패 시 `REVIEW-ESCALATE TASK-XX (3/3)`를 기록하고 중단한다.
+  - 수동 개입으로 해결했다면 `REVIEW-ESCALATE-RESOLVED TASK-XX: <해결 요약>`를 `PROGRESS` Log에 append한 뒤 `rw-run-strict`를 재실행한다.
 
 ## 태스크 템플릿 (요약)
 
@@ -152,4 +153,4 @@
 - `runSubagent unavailable`: 실행 환경/모델에서 도구 지원 여부 확인
 - TASK 번호 충돌: 최신 브랜치로 업데이트 후 선택 모드의 `rw-plan-*` 재실행
 - PROGRESS 누락: Task Status 행과 Log를 수동 보정 후 선택 모드의 `rw-run-*` 재개
-- `REVIEW-ESCALATE` 발생(Strict): 동일 TASK 리뷰 3회 실패 상태이므로 태스크/요구사항을 수동 수정한 뒤 재실행
+- `REVIEW-ESCALATE` 발생(Strict): 태스크/요구사항을 수동 수정 후 `REVIEW-ESCALATE-RESOLVED TASK-XX: <해결 요약>`를 `PROGRESS` Log에 append하고 `rw-run-strict`를 재실행

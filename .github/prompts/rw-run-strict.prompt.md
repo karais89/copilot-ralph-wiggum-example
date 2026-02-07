@@ -46,7 +46,9 @@ Repeat:
   5) Read <PROGRESS> to determine whether unfinished tasks remain
   6) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars:
      print "📦 Manual archive required. Keep .ai/PAUSE.md present, run rw-archive.prompt.md, then resume." and stop
-  7) If <PROGRESS> Log contains `REVIEW-ESCALATE`, print "🛑 A task failed review 3 times. Manual intervention required." and stop
+  7) If <PROGRESS> Log contains unresolved `REVIEW-ESCALATE` for any task
+     (an entry `REVIEW-ESCALATE TASK-XX ...` with no later matching `REVIEW-ESCALATE-RESOLVED TASK-XX ...`),
+     print "🛑 A task failed review 3 times. Manual intervention required." and stop
   8) If active Task Status has no `pending`/`in-progress` rows, and every TASK ID from <TASKS> exists in either:
      - active <PROGRESS> Task Status table, or
      - any `.ai/progress-archive/STATUS-*.md` file (glob),
@@ -76,6 +78,8 @@ Repeat:
 - Do not implement code directly; manage the loop only
 - Trust <PROGRESS> over any verbal "done" claim from subagents
 - Never resurrect archived completed tasks to `pending`
+- Strict recovery rule: after manual intervention on an escalated task, append
+  `REVIEW-ESCALATE-RESOLVED TASK-XX: <resolution>` to <PROGRESS> Log before rerun
 - If requirements are missing/changed, propose a small update in `PLAN.md` Feature Notes and add a new `TASK-XX` file; do not rewrite the whole PLAN
 - Keep `PLAN.md` concise; place details in task files
 

@@ -27,6 +27,7 @@
 - 리뷰 로그 마커:
   - `REVIEW_FAIL`
   - `REVIEW-ESCALATE`
+  - `REVIEW-ESCALATE-RESOLVED`
 - 프롬프트 사전 점검 오류 토큰:
   - `LANG_POLICY_MISSING`
 - feature 파일 입력 오류 토큰:
@@ -63,3 +64,6 @@
    - `rw-archive`는 `.ai/PAUSE.md`가 있는 상태에서만 실행
    - `rw-archive` 실행 시 `.ai/ARCHIVE_LOCK`를 사용해 동시 archive를 방지
 5. `runSubagent` 미지원 환경에서는 즉시 종료하지 않고 수동 fallback 절차를 출력한 뒤 안전 중지한다.
+6. Strict 복구 규칙:
+   - `REVIEW-ESCALATE TASK-XX ...`가 기록된 태스크를 수동 개입으로 해결했으면, `.ai/PROGRESS.md` Log에
+     `REVIEW-ESCALATE-RESOLVED TASK-XX: <해결 요약>`을 append한 뒤 `rw-run-strict`를 재실행한다.
