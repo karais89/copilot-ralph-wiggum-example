@@ -34,7 +34,7 @@ async function main() {
     await run('npm run build');
 
     console.log('Running stats (JSON) output...');
-    const out = await run('node dist/index.js stats -j');
+    const out = await run('node dist/src/index.js stats -j');
     let parsed;
     try {
       parsed = JSON.parse(out);
