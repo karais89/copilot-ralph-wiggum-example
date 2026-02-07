@@ -78,7 +78,7 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 3) 구현된 코드가 모든 완료 기준을 충족하는지 검증
 4) 빌드/검증 커맨드 실행하여 정상 동작 확인
 5) 문제가 있으면 동일 TASK의 `REVIEW_FAIL TASK-XX` 횟수를 계산
-   - 검색 범위: 활성 <PROGRESS> Log + .ai/progress-archive/LOG-*.md 전체 파일(glob 매치)
+   - 검색 범위: 활성 <PROGRESS> Log 전체 (REVIEW 로그는 아카이브/trim 대상이 아니므로 활성 Log에 유지됨)
    - 누적 0회면: `REVIEW_FAIL TASK-XX (1/3): <원인요약>`를 Log에 추가하고 해당 태스크 상태를 pending으로 되돌리기
    - 누적 1회면: `REVIEW_FAIL TASK-XX (2/3): <원인요약>`를 Log에 추가하고 해당 태스크 상태를 pending으로 되돌리기
    - 누적 2회 이상이면: `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`를 Log에 추가하고 상태는 변경하지 않은 채 종료

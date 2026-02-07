@@ -11,6 +11,8 @@ You will ONLY edit these files:
 - .ai/progress-archive/README.md (optional)
 
 Rules:
+- Before any archive operation, ensure `.ai/PAUSE.md` exists. If not, stop immediately with:
+  "⛔ rw-run may still be active. Create .ai/PAUSE.md first, then retry rw-archive."
 - Keep PROGRESS.md small (active tasks only).
 - If .ai/PROGRESS.md is > 8000 chars OR completed rows > 20 OR log entries > 40, run archive.
 - This prompt is intended for Lite/manual operation. When `rw-run-strict` is active, do not run this prompt concurrently.
