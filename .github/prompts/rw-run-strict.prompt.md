@@ -26,10 +26,10 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 반복:
   1) .ai/PAUSE.md가 존재하면 → "⏸️ PAUSE.md 발견. 삭제하면 재개됩니다." 출력 후 중지
   2) <PROGRESS>가 없으면 생성: <TASKS> 폴더의 TASK-*.md를 나열하여 전부 pending으로 초기화
-  3) <TASKS>의 TASK-*.md를 순회해, 활성 <PROGRESS> Task Status 표와 .ai/progress-archive/STATUS-*.md 어디에도 없는 태스크만 pending 행으로 추가
+  3) <TASKS>의 TASK-*.md를 순회해, 활성 <PROGRESS> Task Status 표와 .ai/progress-archive/STATUS-*.md 전체 파일(glob 매치) 어디에도 없는 태스크만 pending 행으로 추가
   4) <PROGRESS>를 읽어 미완료 태스크가 있는지 확인
-  5) <PROGRESS> Log에 `[REVIEW-ESCALATE]`가 있으면 → "🛑 리뷰 3회 실패 태스크 발견. 수동 개입 필요." 출력 후 중지
-  6) 활성 Task Status 표에 pending/in-progress가 없고, <TASKS>의 모든 TASK-*.md가 (a) 활성 <PROGRESS> 표 또는 (b) .ai/progress-archive/STATUS-*.md 중 하나에 존재하면 → "✅ 모든 태스크 완료." 출력 후 종료
+  5) <PROGRESS> Log에 `REVIEW-ESCALATE` 항목이 있으면 → "🛑 리뷰 3회 실패 태스크 발견. 수동 개입 필요." 출력 후 중지
+  6) 활성 Task Status 표에 pending/in-progress가 없고, <TASKS>의 모든 TASK-*.md Task ID가 (a) 활성 <PROGRESS> 표 또는 (b) .ai/progress-archive/STATUS-*.md 전체 파일(glob 매치) 중 하나 이상에 존재하면 → "✅ 모든 태스크 완료." 출력 후 종료
   7) #tool:agent/runSubagent 호출 (아래 SUBAGENT_PROMPT를 그대로 전달)
   8) 서브에이전트 완료 후 <PROGRESS> 재확인
   9) #tool:agent/runSubagent 호출 (아래 REVIEWER_PROMPT를 그대로 전달)
@@ -48,6 +48,7 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 - Task Status 표는 활성 태스크만 유지(pending/in-progress)
 - 완료된 태스크는 아카이브 파일로 전환
 - 트리거 조건: (completed 행 20개 초과) 또는 (<PROGRESS> 전체 크기 8,000자 초과)
+- REVIEW_FAIL/REVIEW-ESCALATE 로그는 카운팅 기준이므로 archive/trim 대상에서 제외하고 활성 <PROGRESS> Log에 유지
 - 아카이브 수행:
   1) .ai/progress-archive/STATUS-YYYYMMDD-HHMM.md 생성(없으면) 및 append-only로 추가
   2) completed 태스크 행 이동 (형식: Task | Title | Commit)
@@ -76,9 +77,11 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 2) 해당 태스크 파일(<TASKS>/TASK-XX-*.md)의 Acceptance Criteria 확인
 3) 구현된 코드가 모든 완료 기준을 충족하는지 검증
 4) 빌드/검증 커맨드 실행하여 정상 동작 확인
-5) 문제가 있으면 <PROGRESS> Log에서 동일 TASK의 `REVIEW_FAIL TASK-XX` 횟수를 확인
-   - 누적 0~1회면: `REVIEW_FAIL TASK-XX (n/3): <원인요약>`를 Log에 추가하고 해당 태스크 상태를 pending으로 되돌리기
-   - 누적 2회면: `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`를 Log에 추가하고 상태는 변경하지 않은 채 종료
+5) 문제가 있으면 동일 TASK의 `REVIEW_FAIL TASK-XX` 횟수를 계산
+   - 검색 범위: 활성 <PROGRESS> Log + .ai/progress-archive/LOG-*.md 전체 파일(glob 매치)
+   - 누적 0회면: `REVIEW_FAIL TASK-XX (1/3): <원인요약>`를 Log에 추가하고 해당 태스크 상태를 pending으로 되돌리기
+   - 누적 1회면: `REVIEW_FAIL TASK-XX (2/3): <원인요약>`를 Log에 추가하고 해당 태스크 상태를 pending으로 되돌리기
+   - 누적 2회 이상이면: `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`를 Log에 추가하고 상태는 변경하지 않은 채 종료
 6) 문제가 없으면 "✅ TASK-XX 검증 완료" 보고 후 종료
 
 규칙:
