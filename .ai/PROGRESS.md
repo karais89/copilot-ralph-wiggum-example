@@ -16,7 +16,7 @@
 | TASK-10 | README Documentation | completed | docs: write README |
 | TASK-11 | Stats Command Handler | completed | feat: add stats command with text and JSON output |
 | TASK-12 | Wire Stats Command to CLI | completed | feat: register stats command in CLI |
-| TASK-13 | Stats Command Integration Test | pending | - |
+| TASK-13 | Stats Command Integration Test | completed | test: verify stats command integration |
 
 ## Log
 
@@ -33,3 +33,4 @@
 - **2026-02-07** — Added feature planning tasks TASK-11~TASK-13 for [stats-json-output].
 - **2026-02-07** — TASK-11 completed: Implemented stats command handler in src/commands/stats.ts with dual output modes. Computes total, completed, pending counts and completion rate (0-100) from todos loaded via storage layer. Default text mode displays formatted statistics with emoji icons (📊, ✓, ⏳). JSON mode (--json flag) outputs machine-readable object with completionRate rounded to 2 decimal places. Handles edge case of zero todos gracefully. Build passes.
 - **2026-02-07** — TASK-12 completed: Registered stats command in CLI entry point (src/index.ts). Imported statsCommand from commands/stats.ts. Command accepts optional --json flag and passes it to statsCommand() handler. Wrapped in try/catch for consistent error handling. Help text displays correctly for both 'todo --help' and 'todo stats --help'. Verified text and JSON output modes work as expected. Build passes.
+- **2026-02-07** — TASK-13 completed: Verified stats command integration through comprehensive end-to-end testing. Tested empty state (0 todos) - all metrics show 0. Tested mixed state (2 todos, 1 completed, 1 pending) - accurate statistics with 50% completion rate. Text output displays formatted statistics with emoji icons. JSON output produces valid, parseable JSON verified with jq. Help command correctly lists stats command with --json option. All acceptance criteria met. No crashes or errors. Build passes.
