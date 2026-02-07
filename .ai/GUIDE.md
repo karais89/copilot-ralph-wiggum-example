@@ -25,7 +25,9 @@
 - `.github/prompts/*.prompt.md`는 영어 본문으로 유지한다.
 - 각 프롬프트는 `Step 0 (Mandatory)`에서 `.ai/CONTEXT.md`를 먼저 읽고, 실패 시 `LANG_POLICY_MISSING`으로 중지한다.
 - `.ai/*` 운영 문서는 기본 한국어로 유지한다.
+- 기존(legacy) 영어 문서는 즉시 전면 번역을 강제하지 않으며, 신규 작성/수정 시 한국어를 우선한다.
 - 언어가 섞여 충돌할 경우 `.ai/CONTEXT.md` 규칙을 우선 적용한다.
+- 단, parser-safe 토큰(`Task Status`, `Log`, `pending/in-progress/completed`)은 문서 언어와 무관하게 반드시 영어로 유지한다.
 
 ## 모드 선택
 
@@ -90,7 +92,7 @@
 ## PROGRESS 템플릿 (요약)
 
 ```markdown
-# Progress
+# 진행 현황
 
 ## Task Status
 | Task | Title | Status | Commit |

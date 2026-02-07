@@ -30,13 +30,14 @@ Steps:
 2) Write PLAN.md (concise PRD) and include `## Feature Notes (append-only)` with one baseline note.
 3) Split PLAN.md into 10~20 atomic task files under .ai/tasks/ as TASK-XX-*.md, each with Dependencies/Acceptance Criteria/Files to modify/Verification.
 4) Create PROGRESS.md listing all tasks as pending using this minimum structure:
-   - `# Progress`
+   - `# 진행 현황`
    - `## Task Status`
    - table header: `| Task | Title | Status | Commit |`
    - table separator: `|------|-------|--------|--------|`
    - one row per TASK as `pending` with commit `-`
    - `## Log`
    - one initial log line: `- **YYYY-MM-DD** — Initial tasks created.`
+   - Keep machine-parsed tokens (`Task Status`, `Log`, `pending`) exactly as written.
 5) If .ai already exists, do not rewrite the whole PLAN; update Feature Notes only and add new TASK-XX files without renumbering existing ones.
 
 Do not implement product code.

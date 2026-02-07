@@ -1,54 +1,55 @@
-# Workspace Context
+# 워크스페이스 컨텍스트
 
-## Language Policy
+## 언어 정책
 
-- Prompt instruction language (`.github/prompts/*.prompt.md`): English (required)
-- Prompt preflight: each prompt must include `Step 0 (Mandatory)` to load this file before any modification
-- User-facing docs language (`.ai/GUIDE.md`, `.ai/PLAN.md`, `.ai/PROGRESS.md`, `.ai/tasks/*.md`, `.ai/notes/*.md`): Korean by default
-- Commit message language: English (Conventional Commits)
-- Conflict rule: If language is mixed or ambiguous, this file takes precedence.
+- 프롬프트 본문 언어(`.github/prompts/*.prompt.md`): 영어(필수)
+- 프롬프트 사전 점검: 모든 프롬프트는 수정 전에 `Step 0 (Mandatory)`로 이 파일을 먼저 읽어야 함
+- 사용자 문서 언어(`.ai/GUIDE.md`, `.ai/PLAN.md`, `.ai/PROGRESS.md`, `.ai/tasks/*.md`, `.ai/notes/*.md`): 한국어 기본
+- 기존(legacy) 문서가 영어인 경우 즉시 전면 번역을 강제하지 않음. 다만 신규 작성/수정 시에는 한국어 우선
+- 커밋 메시지 언어: 영어(Conventional Commits)
+- 언어 충돌 시: 이 파일 규칙을 우선 적용
 
-## Machine-Parsed Tokens (DO NOT TRANSLATE)
+## 기계 파싱 토큰 (번역 금지)
 
-These tokens are contract values used by orchestration prompts/parsers and must stay exactly as written.
+아래 값은 오케스트레이션 프롬프트/파서의 계약값이므로 문자열을 그대로 유지해야 합니다.
 
-- In `.ai/PROGRESS.md` section headers:
+- `.ai/PROGRESS.md` 섹션 헤더:
   - `## Task Status`
   - `## Log`
-- In `.ai/PROGRESS.md` table header:
+- `.ai/PROGRESS.md` 테이블 헤더:
   - `| Task | Title | Status | Commit |`
-- In `.ai/PROGRESS.md` status values:
+- `.ai/PROGRESS.md` 상태값:
   - `pending`
   - `in-progress`
   - `completed`
-- Task ID format:
-  - `TASK-XX` (zero-padded numeric IDs)
-- Review markers in logs:
+- Task ID 형식:
+  - `TASK-XX` (0-padding 숫자 ID)
+- 리뷰 로그 마커:
   - `REVIEW_FAIL`
   - `REVIEW-ESCALATE`
-- Prompt preflight output tokens:
+- 프롬프트 사전 점검 출력 토큰:
   - `LANG_POLICY_MISSING`
   - `LANGUAGE_POLICY_LOADED: <single-line summary>`
-- File/path contracts:
+- 파일/경로 계약:
   - `.ai/PAUSE.md`
   - `.ai/progress-archive/STATUS-*.md`
   - `.ai/progress-archive/LOG-*.md`
-  - `## Feature Notes (append-only)` in `.ai/PLAN.md`
+  - `.ai/PLAN.md`의 `## Feature Notes (append-only)`
 
-## Prompt Authoring Rules
+## 프롬프트 작성 규칙
 
-1. Keep one dominant language per prompt body (avoid line-level mixing).
-2. Add `Step 0 (Mandatory)` to read `.ai/CONTEXT.md` before any file edit.
-3. If `.ai/CONTEXT.md` is missing or unreadable, stop with `LANG_POLICY_MISSING`.
-4. Keep output/report formats in one language per section (do not mix in one bullet/table row).
+1. 프롬프트 본문은 주 언어 1개만 유지하고 라인 단위 혼용을 피한다.
+2. 모든 프롬프트에 `Step 0 (Mandatory)`를 두고 `.ai/CONTEXT.md`를 먼저 읽는다.
+3. `.ai/CONTEXT.md`를 읽을 수 없으면 `LANG_POLICY_MISSING`으로 즉시 중단한다.
+4. 출력/리포트는 섹션 단위로 언어를 통일한다.
 
-## Additional Guardrails
+## 추가 가드레일
 
-1. Korean prose is allowed around machine tokens, but machine tokens themselves must remain unchanged.
-2. Never rename `Task Status`, `Log`, or status enum values even when translating docs.
-3. Keep append-only intent:
-   - `.ai/PLAN.md`: append in `Feature Notes` only
-   - `.ai/PROGRESS.md` Log: append new entries, avoid destructive rewrites unless archiving
-4. Run/archive safety:
-   - Do not run concurrent orchestrators in the same workspace.
-   - Run `rw-archive` only while `.ai/PAUSE.md` exists.
+1. 한국어 설명은 허용되지만, 기계 파싱 토큰 자체는 절대 변경하지 않는다.
+2. 문서를 번역하더라도 `Task Status`, `Log`, 상태 enum 값은 이름을 바꾸지 않는다.
+3. append-only 원칙 유지:
+   - `.ai/PLAN.md`: `Feature Notes`에만 append
+   - `.ai/PROGRESS.md` Log: archive 전까지 append 중심으로 유지
+4. 실행/아카이브 안전 규칙:
+   - 동일 워크스페이스에서 오케스트레이터 동시 실행 금지
+   - `rw-archive`는 `.ai/PAUSE.md`가 있는 상태에서만 실행
