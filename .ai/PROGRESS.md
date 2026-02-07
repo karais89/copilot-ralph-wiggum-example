@@ -14,6 +14,9 @@
 | TASK-08 | CLI Entry Point | completed | feat: wire up CLI with Commander.js |
 | TASK-09 | Error Handling | completed | feat: add comprehensive error handling |
 | TASK-10 | README Documentation | completed | docs: write README |
+| TASK-11 | Stats Command Handler | completed | feat: add stats command with text and JSON output |
+| TASK-12 | Wire Stats Command to CLI | pending | - |
+| TASK-13 | Stats Command Integration Test | pending | - |
 
 ## Log
 
@@ -27,3 +30,5 @@
 - **2026-02-06** — TASK-08 completed: Wired up CLI entry point using Commander.js. Configured program name (todo), version (1.0.0), and description. Registered all 4 commands (add, list, done, delete) with proper action handlers and error handling. Added shebang line for direct execution. package.json bin field already configured. Build passes.
 - **2026-02-06** — TASK-09 completed: Added comprehensive error handling across all commands and entry point. Implemented global uncaught exception and unhandled rejection handlers in index.ts. Wrapped all command functions in try/catch blocks with user-friendly error messages. Enhanced storage layer with specific error handling for permission errors (EACCES/EPERM), disk full errors (ENOSPC), and read-only file system errors (EROFS). Added input validation with usage hints for missing arguments in all commands. All error messages now use ❌ emoji prefix and avoid raw stack traces. Build passes.
 - **2026-02-06** — TASK-10 completed: Created comprehensive README.md documentation with project title, description, installation instructions, usage examples for all 4 commands (add, list, done, delete), example output with formatted todo list, tech stack section, project structure, data storage details, development scripts, and MIT license. Includes features list, ID prefix matching examples, and help command documentation. Build passes.
+- **2026-02-07** — Added feature planning tasks TASK-11~TASK-13 for [stats-json-output].
+- **2026-02-07** — TASK-11 completed: Implemented stats command handler in src/commands/stats.ts with dual output modes. Computes total, completed, pending counts and completion rate (0-100) from todos loaded via storage layer. Default text mode displays formatted statistics with emoji icons (📊, ✓, ⏳). JSON mode (--json flag) outputs machine-readable object with completionRate rounded to 2 decimal places. Handles edge case of zero todos gracefully. Build passes.
