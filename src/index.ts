@@ -5,6 +5,7 @@ import { addCommand } from "./commands/add.js";
 import { listCommand } from "./commands/list.js";
 import { doneCommand } from "./commands/update.js";
 import { deleteCommand } from "./commands/delete.js";
+import { statsCommand } from "./commands/stats.js";
 
 // Global error handlers to prevent crashes from unhandled exceptions
 process.on("uncaughtException", (error: Error) => {
@@ -89,6 +90,21 @@ program
         process.exit(1);
       }
       await deleteCommand(id);
+    } catch (error) {
+      console.error(`❌ Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// Stats command: todo stats [options]
+program
+  .command("stats")
+  .description("Display todo statistics")
+  .option("--json", "Output stats as JSON")
+  .action(async (options: { json?: boolean }) => {
+    try {
+      const jsonOutput = options.json ?? false;
+      await statsCommand(jsonOutput);
     } catch (error) {
       console.error(`❌ Error: ${(error as Error).message}`);
       process.exit(1);
