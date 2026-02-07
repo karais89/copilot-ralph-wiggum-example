@@ -26,7 +26,7 @@ Workflow:
 3) Append one new Feature Notes line to PLAN.md in this format:
    - YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.
 4) Determine next available TASK number from existing task files (max + 1).
-5) Create 3~8 new atomic task files for the feature under `.ai/tasks/` as `TASK-XX-<slug>.md`.
+5) Create 4~10 new atomic task files for the feature under `.ai/tasks/` as `TASK-XX-<slug>.md`.
    Each file must include:
    - Title
    - Dependencies
@@ -34,6 +34,9 @@ Workflow:
    - Acceptance Criteria
    - Files to Create/Modify
    - Verification
+   - Risk Notes
+   - Rollback Plan
+   - Validation Commands
 6) Update `.ai/PROGRESS.md` Task Status table by adding new rows as `pending` with commit `-`.
    - Keep existing rows unchanged.
    - If PROGRESS table is archived/compact, still ensure new pending rows are present in the active Task Status section.

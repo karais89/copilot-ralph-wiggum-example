@@ -28,7 +28,7 @@
 - `Strict`:
   - 계획: `.github/prompts/rw-plan-strict.prompt.md`
   - 실행: `.github/prompts/rw-run-strict.prompt.md`
-  - 특징: reviewer 루프 + PROGRESS archive 규칙 포함
+  - 특징: reviewer 루프 + PROGRESS archive 규칙 + task별 Risk/Rollback/Validation 요구
 
 ## 사용 방법
 

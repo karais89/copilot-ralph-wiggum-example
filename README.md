@@ -195,6 +195,7 @@ This approach provides:
 ### Learn More
 
 Want to use this technique for your own projects? Check out the guides:
+This README focuses on the Todo CLI product; orchestration operating rules live in `.ai/GUIDE.md`.
 
 - 📘 **[가이드](.ai/GUIDE.md)**: Ralph Wiggum 기법 사용법
 - 🧭 **[Lite Plan](.github/prompts/rw-plan-lite.prompt.md)**: 단순/빠른 계획 생성용
