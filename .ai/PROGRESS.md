@@ -43,8 +43,6 @@
  - **2026-02-07** — TASK-14 completed: Added `-j, --json` short alias for the `stats` command in `src/index.ts`. Verified build and manual run: `node dist/index.js stats -j` prints JSON when built. Commit: `feat(stats): add -j/--json flag to stats command`.
  - **2026-02-07** — TASK-17 completed: Added `EXAMPLES.md` with usage examples and a small `scripts/integration-check.mjs` script that builds the project and validates `todo stats --json` output against the canonical fields. Ran the integration check locally; it passed. Commit: `feat(docs): add examples and integration check script`.
  - **2026-02-07** — REVIEW_FAIL TASK-17 (1/3): README missing example JSON output and timezone note (UTC recommended); examples were added to `EXAMPLES.md` instead of `README.md`. Reverted TASK-17 status to `pending` for correction.
-| TASK-16 | Add tests for stats JSON | completed | test(stats): add tests for stats JSON output |
-
 - **2026-02-07** — TASK-16 completed: Added `vitest`-based tests at `test/stats-json.test.ts` covering normal, empty, partial/malformed, and error cases for `todo stats --json`. Updated `package.json` test script and `tsconfig.json` to include tests. `npm test` passes locally. Commit: `test(stats): add tests for stats JSON output`.
 
 - **2026-02-07** — TASK-17 completed: Added example JSON output and UTC timezone note to `README.md`, and verified the existing `scripts/integration-check.mjs` integration check script (build + `node dist/index.js stats -j`) passes locally. Commit: `feat(docs): add README JSON example and verify integration check`.

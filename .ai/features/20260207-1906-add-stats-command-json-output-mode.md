@@ -1,6 +1,6 @@
 # FEATURE: add-stats-command-json-output-mode
 
-Status: IMPLEMENTED
+Status: PLANNED
 
 ## Summary
 `stats` CLI 명령에 `--json` 출력 모드를 추가해 기계가 읽기 쉬운 통계를 제공한다.
