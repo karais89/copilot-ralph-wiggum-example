@@ -20,7 +20,7 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 - #tool:agent/runSubagent 도구가 없으면 즉시 실패 처리: "runSubagent unavailable"
 - 오케스트레이터는 절대 src/ 이하 코드를 직접 수정하지 않습니다.
 - 오케스트레이터가 수정 가능한 파일은 기본적으로 <PROGRESS>, <PLAN>(Feature Notes 섹션 append-only), 및 .ai/progress-archive/* 뿐입니다.
-- Strict 실행 중에는 `rw-archive.prompt.md`를 별도로 실행하지 않습니다(본 프롬프트 내장 archive만 사용).
+- Strict 실행 중 오케스트레이터는 archive를 직접 수행하지 않습니다. archive는 `rw-archive.prompt.md`로만 수동 실행합니다.
 
 ## 루프
 반복:
@@ -28,12 +28,14 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
   2) <PROGRESS>가 없으면 생성: <TASKS> 폴더의 TASK-*.md를 나열하여 전부 pending으로 초기화
   3) <TASKS>의 TASK-*.md를 순회해, 활성 <PROGRESS> Task Status 표와 .ai/progress-archive/STATUS-*.md 전체 파일(glob 매치) 어디에도 없는 태스크만 pending 행으로 추가
   4) <PROGRESS>를 읽어 미완료 태스크가 있는지 확인
-  5) <PROGRESS> Log에 `REVIEW-ESCALATE` 항목이 있으면 → "🛑 리뷰 3회 실패 태스크 발견. 수동 개입 필요." 출력 후 중지
-  6) 활성 Task Status 표에 pending/in-progress가 없고, <TASKS>의 모든 TASK-*.md Task ID가 (a) 활성 <PROGRESS> 표 또는 (b) .ai/progress-archive/STATUS-*.md 전체 파일(glob 매치) 중 하나 이상에 존재하면 → "✅ 모든 태스크 완료." 출력 후 종료
-  7) #tool:agent/runSubagent 호출 (아래 SUBAGENT_PROMPT를 그대로 전달)
-  8) 서브에이전트 완료 후 <PROGRESS> 재확인
-  9) #tool:agent/runSubagent 호출 (아래 REVIEWER_PROMPT를 그대로 전달)
-  10) <PROGRESS> 재확인 후 반복
+  5) <PROGRESS>에서 completed 행 수가 20 초과이거나 <PROGRESS> 전체 크기가 8,000자 초과면 →
+     "📦 수동 아카이브 필요. .ai/PAUSE.md를 유지한 상태에서 rw-archive.prompt.md를 실행한 뒤 재개하세요." 출력 후 중지
+  6) <PROGRESS> Log에 `REVIEW-ESCALATE` 항목이 있으면 → "🛑 리뷰 3회 실패 태스크 발견. 수동 개입 필요." 출력 후 중지
+  7) 활성 Task Status 표에 pending/in-progress가 없고, <TASKS>의 모든 TASK-*.md Task ID가 (a) 활성 <PROGRESS> 표 또는 (b) .ai/progress-archive/STATUS-*.md 전체 파일(glob 매치) 중 하나 이상에 존재하면 → "✅ 모든 태스크 완료." 출력 후 종료
+  8) #tool:agent/runSubagent 호출 (아래 SUBAGENT_PROMPT를 그대로 전달)
+  9) 서브에이전트 완료 후 <PROGRESS> 재확인
+  10) #tool:agent/runSubagent 호출 (아래 REVIEWER_PROMPT를 그대로 전달)
+  11) <PROGRESS> 재확인 후 반복
 
 ## 규칙
 - runSubagent는 순차적으로 (한 번에 하나씩) 호출
@@ -44,16 +46,11 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 - If a requirement is missing/changed, propose a small edit to .ai/PLAN.md (Feature Notes only) and add a new TASK-XX file. Do not rewrite the whole PLAN.
 - Keep PLAN.md concise; put details into task files.
 
-## PROGRESS.md 정리 규칙 (필수, 단순 버전)
-- Task Status 표는 활성 태스크만 유지(pending/in-progress)
-- 완료된 태스크는 아카이브 파일로 전환
+## PROGRESS.md 수동 아카이브 규칙 (Strict)
+- Strict 오케스트레이터는 archive를 직접 수행하지 않음
 - 트리거 조건: (completed 행 20개 초과) 또는 (<PROGRESS> 전체 크기 8,000자 초과)
-- REVIEW_FAIL/REVIEW-ESCALATE 로그는 카운팅 기준이므로 archive/trim 대상에서 제외하고 활성 <PROGRESS> Log에 유지
-- 아카이브 수행:
-  1) .ai/progress-archive/STATUS-YYYYMMDD-HHMM.md 생성(없으면) 및 append-only로 추가
-  2) completed 태스크 행 이동 (형식: Task | Title | Commit)
-  3) <PROGRESS>에는 pending/in-progress만 유지
-  4) <PROGRESS>에 포인터 1줄 남기기: "Completed rows archived to: <파일경로>"
+- 트리거 충족 시 오케스트레이터를 중지하고, `.ai/PAUSE.md`가 있는 상태에서 `rw-archive.prompt.md`를 수동 실행
+- 아카이브 완료 후 `.ai/PAUSE.md`를 삭제하고 Strict 루프 재개
 
 <SUBAGENT_PROMPT>
 당신은 <PLAN>의 PRD를 구현하는 시니어 소프트웨어 엔지니어 코딩 서브에이전트입니다.

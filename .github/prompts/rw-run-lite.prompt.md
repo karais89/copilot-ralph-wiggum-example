@@ -27,16 +27,19 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
   2) <PROGRESS>가 없으면 생성: <TASKS> 폴더의 TASK-*.md를 나열하여 전부 pending으로 초기화
   3) <TASKS>의 TASK-*.md를 순회해, <PROGRESS> Task Status 표에 없는 태스크만 pending 행으로 추가
   4) <PROGRESS>를 읽어 미완료 태스크가 있는지 확인
-  5) Task Status 표에 pending/in-progress가 없으면 → "✅ 모든 태스크 완료." 출력 후 종료
-  6) #tool:agent/runSubagent 호출 (아래 SUBAGENT_PROMPT를 그대로 전달)
-  7) 서브에이전트 완료 후 <PROGRESS> 재확인
-  8) 반복
+  5) <PROGRESS>에서 completed 행 수가 20 초과이거나 <PROGRESS> 전체 크기가 8,000자 초과면 →
+     "⚠️ PROGRESS가 커졌습니다. 현재 루프는 계속 진행합니다. 권장: .ai/PAUSE.md 생성 후 rw-archive.prompt.md를 수동 실행하세요." 출력
+  6) Task Status 표에 pending/in-progress가 없으면 → "✅ 모든 태스크 완료." 출력 후 종료
+  7) #tool:agent/runSubagent 호출 (아래 SUBAGENT_PROMPT를 그대로 전달)
+  8) 서브에이전트 완료 후 <PROGRESS> 재확인
+  9) 반복
 
 ## 규칙
 - runSubagent는 순차적으로 (한 번에 하나씩) 호출
 - 태스크를 직접 선택하지 않음 — 서브에이전트가 선택
 - 직접 코딩하지 않음 — 오직 루프만 관리
 - 서브에이전트의 “완료” 주장보다 <PROGRESS> 내용을 우선한다
+- Lite는 아카이브 임계치 초과 시 경고만 출력하고 자동 중단/자동 아카이브를 수행하지 않는다
 - If a requirement is missing/changed, propose a small edit to .ai/PLAN.md (Feature Notes only) and add a new TASK-XX file. Do not rewrite the whole PLAN.
 - Keep PLAN.md concise; put details into task files.
 

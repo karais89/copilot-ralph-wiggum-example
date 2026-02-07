@@ -15,7 +15,7 @@ Rules:
   "⛔ rw-run may still be active. Create .ai/PAUSE.md first, then retry rw-archive."
 - Keep PROGRESS.md small (active tasks only).
 - If .ai/PROGRESS.md is > 8000 chars OR completed rows > 20 OR log entries > 40, run archive.
-- This prompt is intended for Lite/manual operation. When `rw-run-strict` is active, do not run this prompt concurrently.
+- This prompt is the only archive path for both Lite and Strict. Always run manually while `.ai/PAUSE.md` is present.
 - In PROGRESS.md keep:
   - Task Status table: pending/in-progress only
   - Log: most recent 20 non-review entries + all `REVIEW_FAIL` / `REVIEW-ESCALATE` entries
