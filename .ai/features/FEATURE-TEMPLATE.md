@@ -22,12 +22,12 @@ Status: DRAFT
 ## Constraints
 - 기존 동작 비파괴
 - 변경 범위 최소화
-- `npm run build` 통과
+- 프로젝트 표준 검증 명령 통과
 
 ## Acceptance
 - [ ] 사용자 관점에서 기능이 동작한다.
 - [ ] 오류 시 명확한 메시지를 출력한다.
-- [ ] `npm run build`가 통과한다.
+- [ ] 최소 1개 이상의 표준 검증 명령이 exit code 0으로 통과한다.
 
 ## Edge Cases and Error Handling
 - 입력/상태 예외 케이스와 오류 처리 정책을 적습니다.

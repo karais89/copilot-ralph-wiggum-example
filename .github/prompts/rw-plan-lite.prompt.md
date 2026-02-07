@@ -71,11 +71,12 @@ Normalization rules:
    - Constraints (defaults):
      - Keep existing commands/behavior backward-compatible.
      - Minimize scope and file changes to only what is necessary.
-     - `npm run build` must pass.
+     - Project-defined canonical validation commands must pass (language/toolchain agnostic).
    - Acceptance (defaults):
      - User-facing behavior for the goal is implemented and invokable.
      - Error paths return clear user-friendly messages.
-     - `npm run build` passes after changes.
+     - At least one canonical verification command succeeds with exit code 0.
+     - Verification evidence includes command, exit code, and 1-2 key output lines.
 
 Workflow:
 1) Read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and list existing `.ai/tasks/TASK-*.md` filenames.
@@ -93,6 +94,8 @@ Workflow:
    - Acceptance Criteria
    - Files to Create/Modify
    - Verification
+     - Use project-defined commands (do not hardcode language-specific tools unless the project is explicitly language-specific).
+     - Require evidence format: `command`, `exit code`, `key output`.
 8) Update `.ai/PROGRESS.md` Task Status table by adding only new rows as `pending` with commit `-`.
    Keep existing rows unchanged.
 9) Add one new log entry in PROGRESS Log:

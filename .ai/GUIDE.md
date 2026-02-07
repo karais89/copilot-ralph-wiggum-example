@@ -79,8 +79,8 @@
 - 권장 상태값(단순화): `DRAFT` -> `READY_FOR_PLAN` -> `PLANNED`
 - 보완 질문은 feature 파일이 정상 선택된 이후에만 최대 2개까지 허용한다.
 - 보완이 부족해도 안전 기본값으로 계획을 진행한다:
-  - Constraints: 기존 동작 비파괴, 범위 최소화, `npm run build` 통과
-  - Acceptance: 사용자 기능 동작, 오류 메시지 명확성, `npm run build` 통과
+  - Constraints: 기존 동작 비파괴, 범위 최소화, 프로젝트 표준 검증 명령 통과
+  - Acceptance: 사용자 기능 동작, 오류 메시지 명확성, 최소 1개 이상의 표준 검증 명령 exit code 0
 
 ## 보조 프롬프트 사용 시점
 
