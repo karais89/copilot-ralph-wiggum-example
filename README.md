@@ -134,6 +134,24 @@ todo done --help
 todo delete --help
 ```
 
+### Stats (JSON output)
+
+You can request machine-readable JSON output from the `stats` command using the `-j`/`--json` flag. The JSON includes canonical fields: `total`, `completed`, `pending`, `overdue`, `completionRate` (0-100), and `generated_at` (ISO 8601 timestamp, UTC recommended).
+
+Example:
+
+```json
+{
+   "total": 3,
+   "completed": 1,
+   "pending": 2,
+   "overdue": 0,
+   "completionRate": 33.333333333333336,
+   "generated_at": "2026-02-07T12:34:56Z"
+}
+```
+
+Note: `generated_at` is produced in ISO 8601 format. We recommend interpreting it as UTC to avoid timezone ambiguities.
 ## Project Structure
 
 ```

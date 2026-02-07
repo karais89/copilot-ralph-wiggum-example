@@ -7,8 +7,8 @@ vi.mock("../src/storage/json-store.js", () => {
   };
 });
 
-import { statsCommand } from "../src/commands/stats";
-import { loadTodos } from "../src/storage/json-store";
+import { statsCommand } from "../src/commands/stats.js";
+import { loadTodos } from "../src/storage/json-store.js";
 
 const mockedLoad = loadTodos as unknown as ReturnType<typeof vi.fn> & { mockResolvedValue?: any; mockRejectedValue?: any };
 

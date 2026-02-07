@@ -19,8 +19,8 @@
 | TASK-13 | Stats 통합 테스트 | completed | test: verify stats command integration |
 | TASK-14 | Add stats --json flag | completed | feat(stats): add -j/--json flag to stats command |
 | TASK-15 | Define stats JSON schema | completed | feat(stats): add stats JSON schema and type |
-| TASK-16 | Add tests for stats JSON | pending | - |
-| TASK-17 | Docs/examples and integration check | pending | feat(docs): add examples and integration check script |
+| TASK-16 | Add tests for stats JSON | completed | test(stats): add tests for stats JSON output |
+| TASK-17 | Docs/examples and integration check | completed | feat(docs): add README JSON example and verify integration check |
 
 ## Log
 
@@ -46,3 +46,5 @@
 | TASK-16 | Add tests for stats JSON | completed | test(stats): add tests for stats JSON output |
 
 - **2026-02-07** — TASK-16 completed: Added `vitest`-based tests at `test/stats-json.test.ts` covering normal, empty, partial/malformed, and error cases for `todo stats --json`. Updated `package.json` test script and `tsconfig.json` to include tests. `npm test` passes locally. Commit: `test(stats): add tests for stats JSON output`.
+
+- **2026-02-07** — TASK-17 completed: Added example JSON output and UTC timezone note to `README.md`, and verified the existing `scripts/integration-check.mjs` integration check script (build + `node dist/index.js stats -j`) passes locally. Commit: `feat(docs): add README JSON example and verify integration check`.
