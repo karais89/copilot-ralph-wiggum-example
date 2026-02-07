@@ -33,6 +33,8 @@ Rules:
 - Keep machine tokens unchanged: `Status`, `READY_FOR_PLAN`.
 - Do not use multiple-choice questions.
 - Keep interaction minimal: ask clarification questions only if high-impact ambiguity remains after reading `featureSummary`.
+- Write `.ai/features/*.md` content in Korean by default.
+- Keep only parser/machine tokens in English (`Status`, `READY_FOR_PLAN`, `PLANNED`, file/status tokens in notes if any).
 
 Workflow:
 1) Ensure `.ai/features/` exists; create it if missing.
@@ -52,19 +54,19 @@ Workflow:
 8) Create exactly one feature file with this structure:
    - `# FEATURE: <slug>`
    - `Status: READY_FOR_PLAN`
-   - `## Summary`
-   - `## User Value`
+   - `## Summary` (한국어)
+   - `## User Value` (한국어)
    - `## Goal`
-   - `## In Scope`
-   - `## Out of Scope`
-   - `## Functional Requirements`
+   - `## In Scope` (한국어)
+   - `## Out of Scope` (한국어)
+   - `## Functional Requirements` (한국어)
    - `## Constraints`
    - `## Acceptance`
-   - `## Edge Cases and Error Handling`
-   - `## Verification Baseline`
-   - `## Risks and Open Questions`
+   - `## Edge Cases and Error Handling` (한국어)
+   - `## Verification Baseline` (한국어)
+   - `## Risks and Open Questions` (한국어)
    - `## Notes`
-   Populate sections in detail using the summary and defaults. Include concrete, testable bullet points.
+   Populate sections in detail using the summary and defaults. Include concrete, testable bullet points written in Korean.
 9) In `Notes`, include:
    - source (`rw-feature`)
    - created timestamp

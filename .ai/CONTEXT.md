@@ -4,7 +4,7 @@
 
 - 프롬프트 본문 언어(`.github/prompts/*.prompt.md`): 영어(필수)
 - 프롬프트 사전 점검: 모든 프롬프트는 수정 전에 `Step 0 (Mandatory)`로 이 파일을 먼저 읽어야 함
-- 사용자 문서 언어(`.ai/GUIDE.md`, `.ai/PLAN.md`, `.ai/PROGRESS.md`, `.ai/tasks/*.md`, `.ai/notes/*.md`): 한국어 기본
+- 사용자 문서 언어(`.ai/GUIDE.md`, `.ai/PLAN.md`, `.ai/PROGRESS.md`, `.ai/tasks/*.md`, `.ai/notes/*.md`, `.ai/features/*.md`): 한국어 기본
 - 기존(legacy) 문서가 영어인 경우 즉시 전면 번역을 강제하지 않음. 다만 신규 작성/수정 시에는 한국어 우선
 - 커밋 메시지 언어: 영어(Conventional Commits)
 - 언어 충돌 시: 이 파일 규칙을 우선 적용

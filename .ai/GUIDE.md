@@ -94,6 +94,7 @@
   - 필요할 때만 최대 2개의 짧은 보완 질문을 한다.
   - 입력이 비어 있고 보완 질문 이후에도 요약이 없으면 `FEATURE_SUMMARY_MISSING`으로 중단한다.
   - 생성 파일은 `Status: READY_FOR_PLAN`으로 저장된다.
+  - feature 파일 본문은 한국어로 작성하고, 기계 파싱 토큰(`Status`, `READY_FOR_PLAN`, `PLANNED`)만 영어를 유지한다.
 - `rw-archive.prompt.md`:
   - `Lite`/`Strict` 모두에서 `PROGRESS.md`가 커졌을 때 수동 실행한다.
   - 기준: `PROGRESS.md > 8000 chars` 또는 `completed > 20` 또는 `log > 40`.
