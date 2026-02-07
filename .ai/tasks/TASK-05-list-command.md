@@ -17,3 +17,9 @@ Implement the `list` command that displays all todos in a formatted output.
 ## Files to Create/Modify
 
 - `src/commands/list.ts`
+
+## Verification
+
+- Run `npm run build` and confirm no build errors.
+- Run `node dist/index.js list` with an empty store and confirm "No todos found" is shown.
+- Add a pending and a completed todo, then run `node dist/index.js list` and confirm `[ ]` and `[✓]` formatting plus shortened ids.

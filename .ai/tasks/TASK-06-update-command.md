@@ -16,3 +16,10 @@ Implement the `done` command that toggles the completed status of a todo.
 ## Files to Create/Modify
 
 - `src/commands/update.ts`
+
+## Verification
+
+- Run `npm run build` and confirm no build errors.
+- Run `node dist/index.js done <full-id>` and confirm status toggles.
+- Run `node dist/index.js done <id-prefix>` and confirm prefix matching works.
+- Run `node dist/index.js done unknown` and confirm user-friendly not-found error is shown.

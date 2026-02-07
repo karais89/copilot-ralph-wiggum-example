@@ -18,3 +18,8 @@ Write a comprehensive README.md that documents installation, usage, and all avai
 ## Files to Create/Modify
 
 - `README.md`
+
+## Verification
+
+- Open `README.md` and confirm all required sections exist (title, install, usage examples, list output, tech stack, license).
+- Follow the documented install/build commands and confirm they execute as written.

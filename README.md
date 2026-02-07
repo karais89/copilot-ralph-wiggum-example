@@ -197,7 +197,7 @@ This approach provides:
 Want to use this technique for your own projects? Check out the guides:
 
 - 📘 **[가이드](.ai/GUIDE.md)**: Ralph Wiggum 기법 사용법
-- 🎭 **[오케스트레이터](.ai/ORCHESTRATOR.md)**: 오케스트레이터 + 서브에이전트 프롬프트
+- 🎭 **[오케스트레이터 프롬프트](.github/prompts/rw-run.prompt.md)**: 메인 오케스트레이션 루프 (SSOT)
 - 📋 **[플랜](.ai/PLAN.md)**: 프로젝트 PRD
 - 📊 **[진행 추적](.ai/PROGRESS.md)**: 태스크 완료 상태
 

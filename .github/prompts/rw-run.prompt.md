@@ -25,9 +25,9 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 반복:
   1) .ai/PAUSE.md가 존재하면 → "⏸️ PAUSE.md 발견. 삭제하면 재개됩니다." 출력 후 중지
   2) <PROGRESS>가 없으면 생성: <TASKS> 폴더의 TASK-*.md를 나열하여 전부 pending으로 초기화
-  3) <TASKS>에 있고 <PROGRESS> Task Status 표에 없는 TASK-*.md가 있으면 해당 태스크 행을 pending으로 추가
+  3) <TASKS>의 TASK-*.md를 순회해, 활성 <PROGRESS> Task Status 표와 .ai/progress-archive/STATUS-*.md 어디에도 없는 태스크만 pending 행으로 추가
   4) <PROGRESS>를 읽어 미완료 태스크가 있는지 확인
-  5) 활성 Task Status 표에 pending/in-progress가 없고, <TASKS>의 TASK-*.md 중 <PROGRESS>/archives 어디에도 누락된 항목이 없으면 → "✅ 모든 태스크 완료." 출력 후 종료
+  5) 활성 Task Status 표에 pending/in-progress가 없고, <TASKS>의 모든 TASK-*.md가 (a) 활성 <PROGRESS> 표 또는 (b) .ai/progress-archive/STATUS-*.md 중 하나에 존재하면 → "✅ 모든 태스크 완료." 출력 후 종료
   6) #tool:agent/runSubagent 호출 (아래 SUBAGENT_PROMPT를 그대로 전달)
   7) 서브에이전트 완료 후 <PROGRESS> 재확인
   8) #tool:agent/runSubagent 호출 (아래 REVIEWER_PROMPT를 그대로 전달)
@@ -38,6 +38,7 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 - 태스크를 직접 선택하지 않음 — 서브에이전트가 선택
 - 직접 코딩하지 않음 — 오직 루프만 관리
 - 서브에이전트/리뷰어의 “완료” 주장보다 <PROGRESS> 내용을 우선한다
+- 아카이브된 completed 태스크는 pending으로 되살리지 않는다
 - If a requirement is missing/changed, propose a small edit to .ai/PLAN.md (Feature Notes only) and add a new TASK-XX file. Do not rewrite the whole PLAN.
 - Keep PLAN.md concise; put details into task files.
 

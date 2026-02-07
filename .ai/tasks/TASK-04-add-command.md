@@ -16,3 +16,9 @@ Implement the `add` command that creates a new todo item and saves it to storage
 ## Files to Create/Modify
 
 - `src/commands/add.ts`
+
+## Verification
+
+- Run `npm run build` and confirm no build errors.
+- Run `node dist/index.js add "sample task"` and confirm a success message with generated id is printed.
+- Run `node dist/index.js add ""` and confirm validation error is shown.

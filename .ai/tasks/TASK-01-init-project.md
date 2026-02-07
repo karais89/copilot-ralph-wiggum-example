@@ -21,3 +21,9 @@ Initialize the Node.js project with TypeScript support. Set up the basic project
 - `package.json`
 - `tsconfig.json`
 - `.gitignore`
+
+## Verification
+
+- Run `npm run build` and confirm TypeScript compilation succeeds.
+- Run `cat .gitignore` and confirm `node_modules/`, `dist/`, and `data/todos.json` are listed.
+- Run `ls src` and confirm the initial source directory structure exists.

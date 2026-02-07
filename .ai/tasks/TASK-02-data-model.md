@@ -15,3 +15,8 @@ Define the Todo data model as a TypeScript interface. This is the core type used
 ## Files to Create/Modify
 
 - `src/models/todo.ts`
+
+## Verification
+
+- Run `npm run build` and confirm no type errors.
+- Run `grep -E "export interface Todo|export function createTodo" src/models/todo.ts` and confirm both exports exist.

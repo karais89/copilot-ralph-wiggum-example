@@ -1,4 +1,3 @@
-```markdown
 # Ralph Wiggum 기법 가이드
 
 VS Code Copilot Chat의 `runSubagent`를 활용하여 프로젝트를 자율적으로 구현하는 오케스트레이션 패턴입니다.
@@ -20,11 +19,14 @@ VS Code Copilot Chat의 `runSubagent`를 활용하여 프로젝트를 자율적�
 ```
 .ai/
 ├── PLAN.md              # PRD — 프로젝트 전체 명세
-├── ORCHESTRATOR.md      # 오케스트레이터 프롬프트 (서브에이전트 포함)
+├── PROGRESS.md          # 진행 추적 (없으면 실행 중 생성)
 ├── tasks/               # 개별 태스크 파일
 │   ├── TASK-01-주제.md
 │   └── ...
 └── GUIDE.md             # 이 가이드 (선택적)
+
+.github/prompts/
+└── rw-run.prompt.md     # 메인 오케스트레이터 프롬프트 (SSOT)
 ```
 
 - `PLAN.md`: Claude에게 "이 아이디어의 PRD를 작성해줘"로 초안 생성
@@ -34,7 +36,7 @@ VS Code Copilot Chat의 `runSubagent`를 활용하여 프로젝트를 자율적�
 ### 2단계: 오케스트레이터 실행
 
 1. VS Code Copilot Chat → New Chat (Opus 권장)
-2. `ORCHESTRATOR.md` 내용 복사-붙여넣기
+2. `.github/prompts/rw-run.prompt.md` 내용 복사-붙여넣기
 3. 엔터 → 자동 루프 시작
 
 ### 3단계: 모니터링
@@ -127,4 +129,3 @@ VS Code Copilot Chat의 `runSubagent`를 활용하여 프로젝트를 자율적�
 
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [VS Code Copilot Docs](https://code.visualstudio.com/docs/copilot)
-```
