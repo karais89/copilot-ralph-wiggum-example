@@ -11,6 +11,8 @@
 └── tasks/
 
 .github/prompts/
+├── rw-init.prompt.md
+├── rw-archive.prompt.md
 ├── rw-plan-lite.prompt.md
 ├── rw-run-lite.prompt.md
 ├── rw-plan-strict.prompt.md
@@ -31,16 +33,29 @@
 ## 사용 방법
 
 1. VS Code Copilot Chat에서 새 대화를 연다.
-2. 선택한 모드의 `rw-plan-*.prompt.md` 내용을 붙여넣고 실행해 태스크를 만든다.
-3. 같은 모드의 `rw-run-*.prompt.md` 내용을 붙여넣고 실행해 오케스트레이션 루프를 돌린다.
-4. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
-5. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
+2. `.ai/` 구조가 없으면 `rw-init.prompt.md`를 먼저 실행해 초기화한다(초기 1회).
+3. 선택한 모드의 `rw-plan-*.prompt.md` 내용을 붙여넣고 실행해 태스크를 만든다.
+4. 같은 모드의 `rw-run-*.prompt.md` 내용을 붙여넣고 실행해 오케스트레이션 루프를 돌린다.
+5. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
+6. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
 
 ## 실행 순서
 
-1. 기능 추가 계획: 선택한 모드의 `rw-plan-*.prompt.md`
-2. 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
-3. 상태 확인: `.ai/PROGRESS.md`
+1. 초기화(필요 시): `rw-init.prompt.md`
+2. 기능 추가 계획: 선택한 모드의 `rw-plan-*.prompt.md`
+3. 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
+4. 상태 확인: `.ai/PROGRESS.md`
+
+## 보조 프롬프트 사용 시점
+
+- `rw-init.prompt.md`:
+  - 새 프로젝트이거나 `.ai/` 폴더가 없을 때만 실행한다.
+  - 이미 운영 중인 프로젝트에서는 재초기화 대신 `rw-plan-*`으로 기능을 추가한다.
+- `rw-archive.prompt.md`:
+  - `Lite` 모드에서 `PROGRESS.md`가 커졌을 때 수동 실행한다.
+  - 기준: `PROGRESS.md > 8000 chars` 또는 `completed > 20` 또는 `log > 40`.
+  - 반드시 `rw-run-lite`가 멈춘 상태에서 실행한다.
+  - `Strict` 모드에서는 `rw-run-strict` 내장 archive를 사용하므로 별도 `rw-archive`를 동시에 실행하지 않는다.
 
 ## Lite 운영 규칙
 

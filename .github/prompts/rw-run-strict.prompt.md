@@ -20,6 +20,7 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 - #tool:agent/runSubagent 도구가 없으면 즉시 실패 처리: "runSubagent unavailable"
 - 오케스트레이터는 절대 src/ 이하 코드를 직접 수정하지 않습니다.
 - 오케스트레이터가 수정 가능한 파일은 기본적으로 <PROGRESS>, <PLAN>(Feature Notes 섹션 append-only), 및 .ai/progress-archive/* 뿐입니다.
+- Strict 실행 중에는 `rw-archive.prompt.md`를 별도로 실행하지 않습니다(본 프롬프트 내장 archive만 사용).
 
 ## 루프
 반복:
@@ -27,11 +28,12 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
   2) <PROGRESS>가 없으면 생성: <TASKS> 폴더의 TASK-*.md를 나열하여 전부 pending으로 초기화
   3) <TASKS>의 TASK-*.md를 순회해, 활성 <PROGRESS> Task Status 표와 .ai/progress-archive/STATUS-*.md 어디에도 없는 태스크만 pending 행으로 추가
   4) <PROGRESS>를 읽어 미완료 태스크가 있는지 확인
-  5) 활성 Task Status 표에 pending/in-progress가 없고, <TASKS>의 모든 TASK-*.md가 (a) 활성 <PROGRESS> 표 또는 (b) .ai/progress-archive/STATUS-*.md 중 하나에 존재하면 → "✅ 모든 태스크 완료." 출력 후 종료
-  6) #tool:agent/runSubagent 호출 (아래 SUBAGENT_PROMPT를 그대로 전달)
-  7) 서브에이전트 완료 후 <PROGRESS> 재확인
-  8) #tool:agent/runSubagent 호출 (아래 REVIEWER_PROMPT를 그대로 전달)
-  9) <PROGRESS> 재확인 후 반복
+  5) <PROGRESS> Log에 `[REVIEW-ESCALATE]`가 있으면 → "🛑 리뷰 3회 실패 태스크 발견. 수동 개입 필요." 출력 후 중지
+  6) 활성 Task Status 표에 pending/in-progress가 없고, <TASKS>의 모든 TASK-*.md가 (a) 활성 <PROGRESS> 표 또는 (b) .ai/progress-archive/STATUS-*.md 중 하나에 존재하면 → "✅ 모든 태스크 완료." 출력 후 종료
+  7) #tool:agent/runSubagent 호출 (아래 SUBAGENT_PROMPT를 그대로 전달)
+  8) 서브에이전트 완료 후 <PROGRESS> 재확인
+  9) #tool:agent/runSubagent 호출 (아래 REVIEWER_PROMPT를 그대로 전달)
+  10) <PROGRESS> 재확인 후 반복
 
 ## 규칙
 - runSubagent는 순차적으로 (한 번에 하나씩) 호출
@@ -74,7 +76,9 @@ argument-hint: "Optional: leave blank. Ensure .ai/PLAN.md and .ai/tasks exist."
 2) 해당 태스크 파일(<TASKS>/TASK-XX-*.md)의 Acceptance Criteria 확인
 3) 구현된 코드가 모든 완료 기준을 충족하는지 검증
 4) 빌드/검증 커맨드 실행하여 정상 동작 확인
-5) 문제가 있으면 <PROGRESS>에 이슈를 기록하고 해당 태스크 상태를 pending으로 되돌리기
+5) 문제가 있으면 <PROGRESS> Log에서 동일 TASK의 `REVIEW_FAIL TASK-XX` 횟수를 확인
+   - 누적 0~1회면: `REVIEW_FAIL TASK-XX (n/3): <원인요약>`를 Log에 추가하고 해당 태스크 상태를 pending으로 되돌리기
+   - 누적 2회면: `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`를 Log에 추가하고 상태는 변경하지 않은 채 종료
 6) 문제가 없으면 "✅ TASK-XX 검증 완료" 보고 후 종료
 
 규칙:
