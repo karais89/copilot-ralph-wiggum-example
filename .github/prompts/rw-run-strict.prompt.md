@@ -45,7 +45,7 @@ Repeat:
      - every `.ai/progress-archive/STATUS-*.md` file (glob)
   5) Read <PROGRESS> to determine whether unfinished tasks remain
   6) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars:
-     print "📦 Manual archive required. Keep .ai/PAUSE.md present, run rw-archive.prompt.md, then resume." and stop
+     print "📦 Manual archive required. Create .ai/PAUSE.md if missing, keep it present, run rw-archive.prompt.md, then resume." and stop
   7) If <PROGRESS> Log contains unresolved `REVIEW-ESCALATE` for any task
      (an entry `REVIEW-ESCALATE TASK-XX ...` with no later matching `REVIEW-ESCALATE-RESOLVED TASK-XX ...`),
      print "🛑 A task failed review 3 times. Manual intervention required." and stop
@@ -63,7 +63,7 @@ Repeat:
        d) run manual review against the task Acceptance Criteria
        e) if review fails: append `REVIEW_FAIL TASK-XX (n/3): <root-cause>` and revert status to `pending`
        f) if review passes: set status to `completed` and append one `TASK-XX completed` log line
-       g) if failures reach 3: append `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required` and stop
+       g) if failures reach 3: append `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`, revert status to `pending`, and stop
        h) commit with a conventional commit message
        i) rerun this prompt after manual completion
      - stop
@@ -86,7 +86,7 @@ Repeat:
 ## Manual PROGRESS archive rules (Strict)
 - Strict orchestrator never archives by itself
 - Archive trigger: completed rows > 20 OR <PROGRESS> size > 8,000 chars
-- When triggered: stop orchestrator, keep `.ai/PAUSE.md`, run `rw-archive.prompt.md` manually
+- When triggered: stop orchestrator, create `.ai/PAUSE.md` if missing, keep it present, run `rw-archive.prompt.md` manually
 - After archive: delete `.ai/PAUSE.md` and resume Strict loop
 
 <SUBAGENT_PROMPT>
@@ -115,7 +115,7 @@ Procedure:
    - Search scope: active <PROGRESS> Log only (review logs stay active and are not archived/trimmed)
    - If prior count is 0: append `REVIEW_FAIL TASK-XX (1/3): <root-cause>` and revert task status to `pending`
    - If prior count is 1: append `REVIEW_FAIL TASK-XX (2/3): <root-cause>` and revert task status to `pending`
-   - If prior count is 2 or more: append `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required` and keep status unchanged
+   - If prior count is 2 or more: append `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required` and revert task status to `pending`
 6) If no problems are found, report "✅ TASK-XX verified" and exit
 
 Rule:

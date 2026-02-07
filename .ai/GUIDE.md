@@ -121,7 +121,7 @@
   - 사용자는 단일 태스크를 수동 구현/검증/커밋하고 `PROGRESS`를 갱신한 뒤 프롬프트를 재실행한다.
 - Strict 추가 규칙:
   - 수동 리뷰 실패 시 `REVIEW_FAIL TASK-XX (n/3)`를 기록하고 상태를 `pending`으로 되돌린다.
-  - 3회 실패 시 `REVIEW-ESCALATE TASK-XX (3/3)`를 기록하고 중단한다.
+  - 3회 실패 시 `REVIEW-ESCALATE TASK-XX (3/3)`를 기록하고 상태를 `pending`으로 되돌린 뒤 중단한다.
   - 수동 개입으로 해결했다면 `REVIEW-ESCALATE-RESOLVED TASK-XX: <해결 요약>`를 `PROGRESS` Log에 append한 뒤 `rw-run-strict`를 재실행한다.
 
 ## 태스크 템플릿 (요약)

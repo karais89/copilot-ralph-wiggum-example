@@ -39,7 +39,7 @@ Rules:
 Workflow:
 1) Ensure `.ai/features/` exists; create it if missing.
 2) If `.ai/features/FEATURE-TEMPLATE.md` is missing, create a template with sections:
-   - `Goal`, `Constraints`, `Acceptance`, `In Scope`, `Out of Scope`, `Functional Requirements`, `Edge Cases and Error Handling`, `Verification Baseline`, `Notes`
+   - `Summary`, `User Value`, `Goal`, `In Scope`, `Out of Scope`, `Functional Requirements`, `Constraints`, `Acceptance`, `Edge Cases and Error Handling`, `Verification Baseline`, `Risks and Open Questions`, `Notes`
 3) If `.ai/features/README.md` is missing, create a minimal usage note with status flow (`DRAFT` -> `READY_FOR_PLAN` -> `PLANNED`).
 4) Resolve initial summary:
    - Use `featureSummary` if provided.
