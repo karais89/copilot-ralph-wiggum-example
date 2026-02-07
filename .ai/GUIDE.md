@@ -19,6 +19,14 @@
 └── rw-run-strict.prompt.md
 ```
 
+## 언어 정책
+
+- 기준 파일: `.ai/CONTEXT.md`
+- `.github/prompts/*.prompt.md`는 영어 본문으로 유지한다.
+- 각 프롬프트는 `Step 0 (Mandatory)`에서 `.ai/CONTEXT.md`를 먼저 읽고, 실패 시 `LANG_POLICY_MISSING`으로 중지한다.
+- `.ai/*` 운영 문서는 기본 한국어로 유지한다.
+- 언어가 섞여 충돌할 경우 `.ai/CONTEXT.md` 규칙을 우선 적용한다.
+
 ## 모드 선택
 
 - `Lite`:

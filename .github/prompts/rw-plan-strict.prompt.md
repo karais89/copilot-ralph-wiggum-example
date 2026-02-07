@@ -5,6 +5,19 @@ agent: agent
 argument-hint: "Required: feature summary (goal, constraints, acceptance)."
 ---
 
+Language policy reference: `.ai/CONTEXT.md`
+
+Quick summary:
+- Append one feature note to `PLAN.md`.
+- Create 3-8 new atomic `TASK-XX-*.md` files without renumbering existing tasks.
+- Ensure new `pending` rows are visible in active `PROGRESS.md` even when archives exist.
+
+Step 0 (Mandatory):
+1) Read `.ai/CONTEXT.md` first.
+2) If the file is missing or unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
+3) Before any file change, output exactly one line: `LANGUAGE_POLICY_LOADED: <single-line summary>`
+4) Do not modify any file before Step 0 completes.
+
 Feature summary: ${input:featureSummary:goal/constraints/acceptance}
 
 You are adding a new feature to an existing Ralph-style orchestration workspace.

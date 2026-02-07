@@ -1,80 +1,80 @@
-# Todo CLI App — Product Requirements Document
+# Todo CLI 앱 — 제품 요구사항 문서
 
-## Overview
+## 개요
 
-A command-line Todo application built with Node.js and TypeScript. Users can manage their tasks directly from the terminal with simple, intuitive commands.
+Node.js와 TypeScript로 만든 커맨드라인 Todo 애플리케이션입니다.
+사용자는 터미널에서 간단하고 직관적인 명령으로 할 일을 관리할 수 있습니다.
 
 ## Feature Notes (append-only)
 
-- 2026-02-07: [todo-cli-baseline] Initial baseline shipped (add/list/done/delete, JSON storage, error handling, docs). Related tasks: TASK-01~TASK-10.
-- 2026-02-07: [stats-json-output] Add `todo stats` command with optional `--json` flag to display todo statistics. Text output shows total/completed/pending counts with visual formatting. JSON output returns machine-readable object with total, completed, pending, and completionRate (0-100). Related tasks: TASK-11~TASK-13.
+- 2026-02-07: [todo-cli-baseline] 초기 베이스라인(추가/조회/완료/삭제, JSON 저장소, 에러 처리, 문서화) 적용. Related tasks: TASK-01~TASK-10.
+- 2026-02-07: [stats-json-output] `todo stats` 명령과 선택적 `--json` 플래그 추가. 텍스트 출력은 total/completed/pending 통계를 표시하고, JSON 출력은 total/completed/pending/completionRate(0-100) 객체를 반환. Related tasks: TASK-11~TASK-13.
 
+## 기술 스택
 
-## Tech Stack
+- **런타임**: Node.js (>=18)
+- **언어**: TypeScript (strict mode)
+- **CLI 프레임워크**: Commander.js
+- **저장소**: 로컬 JSON 파일 (`data/todos.json`)
+- **빌드**: `tsc` (TypeScript compiler)
+- **패키지 매니저**: npm
 
-- **Runtime**: Node.js (>=18)
-- **Language**: TypeScript (strict mode)
-- **CLI Framework**: Commander.js
-- **Storage**: Local JSON file (`data/todos.json`)
-- **Build**: `tsc` (TypeScript compiler)
-- **Package Manager**: npm
-
-## Data Model
+## 데이터 모델
 
 ```typescript
 interface Todo {
-  id: string;          // nanoid or UUID
-  title: string;       // task description
-  completed: boolean;  // completion status
-  createdAt: string;   // ISO 8601 timestamp
+  id: string;          // nanoid 또는 UUID
+  title: string;       // 할 일 설명
+  completed: boolean;  // 완료 여부
+  createdAt: string;   // ISO 8601 타임스탬프
 }
 ```
 
-## Functional Requirements
+## 기능 요구사항
 
-### Commands
+### 명령어
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `todo add <title>` | Add a new todo | `todo add "Buy groceries"` |
-| `todo list` | List all todos | `todo list` |
-| `todo done <id>` | Mark a todo as completed | `todo done abc123` |
-| `todo delete <id>` | Delete a todo | `todo delete abc123` |
+| `todo add <title>` | 새 todo 추가 | `todo add "Buy groceries"` |
+| `todo list` | 전체 todo 조회 | `todo list` |
+| `todo done <id>` | 특정 todo 완료 처리 | `todo done abc123` |
+| `todo delete <id>` | 특정 todo 삭제 | `todo delete abc123` |
 
-### Behavior
+### 동작
 
-- `add`: Creates a new Todo with `completed: false`, auto-generates `id` and `createdAt`
-- `list`: Displays all todos in a formatted table. Shows `[✓]` for completed, `[ ]` for pending
-- `done`: Toggles the `completed` field of the specified todo
-- `delete`: Permanently removes the todo from storage
+- `add`: `completed: false`인 새 Todo를 생성하고 `id`와 `createdAt`을 자동 생성
+- `list`: 포맷된 테이블로 모든 todo 출력. 완료는 `[✓]`, 미완료는 `[ ]` 표시
+- `done`: 지정한 todo의 `completed` 값을 토글
+- `delete`: 저장소에서 todo를 영구 삭제
 
-## Non-Functional Requirements
+## 비기능 요구사항
 
-- Graceful error handling for all commands (missing args, invalid ID, file errors)
-- Help text via `todo --help` and `todo <command> --help`
-- Zero external runtime dependencies beyond Commander.js and nanoid
-- Works on macOS, Linux, and Windows
+- 모든 명령어에서 안정적인 에러 처리(인자 누락, 잘못된 ID, 파일 오류)
+- `todo --help`, `todo <command> --help` 도움말 제공
+- 런타임 외부 의존성 최소화(Commander.js, nanoid 이외 없음)
+- macOS, Linux, Windows에서 동작
 
-## Project Structure
+## 프로젝트 구조
 
 ```
 src/
-├── index.ts          # CLI entry point (Commander setup)
+├── index.ts          # CLI 진입점 (Commander 설정)
 ├── commands/
-│   ├── add.ts        # add command handler
-│   ├── list.ts       # list command handler
-│   ├── update.ts     # done/update command handler
-│   └── delete.ts     # delete command handler
+│   ├── add.ts        # add 명령 핸들러
+│   ├── list.ts       # list 명령 핸들러
+│   ├── update.ts     # done/update 명령 핸들러
+│   └── delete.ts     # delete 명령 핸들러
 ├── models/
-│   └── todo.ts       # Todo interface and type definitions
+│   └── todo.ts       # Todo 인터페이스 및 타입 정의
 └── storage/
-    └── json-store.ts # JSON file read/write operations
+    └── json-store.ts # JSON 파일 읽기/쓰기
 ```
 
-## Coding Conventions
+## 코딩 규칙
 
-- ESM modules (`"type": "module"` in package.json)
+- ESM 모듈 (`package.json`의 `"type": "module"`)
 - Strict TypeScript (`"strict": true`)
-- Conventional commits (e.g., `feat: add list command with table output`)
-- No classes — prefer functions and modules
-- All functions should have explicit return types
+- Conventional commit 사용 (예: `feat: add list command with table output`)
+- 클래스보다 함수/모듈 중심
+- 모든 함수에 명시적 반환 타입 작성

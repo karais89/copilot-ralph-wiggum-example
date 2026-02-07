@@ -4,6 +4,19 @@ description: "Scaffold .ai folder: PLAN/tasks/PROGRESS (+ optional GUIDE)"
 agent: agent
 ---
 
+Language policy reference: `.ai/CONTEXT.md`
+
+Quick summary:
+- Initialize the `.ai` workspace files (`PLAN`, `PROGRESS`, `tasks`, optional `GUIDE`).
+- If `.ai` already exists, update append-only sections and add new TASK files only.
+- Do not implement product code.
+
+Step 0 (Mandatory):
+1) Read `.ai/CONTEXT.md` first.
+2) If the file is missing or unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
+3) Before any file change, output exactly one line: `LANGUAGE_POLICY_LOADED: <single-line summary>`
+4) Do not modify any file before Step 0 completes.
+
 Create (or update without overwriting blindly) this structure:
 
 .ai/

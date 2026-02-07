@@ -4,6 +4,19 @@ description: "Slim down .ai/PROGRESS.md by archiving completed rows and older lo
 agent: agent
 ---
 
+Language policy reference: `.ai/CONTEXT.md`
+
+Quick summary:
+- Manually archive completed rows and older logs from `.ai/PROGRESS.md`.
+- Require `.ai/PAUSE.md` before archive.
+- Keep all review logs (`REVIEW_FAIL` / `REVIEW-ESCALATE`) in active PROGRESS.
+
+Step 0 (Mandatory):
+1) Read `.ai/CONTEXT.md` first.
+2) If the file is missing or unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
+3) Before any file change, output exactly one line: `LANGUAGE_POLICY_LOADED: <single-line summary>`
+4) Do not modify any file before Step 0 completes.
+
 You will ONLY edit these files:
 - .ai/PROGRESS.md
 - .ai/progress-archive/STATUS-YYYYMMDD-HHMM.md (create/append)

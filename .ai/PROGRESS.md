@@ -1,36 +1,36 @@
-# Progress
+# 진행 현황
 
 ## Task Status
 
 | Task | Title | Status | Commit |
 |------|-------|--------|--------|
-| TASK-01 | Project Initialization | completed | feat: init project |
-| TASK-02 | Data Model Definition | completed | feat: define Todo model |
-| TASK-03 | Storage Layer | completed | feat: implement storage layer |
-| TASK-04 | Add Command | completed | feat: implement add command |
-| TASK-05 | List Command | completed | feat: implement list command |
-| TASK-06 | Update (Done) Command | completed | feat: implement done command |
-| TASK-07 | Delete Command | completed | feat: implement delete command |
-| TASK-08 | CLI Entry Point | completed | feat: wire up CLI with Commander.js |
-| TASK-09 | Error Handling | completed | feat: add comprehensive error handling |
-| TASK-10 | README Documentation | completed | docs: write README |
-| TASK-11 | Stats Command Handler | completed | feat: add stats command with text and JSON output |
-| TASK-12 | Wire Stats Command to CLI | completed | feat: register stats command in CLI |
-| TASK-13 | Stats Command Integration Test | completed | test: verify stats command integration |
+| TASK-01 | 프로젝트 초기화 | completed | feat: init project |
+| TASK-02 | 데이터 모델 정의 | completed | feat: define Todo model |
+| TASK-03 | 저장소 레이어 | completed | feat: implement storage layer |
+| TASK-04 | Add 명령어 | completed | feat: implement add command |
+| TASK-05 | List 명령어 | completed | feat: implement list command |
+| TASK-06 | Update (Done) 명령어 | completed | feat: implement done command |
+| TASK-07 | Delete 명령어 | completed | feat: implement delete command |
+| TASK-08 | CLI 엔트리포인트 | completed | feat: wire up CLI with Commander.js |
+| TASK-09 | 에러 처리 | completed | feat: add comprehensive error handling |
+| TASK-10 | README 문서화 | completed | docs: write README |
+| TASK-11 | Stats 명령 핸들러 | completed | feat: add stats command with text and JSON output |
+| TASK-12 | Stats 명령 CLI 연결 | completed | feat: register stats command in CLI |
+| TASK-13 | Stats 통합 테스트 | completed | test: verify stats command integration |
 
 ## Log
 
-- **2026-02-06** — TASK-01 completed: Initialized project with package.json (ESM), tsconfig.json (strict), .gitignore, installed commander/nanoid + dev deps, created src/ directory structure with placeholder files. Build passes.
-- **2026-02-06** — TASK-02 completed: Defined Todo interface (id, title, completed, createdAt) and createTodo() helper using nanoid. Exported from src/models/todo.ts. Build passes.
-- **2026-02-06** — TASK-03 completed: Implemented JSON storage layer with loadTodos() and saveTodos() functions. Auto-creates data/ directory and todos.json file. Handles missing files and parse errors gracefully. Build passes.
-- **2026-02-06** — TASK-04 completed: Implemented add command handler. Creates new todos with id, title, completed flag, and createdAt timestamp. Validates input, loads existing todos, persists to storage, and provides user confirmation. Build passes.
-- **2026-02-06** — TASK-05 completed: Implemented list command handler. Displays all todos in formatted output with status icons ([✓] for completed, [ ] for pending), shortened id (first 8 chars), and title. Shows "No todos found" message if empty, and displays total count. Build passes.
-- **2026-02-06** — TASK-06 completed: Implemented done command handler. Toggles completed status of todos by full id or prefix match. Validates input, loads existing todos, finds matching todo, toggles status, persists to storage, and provides user confirmation with current status. Shows error if no match found. Build passes.
-- **2026-02-06** — TASK-07 completed: Implemented delete command handler. Permanently removes todos by full id or prefix match. Validates input, loads existing todos, finds matching todo, removes from array, persists to storage, and provides user confirmation with deleted todo title. Shows error if no match found. Build passes.
-- **2026-02-06** — TASK-08 completed: Wired up CLI entry point using Commander.js. Configured program name (todo), version (1.0.0), and description. Registered all 4 commands (add, list, done, delete) with proper action handlers and error handling. Added shebang line for direct execution. package.json bin field already configured. Build passes.
-- **2026-02-06** — TASK-09 completed: Added comprehensive error handling across all commands and entry point. Implemented global uncaught exception and unhandled rejection handlers in index.ts. Wrapped all command functions in try/catch blocks with user-friendly error messages. Enhanced storage layer with specific error handling for permission errors (EACCES/EPERM), disk full errors (ENOSPC), and read-only file system errors (EROFS). Added input validation with usage hints for missing arguments in all commands. All error messages now use ❌ emoji prefix and avoid raw stack traces. Build passes.
-- **2026-02-06** — TASK-10 completed: Created comprehensive README.md documentation with project title, description, installation instructions, usage examples for all 4 commands (add, list, done, delete), example output with formatted todo list, tech stack section, project structure, data storage details, development scripts, and MIT license. Includes features list, ID prefix matching examples, and help command documentation. Build passes.
-- **2026-02-07** — Added feature planning tasks TASK-11~TASK-13 for [stats-json-output].
-- **2026-02-07** — TASK-11 completed: Implemented stats command handler in src/commands/stats.ts with dual output modes. Computes total, completed, pending counts and completion rate (0-100) from todos loaded via storage layer. Default text mode displays formatted statistics with emoji icons (📊, ✓, ⏳). JSON mode (--json flag) outputs machine-readable object with completionRate rounded to 2 decimal places. Handles edge case of zero todos gracefully. Build passes.
-- **2026-02-07** — TASK-12 completed: Registered stats command in CLI entry point (src/index.ts). Imported statsCommand from commands/stats.ts. Command accepts optional --json flag and passes it to statsCommand() handler. Wrapped in try/catch for consistent error handling. Help text displays correctly for both 'todo --help' and 'todo stats --help'. Verified text and JSON output modes work as expected. Build passes.
-- **2026-02-07** — TASK-13 completed: Verified stats command integration through comprehensive end-to-end testing. Tested empty state (0 todos) - all metrics show 0. Tested mixed state (2 todos, 1 completed, 1 pending) - accurate statistics with 50% completion rate. Text output displays formatted statistics with emoji icons. JSON output produces valid, parseable JSON verified with jq. Help command correctly lists stats command with --json option. All acceptance criteria met. No crashes or errors. Build passes.
+- **2026-02-06** — TASK-01 completed: package.json(ESM), tsconfig.json(strict), .gitignore를 포함해 프로젝트를 초기화하고 commander/nanoid 및 개발 의존성을 설치했습니다. `src/` 기본 구조를 생성했으며 빌드 통과.
+- **2026-02-06** — TASK-02 completed: `src/models/todo.ts`에 Todo 인터페이스(id, title, completed, createdAt)와 `createTodo()` 헬퍼를 정의했습니다. 빌드 통과.
+- **2026-02-06** — TASK-03 completed: `loadTodos()`, `saveTodos()` 기반 JSON 저장소 레이어를 구현했습니다. `data/` 디렉터리와 `todos.json` 자동 생성, 파일 누락/파싱 오류 처리 포함. 빌드 통과.
+- **2026-02-06** — TASK-04 completed: add 명령 핸들러를 구현했습니다. 입력 검증, 기존 todo 로드, 저장소 반영, 사용자 확인 메시지를 포함합니다. 빌드 통과.
+- **2026-02-06** — TASK-05 completed: list 명령 핸들러를 구현했습니다. 완료 `[✓]`, 미완료 `[ ]`, 축약 ID(앞 8자리), 제목을 포맷 출력하며 비어 있을 때 안내 메시지와 총 개수를 표시합니다. 빌드 통과.
+- **2026-02-06** — TASK-06 completed: done 명령 핸들러를 구현했습니다. 전체 ID/접두어 매칭으로 todo를 찾아 완료 상태를 토글하고 저장합니다. 미매칭 시 오류를 반환합니다. 빌드 통과.
+- **2026-02-06** — TASK-07 completed: delete 명령 핸들러를 구현했습니다. 전체 ID/접두어 매칭으로 todo를 영구 삭제하고 삭제된 항목 제목을 출력합니다. 미매칭 시 오류를 반환합니다. 빌드 통과.
+- **2026-02-06** — TASK-08 completed: Commander.js 기반 CLI 엔트리포인트를 구성했습니다. 프로그램명(`todo`), 버전(`1.0.0`), 설명, add/list/done/delete 명령 등록 및 오류 처리를 연결했습니다. 빌드 통과.
+- **2026-02-06** — TASK-09 completed: 전역 예외/거부 처리와 명령별 try/catch를 추가해 에러 처리를 강화했습니다. 저장소 계층에서 권한(EACCES/EPERM), 디스크 가득 참(ENOSPC), 읽기 전용(EROFS) 오류를 구분 처리합니다. 빌드 통과.
+- **2026-02-06** — TASK-10 completed: README 문서를 작성했습니다. 설치, 명령 사용 예시(add/list/done/delete), 출력 예시, 기술 스택, 프로젝트 구조, 저장소, 개발 스크립트, 라이선스를 포함합니다. 빌드 통과.
+- **2026-02-07** — [stats-json-output] 기능 계획 태스크 TASK-11~TASK-13 추가.
+- **2026-02-07** — TASK-11 completed: `src/commands/stats.ts`에 stats 명령 핸들러를 구현했습니다. total/completed/pending/completionRate(0-100)를 계산하며 기본 텍스트 출력과 `--json` 출력 모두 지원합니다. 빌드 통과.
+- **2026-02-07** — TASK-12 completed: `src/index.ts`에 stats 명령을 등록했습니다. `--json` 옵션 전달, 일관된 오류 처리, `todo --help`/`todo stats --help` 출력 확인을 완료했습니다. 빌드 통과.
+- **2026-02-07** — TASK-13 completed: stats 명령 통합 검증을 수행했습니다. 빈 상태(0개), 혼합 상태(2개 중 1개 완료), 텍스트/JSON 출력, `jq` 파싱, 도움말 노출을 확인했고 모든 완료 기준을 충족했습니다. 빌드 통과.
