@@ -1,4 +1,5 @@
 import { loadTodos } from "../storage/json-store.js";
+import type { StatsOutput } from "../models/stats.js";
 
 /**
  * Handles the 'stats' command to display todo statistics.
@@ -21,8 +22,8 @@ export async function statsCommand(json: boolean = false): Promise<void> {
 
     // Output based on mode
     if (json) {
-      // JSON output mode — include required schema fields
-      const stats = {
+      // JSON output mode — include required schema fields matching src/schemas/stats.schema.json
+      const stats: StatsOutput = {
         total,
         completed,
         pending,
@@ -31,6 +32,7 @@ export async function statsCommand(json: boolean = false): Promise<void> {
         generated_at,
       };
       console.log(JSON.stringify(stats, null, 2));
+      return;
     } else {
       // Text output mode with visual formatting
       console.log("\n📊 Todo Statistics\n");
