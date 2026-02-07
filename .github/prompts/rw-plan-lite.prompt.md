@@ -55,9 +55,14 @@ Feature input resolution (required):
    - then a short fix guide:
      - open the latest `YYYYMMDD-HHMM-<slug>.md`
      - change `Status: DRAFT` (or current value) to `Status: READY_FOR_PLAN`
-7) If multiple READY candidates exist, select the lexicographically greatest filename.
-8) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
-9) In any error case above, stop immediately without clarification questions.
+7) If multiple READY candidates exist, stop immediately and print:
+   - first line exactly: `FEATURE_MULTI_READY`
+   - then a short fix guide:
+     - keep exactly one file as `Status: READY_FOR_PLAN`
+     - set other READY files to `Status: DRAFT` (or `Status: PLANNED` if already consumed)
+8) If exactly one READY candidate exists, select that file.
+9) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
+10) In any error case above, stop immediately without clarification questions.
 
 Normalization rules:
 1) Backward compatibility: if resolved input already includes structured sections (`goal`, `constraints`, `acceptance`), preserve and use them.

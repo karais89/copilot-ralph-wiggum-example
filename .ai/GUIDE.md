@@ -65,17 +65,18 @@
 - `rw-plan-lite`/`rw-plan-strict`는 **입력 인자 없이** `.ai/features/*.md`만 사용한다.
 - 파일 선택 규칙:
   - 입력 후보는 `.ai/features/*.md` 중 `FEATURE-TEMPLATE.md`, `README.md`를 제외한 파일
-  - `Status: READY_FOR_PLAN` 파일만 최종 후보
-  - 후보가 여러 개면 파일명 사전순 마지막(최신) 1개 선택
+  - `Status: READY_FOR_PLAN` 파일은 정확히 1개여야 한다.
+  - READY 후보가 2개 이상이면 자동 선택하지 않고 에러로 중단한다.
   - 권장 파일명: `YYYYMMDD-HHMM-<slug>.md`
 - 에러 처리(정확한 토큰):
   - `.ai/features` 폴더가 없거나 읽기 불가: `FEATURES_DIR_MISSING`
   - `.ai/features`에 `.md` 파일이 없음: `FEATURE_FILE_MISSING`
   - `.md` 파일은 있으나 `Status: READY_FOR_PLAN` 후보 없음: `FEATURE_NOT_READY`
+  - `Status: READY_FOR_PLAN` 후보가 2개 이상: `FEATURE_MULTI_READY`
 - 에러 발생 시 첫 줄은 에러 토큰을 출력하고, 다음 줄에 생성/수정 가이드를 출력한 뒤 즉시 중단한다.
 - 에러 시 보완 질문은 하지 않는다.
 - plan 완료 시 선택된 feature 파일 상태를 `PLANNED`로 갱신한다.
-- 권장 상태값: `DRAFT` -> `READY_FOR_PLAN` -> `PLANNED` -> `DONE` (필요 시 `BLOCKED`)
+- 권장 상태값(단순화): `DRAFT` -> `READY_FOR_PLAN` -> `PLANNED`
 - 보완 질문은 feature 파일이 정상 선택된 이후에만 최대 2개까지 허용한다.
 - 보완이 부족해도 안전 기본값으로 계획을 진행한다:
   - Constraints: 기존 동작 비파괴, 범위 최소화, `npm run build` 통과
@@ -88,11 +89,11 @@
   - 이미 운영 중인 프로젝트에서는 재초기화 대신 `rw-plan-*`으로 기능을 추가한다.
 - `rw-feature.prompt.md`:
   - `rw-plan-*` 실행 전에 feature 입력 파일을 만들 때 사용한다.
-  - feature 파일 생성 전에 **선택형 질문 2개(Q1/Q2)**를 고정으로 수행한다.
-  - 각 질문은 `A/B/C` 3지선다이며, 답변 형식은 `Q1:A, Q2:B` 또는 `A,B` 또는 `A B`를 허용한다(대소문자 무관).
-  - 1회 파싱 실패 시 `FEATURE_CHOICE_REQUIRED`를 출력하고 질문을 1회 재시도한다.
-  - 재시도에도 실패하면 기본값 `Q1:B, Q2:B`로 진행한다(무한 재질문 금지).
-  - 질문 후 `Status: READY_FOR_PLAN` 파일을 생성한다.
+  - 한 줄 입력(`featureSummary`)을 받아 feature 파일을 상세 스펙 형태로 생성한다.
+  - 선택형 질문은 사용하지 않는다.
+  - 필요할 때만 최대 2개의 짧은 보완 질문을 한다.
+  - 입력이 비어 있고 보완 질문 이후에도 요약이 없으면 `FEATURE_SUMMARY_MISSING`으로 중단한다.
+  - 생성 파일은 `Status: READY_FOR_PLAN`으로 저장된다.
 - `rw-archive.prompt.md`:
   - `Lite`/`Strict` 모두에서 `PROGRESS.md`가 커졌을 때 수동 실행한다.
   - 기준: `PROGRESS.md > 8000 chars` 또는 `completed > 20` 또는 `log > 40`.
