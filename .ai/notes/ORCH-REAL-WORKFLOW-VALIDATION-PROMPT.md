@@ -22,6 +22,8 @@
    - 변경 파일 목록
 3. 실행 증거 누락 시 해당 단계는 FAIL.
 4. 실패 시 원인 수정 후 해당 단계부터 재실행.
+5. 증거 보존 전까지 `git checkout -- <file>`, `git restore`, 브랜치 삭제 금지.
+6. 최종 보고서에 검증 시점의 `branch`와 `HEAD commit`을 반드시 기록.
 
 ## 검증 명령 선택 규칙 (언어 비종속)
 1. 프로젝트의 표준 검증 명령을 먼저 결정한다:
@@ -53,6 +55,16 @@
 3. `/Users/kaya/Documents/Github/context/context-github/.ai/PAUSE.md`, `/Users/kaya/Documents/Github/context/context-github/.ai/ARCHIVE_LOCK` 부재 확인
 4. run 재진입 가능 여부 최종 확인
 
+## 증거 보존 순서 (필수)
+1. 보고서 파일 먼저 작성: `/Users/kaya/Documents/Github/context/context-github/.ai/notes/ORCH-E2E-REAL-TEST-<YYYYMMDD-HHMM>.md`
+2. 보고서에 아래 메타데이터를 기록:
+   - 검증 브랜치명
+   - 검증 시작/종료 시각
+   - 시작 HEAD / 종료 HEAD 커밋 해시
+   - `git status --short` 요약
+3. 보고서 저장 및 필요 시 커밋 후에만 작업 트리 정리(`git checkout --`, `git restore`) 수행
+4. 브랜치 삭제는 최종 판정 공유 이후에만 수행
+
 ## 산출물
 - `/Users/kaya/Documents/Github/context/context-github/.ai/notes/ORCH-E2E-REAL-TEST-<YYYYMMDD-HHMM>.md`
 
@@ -65,3 +77,7 @@
    - 오케스트라 배포 가능/불가
    - 제품(앱) 배포 가능/불가
    - 각각의 근거 3줄 이내
+6. 검증 메타데이터:
+   - `branch`
+   - `HEAD commit`
+   - 증거 보존 완료 여부(yes/no)
