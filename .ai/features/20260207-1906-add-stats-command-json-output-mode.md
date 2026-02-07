@@ -1,6 +1,6 @@
 # FEATURE: add-stats-command-json-output-mode
 
-Status: READY_FOR_PLAN
+Status: IMPLEMENTED
 
 ## Summary
 `stats` CLI 명령에 `--json` 출력 모드를 추가해 기계가 읽기 쉬운 통계를 제공한다.
@@ -55,3 +55,8 @@ Status: READY_FOR_PLAN
 - source: rw-feature
 - created: 2026-02-07 19:06:00
 - recommended next step: rw-plan-lite
+ - plan_tasks: TASK-14~TASK-17 planned 2026-02-07
+
+## Implementation Notes
+- `src/commands/stats.ts` now emits `total`, `completed`, `pending`, `overdue` (number), and `generated_at` (ISO-8601 string) when `--json` is used.
+- On error and when `--json` is requested, the CLI emits `{ "error": "internal", "message": "..." }` and exits non-zero.

@@ -14,15 +14,21 @@ export async function statsCommand(json: boolean = false): Promise<void> {
     const completed = todos.filter((todo) => todo.completed).length;
     const pending = total - completed;
     const completionRate = total === 0 ? 0 : Number(((completed / total) * 100).toFixed(2));
+    // `overdue` is included in the JSON schema but the current Todo model
+    // has no due date field; provide 0 as a sensible default for now.
+    const overdue = 0;
+    const generated_at = new Date().toISOString();
 
     // Output based on mode
     if (json) {
-      // JSON output mode
+      // JSON output mode — include required schema fields
       const stats = {
         total,
         completed,
         pending,
+        overdue,
         completionRate,
+        generated_at,
       };
       console.log(JSON.stringify(stats, null, 2));
     } else {

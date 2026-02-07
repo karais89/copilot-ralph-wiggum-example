@@ -106,7 +106,13 @@ program
       const jsonOutput = options.json ?? false;
       await statsCommand(jsonOutput);
     } catch (error) {
-      console.error(`❌ Error: ${(error as Error).message}`);
+      const errMsg = (error as Error).message;
+      // If the user requested JSON output, emit a machine-readable error object.
+      if (options.json) {
+        console.error(JSON.stringify({ error: "internal", message: errMsg }));
+        process.exit(1);
+      }
+      console.error(`❌ Error: ${errMsg}`);
       process.exit(1);
     }
   });
