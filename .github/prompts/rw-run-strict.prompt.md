@@ -30,30 +30,45 @@ Step 0 (Mandatory):
 4) Do not modify any file before Step 0 completes.
 
 Important:
-- If `#tool:agent/runSubagent` is unavailable, fail immediately with: `runSubagent unavailable`
 - The orchestrator must never edit product code under `src/`.
 - The orchestrator may edit only: <PROGRESS>, <PLAN> (`Feature Notes` append-only), and `.ai/progress-archive/*`.
 - During Strict runs, the orchestrator never performs archive directly; archive is manual via `rw-archive.prompt.md`.
+- If `#tool:agent/runSubagent` is unavailable, switch to manual fallback mode (do not continue autonomous loop).
 
 ## Loop
 Repeat:
   1) If `.ai/PAUSE.md` exists, print "⏸️ PAUSE.md detected. Remove it to resume." and stop
-  2) If <PROGRESS> does not exist, create it by listing all `TASK-*.md` from <TASKS> as `pending`
-  3) Scan `TASK-*.md` in <TASKS>; add as `pending` only task IDs that are missing from both:
+  2) If `.ai/ARCHIVE_LOCK` exists, print "⛔ Archive lock detected (.ai/ARCHIVE_LOCK). Wait for archive completion, then retry." and stop
+  3) If <PROGRESS> does not exist, create it by listing all `TASK-*.md` from <TASKS> as `pending`
+  4) Scan `TASK-*.md` in <TASKS>; add as `pending` only task IDs that are missing from both:
      - active Task Status table in <PROGRESS>
      - every `.ai/progress-archive/STATUS-*.md` file (glob)
-  4) Read <PROGRESS> to determine whether unfinished tasks remain
-  5) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars:
+  5) Read <PROGRESS> to determine whether unfinished tasks remain
+  6) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars:
      print "📦 Manual archive required. Keep .ai/PAUSE.md present, run rw-archive.prompt.md, then resume." and stop
-  6) If <PROGRESS> Log contains `REVIEW-ESCALATE`, print "🛑 A task failed review 3 times. Manual intervention required." and stop
-  7) If active Task Status has no `pending`/`in-progress` rows, and every TASK ID from <TASKS> exists in either:
+  7) If <PROGRESS> Log contains `REVIEW-ESCALATE`, print "🛑 A task failed review 3 times. Manual intervention required." and stop
+  8) If active Task Status has no `pending`/`in-progress` rows, and every TASK ID from <TASKS> exists in either:
      - active <PROGRESS> Task Status table, or
      - any `.ai/progress-archive/STATUS-*.md` file (glob),
      then print "✅ All tasks completed." and exit
-  8) Call `#tool:agent/runSubagent` with SUBAGENT_PROMPT exactly as provided below
-  9) Re-check <PROGRESS> after implementation subagent completes
-  10) Call `#tool:agent/runSubagent` with REVIEWER_PROMPT exactly as provided below
-  11) Re-check <PROGRESS> and repeat
+  9) If `#tool:agent/runSubagent` is unavailable:
+     - print `runSubagent unavailable`
+     - print `MANUAL_FALLBACK_REQUIRED`
+     - print manual checklist:
+       a) choose one dependency-satisfied `pending` task from <PROGRESS>
+       b) implement only that task in product code
+       c) run build/verification commands and fix issues
+       d) run manual review against the task Acceptance Criteria
+       e) if review fails: append `REVIEW_FAIL TASK-XX (n/3): <root-cause>` and revert status to `pending`
+       f) if review passes: set status to `completed` and append one `TASK-XX completed` log line
+       g) if failures reach 3: append `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required` and stop
+       h) commit with a conventional commit message
+       i) rerun this prompt after manual completion
+     - stop
+  10) Call `#tool:agent/runSubagent` with SUBAGENT_PROMPT exactly as provided below
+  11) Re-check <PROGRESS> after implementation subagent completes
+  12) Call `#tool:agent/runSubagent` with REVIEWER_PROMPT exactly as provided below
+  13) Re-check <PROGRESS> and repeat
 
 ## Rules
 - Invoke runSubagent sequentially (one at a time)

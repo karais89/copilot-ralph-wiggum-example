@@ -65,10 +65,11 @@
   - `Lite`/`Strict` 모두에서 `PROGRESS.md`가 커졌을 때 수동 실행한다.
   - 기준: `PROGRESS.md > 8000 chars` 또는 `completed > 20` 또는 `log > 40`.
   - 반드시 run 루프가 멈춘 상태(`.ai/PAUSE.md` 존재)에서 실행한다.
+  - archive 중에는 `.ai/ARCHIVE_LOCK`이 생성되며, lock이 있으면 다른 archive 실행을 중단한다.
 
 ## Lite 운영 규칙
 
-- `runSubagent`가 없으면 즉시 실패 처리한다.
+- `runSubagent`가 없으면 자동 루프를 중단하고 수동 fallback 절차를 출력한다.
 - 오케스트레이터는 `src/` 코드를 직접 수정하지 않는다.
 - `PLAN.md`는 `Feature Notes`만 append 한다.
 - 태스크는 `TASK-XX` 번호를 유지한다.
@@ -76,6 +77,17 @@
 - archive 임계치(`completed > 20` 또는 `PROGRESS > 8000 chars`)를 넘기면 경고를 출력하지만 실행은 계속된다.
 - 경고가 나오면 `.ai/PAUSE.md`를 만든 뒤 `rw-archive.prompt.md`를 수동 실행하고 재개하는 것을 권장한다.
 - 중단이 필요하면 `.ai/PAUSE.md`를 만든다.
+
+## runSubagent fallback
+
+- 트리거: `runSubagent unavailable` 감지 시
+- 공통 동작:
+  - 자동 오케스트레이션 루프를 즉시 중지한다.
+  - `MANUAL_FALLBACK_REQUIRED` 안내와 함께 수동 체크리스트를 출력한다.
+  - 사용자는 단일 태스크를 수동 구현/검증/커밋하고 `PROGRESS`를 갱신한 뒤 프롬프트를 재실행한다.
+- Strict 추가 규칙:
+  - 수동 리뷰 실패 시 `REVIEW_FAIL TASK-XX (n/3)`를 기록하고 상태를 `pending`으로 되돌린다.
+  - 3회 실패 시 `REVIEW-ESCALATE TASK-XX (3/3)`를 기록하고 중단한다.
 
 ## 태스크 템플릿 (요약)
 

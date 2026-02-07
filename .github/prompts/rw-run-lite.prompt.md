@@ -30,22 +30,34 @@ Step 0 (Mandatory):
 4) Do not modify any file before Step 0 completes.
 
 Important:
-- If `#tool:agent/runSubagent` is unavailable, fail immediately with: `runSubagent unavailable`
 - The orchestrator must never edit product code under `src/`.
 - Assume one orchestrator session only (no concurrent orchestrators).
+- If `#tool:agent/runSubagent` is unavailable, switch to manual fallback mode (do not continue autonomous loop).
 
 ## Loop
 Repeat:
   1) If `.ai/PAUSE.md` exists, print "⏸️ PAUSE.md detected. Remove it to resume." and stop
-  2) If <PROGRESS> does not exist, create it by listing all `TASK-*.md` from <TASKS> as `pending`
-  3) Scan `TASK-*.md` in <TASKS> and append missing task rows to the Task Status table in <PROGRESS> as `pending`
-  4) Read <PROGRESS> to determine whether unfinished tasks remain
-  5) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars:
+  2) If `.ai/ARCHIVE_LOCK` exists, print "⛔ Archive lock detected (.ai/ARCHIVE_LOCK). Wait for archive completion, then retry." and stop
+  3) If <PROGRESS> does not exist, create it by listing all `TASK-*.md` from <TASKS> as `pending`
+  4) Scan `TASK-*.md` in <TASKS> and append missing task rows to the Task Status table in <PROGRESS> as `pending`
+  5) Read <PROGRESS> to determine whether unfinished tasks remain
+  6) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars:
      print "⚠️ PROGRESS is growing large. The loop will continue. Recommended: create .ai/PAUSE.md, then run rw-archive.prompt.md manually."
-  6) If no `pending` or `in-progress` rows exist in Task Status, print "✅ All tasks completed." and exit
-  7) Call `#tool:agent/runSubagent` with SUBAGENT_PROMPT exactly as provided below
-  8) Re-check <PROGRESS> after the subagent finishes
-  9) Repeat
+  7) If no `pending` or `in-progress` rows exist in Task Status, print "✅ All tasks completed." and exit
+  8) If `#tool:agent/runSubagent` is unavailable:
+     - print `runSubagent unavailable`
+     - print `MANUAL_FALLBACK_REQUIRED`
+     - print manual checklist:
+       a) choose one dependency-satisfied `pending` task from <PROGRESS>
+       b) implement only that task in product code
+       c) run build/verification commands and fix issues
+       d) update <PROGRESS> status to `completed` and append one `TASK-XX completed` log line
+       e) commit with a conventional commit message
+       f) rerun this prompt after manual completion
+     - stop
+  9) Call `#tool:agent/runSubagent` with SUBAGENT_PROMPT exactly as provided below
+  10) Re-check <PROGRESS> after the subagent finishes
+  11) Repeat
 
 ## Rules
 - Invoke runSubagent sequentially (one at a time)

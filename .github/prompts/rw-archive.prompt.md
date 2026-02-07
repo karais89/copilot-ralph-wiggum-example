@@ -9,6 +9,7 @@ Language policy reference: `.ai/CONTEXT.md`
 Quick summary:
 - Manually archive completed rows and older logs from `.ai/PROGRESS.md`.
 - Require `.ai/PAUSE.md` before archive.
+- Use `.ai/ARCHIVE_LOCK` to prevent concurrent archive runs.
 - Keep all review logs (`REVIEW_FAIL` / `REVIEW-ESCALATE`) in active PROGRESS.
 
 Step 0 (Mandatory):
@@ -19,6 +20,7 @@ Step 0 (Mandatory):
 
 You will ONLY edit these files:
 - .ai/PROGRESS.md
+- .ai/ARCHIVE_LOCK (create/delete for lock)
 - .ai/progress-archive/STATUS-YYYYMMDD-HHMM.md (create/append)
 - .ai/progress-archive/LOG-YYYYMMDD-HHMM.md (create/append)
 - .ai/progress-archive/README.md (optional)
@@ -26,6 +28,11 @@ You will ONLY edit these files:
 Rules:
 - Before any archive operation, ensure `.ai/PAUSE.md` exists. If not, stop immediately with:
   "⛔ rw-run may still be active. Create .ai/PAUSE.md first, then retry rw-archive."
+- If `.ai/ARCHIVE_LOCK` already exists, stop immediately with:
+  "⛔ Archive lock detected (.ai/ARCHIVE_LOCK). Another archive may be running."
+- Before mutating PROGRESS or archive files, create `.ai/ARCHIVE_LOCK` with a timestamp line.
+- On successful completion, delete `.ai/ARCHIVE_LOCK`.
+- If archive cannot complete safely, keep `.ai/ARCHIVE_LOCK` and report manual recovery steps.
 - Keep PROGRESS.md small (active tasks only).
 - If .ai/PROGRESS.md is > 8000 chars OR completed rows > 20 OR log entries > 40, run archive.
 - This prompt is the only archive path for both Lite and Strict. Always run manually while `.ai/PAUSE.md` is present.

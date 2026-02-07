@@ -30,8 +30,11 @@
 - 프롬프트 사전 점검 출력 토큰:
   - `LANG_POLICY_MISSING`
   - `LANGUAGE_POLICY_LOADED: <single-line summary>`
+- fallback 출력 토큰:
+  - `MANUAL_FALLBACK_REQUIRED`
 - 파일/경로 계약:
   - `.ai/PAUSE.md`
+  - `.ai/ARCHIVE_LOCK`
   - `.ai/progress-archive/STATUS-*.md`
   - `.ai/progress-archive/LOG-*.md`
   - `.ai/PLAN.md`의 `## Feature Notes (append-only)`
@@ -53,3 +56,5 @@
 4. 실행/아카이브 안전 규칙:
    - 동일 워크스페이스에서 오케스트레이터 동시 실행 금지
    - `rw-archive`는 `.ai/PAUSE.md`가 있는 상태에서만 실행
+   - `rw-archive` 실행 시 `.ai/ARCHIVE_LOCK`를 사용해 동시 archive를 방지
+5. `runSubagent` 미지원 환경에서는 즉시 종료하지 않고 수동 fallback 절차를 출력한 뒤 안전 중지한다.
