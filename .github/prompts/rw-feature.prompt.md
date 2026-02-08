@@ -46,7 +46,7 @@ Workflow:
 5) Resolve initial summary:
    - Use `featureSummary` if provided.
    - If missing, use `#tool:vscode/askQuestions` with one open-ended question:
-     - "What feature should be added?"
+     - "What feature should be added? (Example: add export command with date filter)"
    - If `#tool:vscode/askQuestions` is unavailable, ask the same question in chat once.
    - If still missing after that single interaction, stop immediately and output exactly: `FEATURE_SUMMARY_MISSING`.
 6) If high-impact ambiguity remains after reading summary + repository context, use `#tool:vscode/askQuestions` once for clarification:
