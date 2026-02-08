@@ -20,14 +20,21 @@ Step 0 (Mandatory):
 
 You will ONLY edit these files:
 - .ai/PROGRESS.md
+- .ai/PAUSE.md (optional create for archive preflight)
 - .ai/ARCHIVE_LOCK (create/delete for lock)
 - .ai/progress-archive/STATUS-YYYYMMDD-HHMM.md (create/append)
 - .ai/progress-archive/LOG-YYYYMMDD-HHMM.md (create/append)
 - .ai/progress-archive/README.md (optional)
 
 Rules:
-- Before any archive operation, ensure `.ai/PAUSE.md` exists. If not, stop immediately with:
-  "⛔ rw-run may still be active. Create .ai/PAUSE.md first, then retry rw-archive."
+- Before any archive operation, ensure `.ai/PAUSE.md` exists.
+  - If `.ai/PAUSE.md` is missing, resolve once via `#tool:vscode/askQuestions` single choice (in resolved user-document language from `.ai/CONTEXT.md`):
+    - `Create .ai/PAUSE.md and continue rw-archive`
+    - `Cancel`
+  - If `#tool:vscode/askQuestions` is unavailable, ask the same single-choice confirmation in chat once.
+  - If user selects create, create `.ai/PAUSE.md` with one timestamp line and continue.
+  - If user selects cancel or no valid selection is obtained after that single interaction, stop immediately with:
+    "⛔ rw-run may still be active. Create .ai/PAUSE.md first, then retry rw-archive."
 - If `.ai/ARCHIVE_LOCK` already exists, stop immediately with:
   "⛔ Archive lock detected (.ai/ARCHIVE_LOCK). Another archive may be running."
 - Before mutating PROGRESS or archive files, create `.ai/ARCHIVE_LOCK` with a timestamp line.
