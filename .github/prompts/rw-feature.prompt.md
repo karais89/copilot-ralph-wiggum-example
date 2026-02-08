@@ -74,7 +74,7 @@ Workflow:
 10) In `Notes`, include:
    - source (`rw-feature`)
    - created timestamp
-   - recommended next step (`rw-plan-lite` or `rw-plan-strict`)
+1   - recommended next step (`rw-plan-lite` or `rw-plan-strict`)
 
 Output format at end:
 - Created feature file path
