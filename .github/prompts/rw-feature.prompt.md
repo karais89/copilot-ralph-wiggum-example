@@ -49,8 +49,12 @@ Workflow:
      - "What feature should be added?"
    - If `#tool:vscode/askQuestions` is unavailable, ask the same question in chat once.
    - If still missing after that single interaction, stop immediately and output exactly: `FEATURE_SUMMARY_MISSING`.
-6) Ask up to 2 short open clarifying questions only when necessary for high-impact ambiguity.
-7) If user does not provide enough detail after questions, apply safe defaults:
+6) If high-impact ambiguity remains after reading summary + repository context, use `#tool:vscode/askQuestions` once for clarification:
+   - Prefer single-choice options (2-4 choices + optional `AI_DECIDE`) when practical.
+   - Use one short open-ended question only if options are not practical.
+   - If `#tool:vscode/askQuestions` is unavailable, ask the same clarification in chat once.
+   - Do not run repeated clarification rounds.
+7) If user does not provide enough detail after that single clarification batch, apply safe defaults:
    - Constraints: backward compatible, minimal scope, project-defined canonical validation commands must pass.
    - Acceptance: user-visible behavior works, clear error messages, and at least one canonical verification command succeeds with exit code 0.
 8) Build slug from summary and generate filename `YYYYMMDD-HHMM-<slug>.md` using local time.
@@ -74,7 +78,7 @@ Workflow:
 10) In `Notes`, include:
    - source (`rw-feature`)
    - created timestamp
-1   - recommended next step (`rw-plan-lite` or `rw-plan-strict`)
+   - recommended next step (`rw-plan-lite` or `rw-plan-strict`)
 
 Output format at end:
 - Created feature file path
