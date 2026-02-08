@@ -45,8 +45,10 @@ Workflow:
 4) Resolve output language for user-facing prose from `.ai/CONTEXT.md` (user document language policy).
 5) Resolve initial summary:
    - Use `featureSummary` if provided.
-   - If missing, ask one short direct question: "What feature should be added?"
-   - If still missing after that question, stop immediately and output exactly: `FEATURE_SUMMARY_MISSING`.
+   - If missing, use `#tool:vscode/askQuestions` with one open-ended question:
+     - "What feature should be added?"
+   - If `#tool:vscode/askQuestions` is unavailable, ask the same question in chat once.
+   - If still missing after that single interaction, stop immediately and output exactly: `FEATURE_SUMMARY_MISSING`.
 6) Ask up to 2 short open clarifying questions only when necessary for high-impact ambiguity.
 7) If user does not provide enough detail after questions, apply safe defaults:
    - Constraints: backward compatible, minimal scope, project-defined canonical validation commands must pass.
