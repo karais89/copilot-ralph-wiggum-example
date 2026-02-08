@@ -3,7 +3,7 @@ Title: Documentation examples and small integration test
 Dependencies: TASK-14, TASK-15, TASK-16
 
 Description:
-- Add example usage to README and feature docs demonstrating both text and JSON outputs. Add a lightweight integration check that runs `node dist/index.js stats --json` after build in a local script.
+- Add example usage to README and feature docs demonstrating both text and JSON outputs. Add a lightweight integration check that runs `node dist/src/index.js stats --json` after build in a local script.
 
 Acceptance Criteria:
 - README includes an example JSON output and a note about `generated_at` timezone (UTC recommended).

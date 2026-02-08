@@ -21,5 +21,5 @@ Implement the JSON file-based storage layer. This module handles reading from an
 ## Verification
 
 - Run `npm run build` and confirm no build errors.
-- Run `node dist/index.js list` with no existing todo file and confirm it handles missing storage without crashing.
-- Run `echo '{' > data/todos.json && node dist/index.js list` and confirm parse failure is surfaced as a controlled error message (no stack trace).
+- Run `node dist/src/index.js list` with no existing todo file and confirm it handles missing storage without crashing.
+- Run `echo '{' > data/todos.json && node dist/src/index.js list` and confirm parse failure is surfaced as a controlled error message (no stack trace).

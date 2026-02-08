@@ -31,7 +31,7 @@ Step 0 (Mandatory):
 
 Important:
 - The orchestrator must never edit product code under `src/`.
-- The orchestrator may edit only: <PROGRESS>, <PLAN> (`Feature Notes` append-only), and `.ai/progress-archive/*`.
+- The orchestrator may edit only: <PROGRESS>, <PLAN> (`Feature Notes` append-only), `.ai/tasks/TASK-XX-*.md` (new files only when adding scope), and `.ai/progress-archive/*`.
 - During Strict runs, the orchestrator never performs archive directly; archive is manual via `rw-archive.prompt.md`.
 - If `#tool:agent/runSubagent` is unavailable, switch to manual fallback mode (do not continue autonomous loop).
 

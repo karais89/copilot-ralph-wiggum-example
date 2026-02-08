@@ -37,6 +37,7 @@ Feature input resolution (required):
 2) If `.ai/features/` is missing or unreadable, stop immediately and print:
    - first line exactly: `FEATURES_DIR_MISSING`
    - then a short fix guide:
+     - run `.github/prompts/rw-feature.prompt.md` first (recommended)
      - create directory `.ai/features/`
      - create one feature file from `.ai/features/FEATURE-TEMPLATE.md`
      - save as `YYYYMMDD-HHMM-<slug>.md`
@@ -47,6 +48,7 @@ Feature input resolution (required):
 4) If no input-file candidates exist, stop immediately and print:
    - first line exactly: `FEATURE_FILE_MISSING`
    - then a short fix guide:
+     - run `.github/prompts/rw-feature.prompt.md` to create one READY file (recommended)
      - copy `.ai/features/FEATURE-TEMPLATE.md` to `.ai/features/YYYYMMDD-HHMM-<slug>.md`
      - set `Status: READY_FOR_PLAN`
 5) From input-file candidates, select files with exact line: `Status: READY_FOR_PLAN`.

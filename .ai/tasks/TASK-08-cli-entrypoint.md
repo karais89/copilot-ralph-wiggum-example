@@ -23,5 +23,5 @@ Wire up all commands into the main CLI entry point using Commander.js. Configure
 ## Verification
 
 - Run `npm run build` and confirm CLI compiles.
-- Run `node dist/index.js --help` and confirm all commands (`add`, `list`, `done`, `delete`) are listed.
-- Run `node dist/index.js add --help` (and other commands) and confirm command-specific help text is displayed.
+- Run `node dist/src/index.js --help` and confirm all commands (`add`, `list`, `done`, `delete`) are listed.
+- Run `node dist/src/index.js add --help` (and other commands) and confirm command-specific help text is displayed.

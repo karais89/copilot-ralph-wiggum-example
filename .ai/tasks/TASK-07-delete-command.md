@@ -20,6 +20,6 @@ Implement the `delete` command that permanently removes a todo from storage.
 ## Verification
 
 - Run `npm run build` and confirm no build errors.
-- Run `node dist/index.js delete <full-id>` and confirm the todo is removed.
-- Run `node dist/index.js delete <id-prefix>` and confirm prefix matching works.
-- Run `node dist/index.js delete unknown` and confirm user-friendly not-found error is shown.
+- Run `node dist/src/index.js delete <full-id>` and confirm the todo is removed.
+- Run `node dist/src/index.js delete <id-prefix>` and confirm prefix matching works.
+- Run `node dist/src/index.js delete unknown` and confirm user-friendly not-found error is shown.

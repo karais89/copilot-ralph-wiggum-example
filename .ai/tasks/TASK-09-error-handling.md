@@ -25,5 +25,5 @@ Add comprehensive error handling across all commands and the main entry point. E
 ## Verification
 
 - Run `npm run build` and confirm no build errors.
-- Run commands with missing arguments (e.g., `node dist/index.js done`) and confirm usage hints are shown.
+- Run commands with missing arguments (e.g., `node dist/src/index.js done`) and confirm usage hints are shown.
 - Temporarily break `data/todos.json` (invalid JSON) and confirm error output is controlled and readable.

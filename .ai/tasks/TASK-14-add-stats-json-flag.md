@@ -6,7 +6,7 @@ Description:
 - Add a `--json` (or `-j`) option to the existing `stats` CLI command so that when provided, the command outputs machine-parseable JSON instead of (or in addition to) human-friendly text.
 
 Acceptance Criteria:
-- `node dist/index.js stats --json` exits 0 and prints valid JSON to stdout.
+- `node dist/src/index.js stats --json` exits 0 and prints valid JSON to stdout.
 - When `--json` is not provided, existing text output remains unchanged.
 
 Files to Create/Modify:
@@ -14,5 +14,5 @@ Files to Create/Modify:
 - `src/index.ts` (if CLI option wiring is required)
 
 Verification:
-- Manual run: `node dist/index.js stats --json` and `node dist/index.js stats` show expected outputs.
+- Manual run: `node dist/src/index.js stats --json` and `node dist/src/index.js stats` show expected outputs.
 - Unit/integration tests added in TASK-16 pass.

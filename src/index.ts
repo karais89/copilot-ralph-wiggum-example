@@ -6,6 +6,7 @@ import { listCommand } from "./commands/list.js";
 import { doneCommand } from "./commands/update.js";
 import { deleteCommand } from "./commands/delete.js";
 import { statsCommand } from "./commands/stats.js";
+import { clearCommand } from "./commands/clear.js";
 
 // Global error handlers to prevent crashes from unhandled exceptions
 process.on("uncaughtException", (error: Error) => {
@@ -113,6 +114,19 @@ program
         process.exit(1);
       }
       console.error(`❌ Error: ${errMsg}`);
+      process.exit(1);
+    }
+  });
+
+// Clear command: todo clear
+program
+  .command("clear")
+  .description("Clear all completed todos")
+  .action(async () => {
+    try {
+      await clearCommand();
+    } catch (error) {
+      console.error(`❌ Error: ${(error as Error).message}`);
       process.exit(1);
     }
   });
