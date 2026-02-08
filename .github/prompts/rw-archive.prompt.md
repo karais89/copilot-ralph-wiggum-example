@@ -20,7 +20,7 @@ Step 0 (Mandatory):
 
 You will ONLY edit these files:
 - .ai/PROGRESS.md
-- .ai/PAUSE.md (optional create for archive preflight)
+- .ai/PAUSE.md (optional create/delete for archive preflight)
 - .ai/ARCHIVE_LOCK (create/delete for lock)
 - .ai/progress-archive/STATUS-YYYYMMDD-HHMM.md (create/append)
 - .ai/progress-archive/LOG-YYYYMMDD-HHMM.md (create/append)
@@ -32,13 +32,14 @@ Rules:
     - `Create .ai/PAUSE.md and continue rw-archive`
     - `Cancel`
   - If `#tool:vscode/askQuestions` is unavailable, ask the same single-choice confirmation in chat once.
-  - If user selects create, create `.ai/PAUSE.md` with one timestamp line and continue.
+  - If user selects create, create `.ai/PAUSE.md` with one timestamp line, set internal flag `pause_created_by_archive=true`, and continue.
   - If user selects cancel or no valid selection is obtained after that single interaction, stop immediately with:
     "⛔ rw-run may still be active. Create .ai/PAUSE.md first, then retry rw-archive."
 - If `.ai/ARCHIVE_LOCK` already exists, stop immediately with:
   "⛔ Archive lock detected (.ai/ARCHIVE_LOCK). Another archive may be running."
 - Before mutating PROGRESS or archive files, create `.ai/ARCHIVE_LOCK` with a timestamp line.
 - On successful completion, delete `.ai/ARCHIVE_LOCK`.
+- If `pause_created_by_archive=true`, also delete `.ai/PAUSE.md` automatically before finishing.
 - If archive cannot complete safely, keep `.ai/ARCHIVE_LOCK` and report manual recovery steps.
 - Keep PROGRESS.md small (active tasks only).
 - If .ai/PROGRESS.md is > 8000 chars OR completed rows > 20 OR log entries > 40, run archive.
