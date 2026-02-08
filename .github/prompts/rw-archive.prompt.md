@@ -27,22 +27,45 @@ You will ONLY edit these files:
 - .ai/progress-archive/README.md (optional)
 
 Rules:
+- First, inspect active `.ai/PROGRESS.md` and compute:
+  - total character count
+  - completed Task Status row count
+  - Log entry count
+  Then set `archive_needed=true` if any condition is met:
+  - char count > 8000
+  - completed rows > 20
+  - log entries > 40
+- If `archive_needed=false`, resolve force-run once via `#tool:vscode/askQuestions` single choice (in resolved user-document language from `.ai/CONTEXT.md`):
+  - `Force archive now`
+  - `Skip archive (recommended)`
+  - If `#tool:vscode/askQuestions` is unavailable, ask the same single-choice confirmation in chat once.
+  - If `Force archive now` is selected, set `force_archive=true` and continue.
+  - If `Skip archive` is selected or no valid selection is obtained after that single interaction:
+    - do not create `.ai/ARCHIVE_LOCK`
+    - do not create archive output files
+    - if `.ai/PAUSE.md` contains exact line `created-by: rw-archive-preflight`, delete `.ai/PAUSE.md` before finishing
+    - finish with a no-op summary
+- Do not use open-ended follow-up text like "if you want forced archive, tell me". Use the single-choice askQuestions flow above.
 - Before any archive operation, ensure `.ai/PAUSE.md` exists.
   - If `.ai/PAUSE.md` is missing, resolve once via `#tool:vscode/askQuestions` single choice (in resolved user-document language from `.ai/CONTEXT.md`):
     - `Create .ai/PAUSE.md and continue rw-archive`
     - `Cancel`
   - If `#tool:vscode/askQuestions` is unavailable, ask the same single-choice confirmation in chat once.
-  - If user selects create, create `.ai/PAUSE.md` with one timestamp line, set internal flag `pause_created_by_archive=true`, and continue.
+  - If user selects create, create `.ai/PAUSE.md` with:
+    - one timestamp line
+    - one ownership marker line: `created-by: rw-archive-preflight`
+    and continue.
   - If user selects cancel or no valid selection is obtained after that single interaction, stop immediately with:
     "⛔ rw-run may still be active. Create .ai/PAUSE.md first, then retry rw-archive."
 - If `.ai/ARCHIVE_LOCK` already exists, stop immediately with:
   "⛔ Archive lock detected (.ai/ARCHIVE_LOCK). Another archive may be running."
 - Before mutating PROGRESS or archive files, create `.ai/ARCHIVE_LOCK` with a timestamp line.
 - On successful completion, delete `.ai/ARCHIVE_LOCK`.
-- If `pause_created_by_archive=true`, also delete `.ai/PAUSE.md` automatically before finishing.
+- On successful completion, if `.ai/PAUSE.md` contains exact line `created-by: rw-archive-preflight`, delete `.ai/PAUSE.md` automatically before finishing.
+- If the marker line is absent, do not delete `.ai/PAUSE.md`.
 - If archive cannot complete safely, keep `.ai/ARCHIVE_LOCK` and report manual recovery steps.
 - Keep PROGRESS.md small (active tasks only).
-- If .ai/PROGRESS.md is > 8000 chars OR completed rows > 20 OR log entries > 40, run archive.
+- Run archive only when `archive_needed=true` or `force_archive=true`.
 - This prompt is the only archive path for both Lite and Strict. Always run manually while `.ai/PAUSE.md` is present.
 - In PROGRESS.md keep:
   - Task Status table: pending/in-progress only
