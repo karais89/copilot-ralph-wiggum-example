@@ -45,14 +45,15 @@ Workflow:
 4) Resolve output language for user-facing prose from `.ai/CONTEXT.md` (user document language policy).
 5) Resolve initial summary:
    - Use `featureSummary` if provided.
-   - If missing, use `#tool:vscode/askQuestions` with one open-ended question:
-     - "What feature should be added? (Example: add export command with date filter)"
-   - If `#tool:vscode/askQuestions` is unavailable, ask the same question in chat once.
+   - If missing, use `#tool:vscode/askQuestions` with one open-ended question written in the resolved user-document language from Step 4.
+   - Question intent (do not hardcode this English string in output): "What feature should be added? (Example: add export command with date filter)"
+   - If `#tool:vscode/askQuestions` is unavailable, ask the same localized question in chat once.
    - If still missing after that single interaction, stop immediately and output exactly: `FEATURE_SUMMARY_MISSING`.
 6) If high-impact ambiguity remains after reading summary + repository context, use `#tool:vscode/askQuestions` once for clarification:
    - Prefer single-choice options (2-4 choices + optional `AI_DECIDE`) when practical.
    - Use one short open-ended question only if options are not practical.
-   - If `#tool:vscode/askQuestions` is unavailable, ask the same clarification in chat once.
+   - Clarification questions/options must be written in the resolved user-document language from Step 4.
+   - If `#tool:vscode/askQuestions` is unavailable, ask the same localized clarification in chat once.
    - Do not run repeated clarification rounds.
 7) If user does not provide enough detail after that single clarification batch, apply safe defaults:
    - Constraints: backward compatible, minimal scope, project-defined canonical validation commands must pass.
