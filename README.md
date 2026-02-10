@@ -1,229 +1,170 @@
-# Todo CLI
+# Ralph Wiggum Orchestration — Copilot Example
 
-A simple and elegant command-line Todo application built with Node.js and TypeScript. Manage your tasks directly from the terminal with intuitive commands.
+An AI-driven software development orchestration technique for **GitHub Copilot** (VS Code). Uses Copilot's `runSubagent` tool to autonomously implement projects through a coordinated system of orchestrator and subagent AI agents.
 
-## Features
+This repository serves two purposes:
 
-- ✅ Add, list, complete, and delete todos
-- 💾 Persistent storage using local JSON file
-- 🎨 Clean, formatted output with status indicators
-- ⚡ Fast and lightweight
-- 🔍 ID prefix matching for easy task management
-- 🛡️ Comprehensive error handling
+1. **The RW orchestration template** — 7 reusable prompt files + structural docs that can be extracted and dropped into any project
+2. **A working example** — A Todo CLI app built entirely by this technique (70+ commits, 20 tasks, zero manual coding)
 
-## Tech Stack
+## How It Works
 
-- **Runtime**: Node.js (>=18)
-- **Language**: TypeScript (strict mode)
-- **CLI Framework**: Commander.js
-- **Storage**: Local JSON file (`data/todos.json`)
-- **Build Tool**: TypeScript Compiler (tsc)
+```
+rw-init  →  rw-feature  →  rw-plan-*  →  rw-run-*  →  rw-archive
+(1회)       (기능별)        (계획)        (자동 루프)    (수동)
+```
 
-## Installation
+1. **`rw-init`** — Bootstraps the `.ai/` workspace (PLAN, PROGRESS, tasks)
+2. **`rw-feature`** — Creates a structured feature specification file
+3. **`rw-plan-lite` / `rw-plan-strict`** — Breaks features into 3-8 atomic tasks
+4. **`rw-run-lite` / `rw-run-strict`** — Orchestration loop: spawns subagents to implement tasks sequentially until all complete
+5. **`rw-archive`** — Archives completed progress when it grows large
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/karais89/copilot-ralph-wiggum-example.git
-   cd copilot-ralph-wiggum-example
-   ```
+### Two Modes
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+| | Lite | Strict |
+|---|---|---|
+| Reviewer subagent | No | Yes (validates each task) |
+| Review failure tracking | N/A | `REVIEW_FAIL` (1/3, 2/3) → `REVIEW-ESCALATE` (3/3) |
+| Archive on threshold | Warning only (continues) | Hard stop (manual archive required) |
+| Best for | Small/fast features | Critical/complex features |
 
-3. **Build the project**
-   ```bash
-   npm run build
-   ```
+### Key Benefits
 
-4. **Link the CLI globally (optional)**
-   ```bash
-   npm link
-   ```
+- **Cost efficiency** — 1 premium request can drive an entire project
+- **Context isolation** — Each subagent gets a fresh context, preventing "message too big" errors
+- **Full traceability** — Every step logged in PROGRESS.md and committed
+- **Autonomous execution** — Can run for hours without supervision
+- **Language/toolchain agnostic** — Prompts contain zero hardcoded language or framework references
 
-   After linking, you can use the `todo` command from anywhere in your terminal.
+## Use in Your Own Project
 
-## Usage
-
-### Add a New Todo
-
-Create a new todo item with a title:
+### Option 1: Extract Template (Recommended)
 
 ```bash
-todo add "Buy groceries"
+git clone https://github.com/karais89/copilot-ralph-wiggum-example.git
+cd copilot-ralph-wiggum-example
+
+# Extract only the RW template files into your project
+./scripts/extract-template.sh ~/your-project
 ```
 
-Output:
+This copies 11 files into your project:
+
 ```
-✔ Added todo: "Buy groceries" (abc12345)
+your-project/
+├── .github/prompts/           # 7 orchestration prompts
+│   ├── rw-init.prompt.md
+│   ├── rw-feature.prompt.md
+│   ├── rw-plan-lite.prompt.md
+│   ├── rw-plan-strict.prompt.md
+│   ├── rw-run-lite.prompt.md
+│   ├── rw-run-strict.prompt.md
+│   └── rw-archive.prompt.md
+└── .ai/                       # Structural files
+    ├── CONTEXT.md             # Language policy & parser tokens
+    ├── GUIDE.md               # Operational guide
+    └── features/
+        ├── FEATURE-TEMPLATE.md
+        └── README.md
 ```
 
-### List All Todos
+### Option 2: Manual Copy
 
-Display all your todos with their status:
+Copy these paths from this repo into your project:
+- `.github/prompts/*.prompt.md` (all 7 files)
+- `.ai/CONTEXT.md`
+- `.ai/GUIDE.md`
+- `.ai/features/FEATURE-TEMPLATE.md`
+- `.ai/features/README.md`
+
+Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`
+
+### After Extraction
+
+1. Open your project in VS Code with GitHub Copilot
+2. Open Copilot Chat and run **`rw-init`** — this creates `PLAN.md`, `PROGRESS.md`, and initial tasks by analyzing your repo
+3. Run **`rw-feature`** to create a feature spec
+4. Run **`rw-plan-lite`** (or `rw-plan-strict`) to generate tasks
+5. Run **`rw-run-lite`** (or `rw-run-strict`) to start the autonomous loop
+
+## Orchestration File Reference
+
+### Prompts (`.github/prompts/`)
+
+| Prompt | Purpose |
+|---|---|
+| [`rw-init`](.github/prompts/rw-init.prompt.md) | Bootstrap `.ai/` workspace from repo context |
+| [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
+| [`rw-plan-lite`](.github/prompts/rw-plan-lite.prompt.md) | Generate task breakdown (Lite mode) |
+| [`rw-plan-strict`](.github/prompts/rw-plan-strict.prompt.md) | Generate task breakdown (Strict mode) |
+| [`rw-run-lite`](.github/prompts/rw-run-lite.prompt.md) | Orchestration loop (Lite mode) |
+| [`rw-run-strict`](.github/prompts/rw-run-strict.prompt.md) | Orchestration loop + reviewer (Strict mode) |
+| [`rw-archive`](.github/prompts/rw-archive.prompt.md) | Archive completed progress |
+
+### Workspace (`.ai/`)
+
+| File | Role |
+|---|---|
+| [`CONTEXT.md`](.ai/CONTEXT.md) | Language policy & machine-parseable tokens (read by every prompt at Step 0) |
+| [`GUIDE.md`](.ai/GUIDE.md) | Operational guide for the RW workflow |
+| [`PLAN.md`](.ai/PLAN.md) | Product requirements (created by `rw-init`, this file is Todo-specific in this repo) |
+| [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (created by `rw-init`) |
+| `tasks/TASK-XX-*.md` | Individual task definitions (created by `rw-plan-*`) |
+| `features/*.md` | Feature specifications (created by `rw-feature`) |
+
+### Safety Mechanisms
+
+- **Step 0** — Every prompt reads `.ai/CONTEXT.md` first; fails with `LANG_POLICY_MISSING` if missing
+- **PAUSE.md** — Create `.ai/PAUSE.md` to halt the orchestration loop
+- **ARCHIVE_LOCK** — Prevents concurrent archive operations
+- **REVIEW-ESCALATE** — (Strict mode) 3 consecutive review failures trigger escalation and halt
+- **MANUAL_FALLBACK_REQUIRED** — Graceful degradation when `runSubagent` is unavailable
+
+## Example: Todo CLI
+
+This repository includes a complete Todo CLI app as a working example of the RW technique in action. The entire app was built autonomously — from project init to error handling to documentation — across 20 tasks and 70+ commits.
+
+### Quick Start (Example App)
 
 ```bash
-todo list
+git clone https://github.com/karais89/copilot-ralph-wiggum-example.git
+cd copilot-ralph-wiggum-example
+npm install
+npm run build
+npm link    # optional: enables global 'todo' command
 ```
 
-Example output:
-```
-[ ] abc12345  Buy groceries
-[✓] def67890  Finish project documentation
-[ ] ghi11223  Call dentist
-
-Total: 3 todos
-```
-
-### Mark a Todo as Done
-
-Toggle the completion status of a todo using its ID or ID prefix:
+### Commands
 
 ```bash
-todo done abc12345
+todo add "Buy groceries"     # Add a new todo
+todo list                    # List all todos
+todo done <id>               # Toggle completion
+todo delete <id>             # Delete a todo
+todo stats                   # Show statistics
+todo stats --json            # Machine-readable JSON output
+todo clear                   # Remove completed todos
 ```
 
-Or use just the prefix:
-```bash
-todo done abc
-```
+### Tech Stack
 
-Output:
-```
-✔ Todo "Buy groceries" marked as completed
-```
+- Node.js (>=18), TypeScript (strict), Commander.js, nanoid
+- Local JSON storage (`data/todos.json`)
+- Vitest for testing
 
-Running the same command again will toggle it back to incomplete:
-```
-✔ Todo "Buy groceries" marked as incomplete
-```
-
-### Delete a Todo
-
-Permanently remove a todo using its ID or ID prefix:
+### Development Scripts
 
 ```bash
-todo delete abc12345
+npm run build   # Compile TypeScript
+npm run dev     # Run with tsx (dev mode)
+npm test        # Run tests
 ```
 
-Or use just the prefix:
-```bash
-todo delete abc
-```
+## Requirements
 
-Output:
-```
-✔ Deleted todo: "Buy groceries"
-```
-
-### Help
-
-View available commands and options:
-
-```bash
-todo --help
-```
-
-Get help for a specific command:
-
-```bash
-todo add --help
-todo list --help
-todo done --help
-todo delete --help
-```
-
-### Stats (JSON output)
-
-You can request machine-readable JSON output from the `stats` command using the `-j`/`--json` flag. The JSON includes canonical fields: `total`, `completed`, `pending`, `overdue`, `completionRate` (0-100), and `generated_at` (ISO 8601 timestamp, UTC recommended).
-
-Example:
-
-```json
-{
-   "total": 3,
-   "completed": 1,
-   "pending": 2,
-   "overdue": 0,
-   "completionRate": 33.333333333333336,
-   "generated_at": "2026-02-07T12:34:56Z"
-}
-```
-
-Note: `generated_at` is produced in ISO 8601 format. We recommend interpreting it as UTC to avoid timezone ambiguities.
-## Project Structure
-
-```
-src/
-├── index.ts          # CLI entry point with Commander setup
-├── commands/
-│   ├── add.ts        # Add command handler
-│   ├── list.ts       # List command handler
-│   ├── update.ts     # Done/update command handler
-│   └── delete.ts     # Delete command handler
-├── models/
-│   └── todo.ts       # Todo interface and type definitions
-└── storage/
-    └── json-store.ts # JSON file read/write operations
-```
-
-## Data Storage
-
-Todos are stored in a local JSON file at `data/todos.json`. The file is automatically created when you add your first todo. Each todo has the following structure:
-
-```typescript
-interface Todo {
-  id: string;          // Unique identifier (nanoid)
-  title: string;       // Task description
-  completed: boolean;  // Completion status
-  createdAt: string;   // ISO 8601 timestamp
-}
-```
-
-## Development
-
-### Scripts
-
-- `npm run build` - Compile TypeScript to JavaScript
-- `npm start` - Run the compiled CLI
-- `npm run dev` - Run the CLI in development mode with tsx
-
-### Requirements
-
-- Node.js version 18 or higher
-- npm (comes with Node.js)
-
-## About This Project
-
-This project was built using the **Ralph Wiggum technique** — an orchestration pattern that leverages VS Code Copilot's `runSubagent` tool to autonomously implement projects through a coordinated system of orchestrator and subagent AI agents.
-
-### How It Works
-
-- **Orchestrator**: Manages the overall workflow, calling subagents sequentially
-- **Subagents**: Each implements a single task independently
-- **Progress Tracking**: All work tracked through `.ai/PROGRESS.md`
-
-This approach provides:
-- ⚡ **Cost efficiency**: 1 premium request for the entire project
-- 🔄 **Context isolation**: Prevents "message too big" errors
-- 📊 **Full traceability**: Every step logged and committed
-- 🎯 **Autonomous execution**: Can run for hours without supervision
-
-### Learn More
-
-Want to use this technique for your own projects? Check out the guides:
-This README focuses on the Todo CLI product; orchestration operating rules live in `.ai/GUIDE.md`.
-
-- 📘 **[가이드](.ai/GUIDE.md)**: Ralph Wiggum 기법 사용법
-- 🧭 **[Lite Plan](.github/prompts/rw-plan-lite.prompt.md)**: 단순/빠른 계획 생성용
-- 🎭 **[Lite Orchestrator](.github/prompts/rw-run-lite.prompt.md)**: 단순/빠른 실행용
-- 🧾 **[Strict Plan](.github/prompts/rw-plan-strict.prompt.md)**: 보수적 계획 생성용
-- 🛡️ **[Strict Orchestrator](.github/prompts/rw-run-strict.prompt.md)**: reviewer + archive 포함
-- 📋 **[플랜](.ai/PLAN.md)**: 프로젝트 PRD
-- 📊 **[진행 추적](.ai/PROGRESS.md)**: 태스크 완료 상태
-
-The `.ai/` folder contains all the planning documents, task breakdowns, and progress tracking used during this project's development.
+- **VS Code** with **GitHub Copilot** (Copilot Chat with `runSubagent` support)
+- For the example Todo CLI: Node.js >= 18
 
 ## License
 
