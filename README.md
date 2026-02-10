@@ -23,8 +23,8 @@ A simple and elegant command-line Todo application built with Node.js and TypeSc
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd todo-cli
+   git clone https://github.com/karais89/copilot-ralph-wiggum-example.git
+   cd copilot-ralph-wiggum-example
    ```
 
 2. **Install dependencies**

@@ -1,7 +1,7 @@
 {
-  "name": "todo-cli",
+  "name": "copilot-ralph-wiggum-example",
   "version": "1.0.0",
-  "description": "A command-line Todo application built with Node.js and TypeScript",
+  "description": "A Todo CLI built entirely by GitHub Copilot's runSubagent orchestration using the Ralph Wiggum technique",
   "type": "module",
   "main": "dist/src/index.js",
   "bin": {
@@ -14,10 +14,21 @@
     "test": "vitest run test/stats-json.test.ts"
   },
   "keywords": [
+    "github-copilot",
+    "runSubagent",
+    "ralph-wiggum",
+    "ai-orchestration",
     "todo",
     "cli",
     "typescript"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/karais89/copilot-ralph-wiggum-example.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "license": "MIT",
   "dependencies": {
     "commander": "^14.0.3",
