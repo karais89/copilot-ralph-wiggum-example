@@ -52,6 +52,7 @@ Rules:
 - Keep `.ai/PLAN.md` concise; do not add full PRD/spec decomposition.
 - Keep machine tokens untouched where present (`Task Status`, `Log`, status enums).
 - Write user-facing content in language resolved from `.ai/CONTEXT.md` (default Korean if ambiguous).
+- Keep task section headers unchanged (`Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Verification`) and write section values/prose in the resolved user-document language.
 - Clarification-first: for ambiguous requirements, ask follow-up questions persistently before applying defaults.
 
 Workflow:
@@ -75,6 +76,7 @@ Workflow:
        - Acceptance Criteria
        - Files to Create/Modify
        - Verification
+       - Keep the section headers above exactly as written, but write all values/prose in the resolved user-document language.
    - `PROGRESS.md`:
      - If missing, create:
        - `# 진행 현황`
@@ -85,6 +87,7 @@ Workflow:
        - `## Log`
        - `- **YYYY-MM-DD** — Initial workspace scaffolded by rw-new-project.`
      - If exists, keep existing rows/logs and add only missing task rows as `pending`.
+     - For newly added rows, write the `Title` value in the same resolved user-document language.
 3) Resolve initial direction input:
    - If `projectIdea` is present, use it as seed.
    - If missing, ask one open-ended question using `#tool:vscode/askQuestions`:

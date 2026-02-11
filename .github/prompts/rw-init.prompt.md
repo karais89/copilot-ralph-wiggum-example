@@ -29,6 +29,9 @@ Critical constraints (never override):
 - Never create more than one task file during `rw-init`.
 - Never create `TASK-02` or higher during `rw-init`.
 - Never rewrite existing `PLAN.md` or `PROGRESS.md` contents wholesale.
+- Resolve user-document language from `.ai/CONTEXT.md` before writing user-facing prose (default Korean if ambiguous).
+- Keep machine/parser tokens and section headers unchanged (`Task Status`, `Log`, `pending`, `Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Verification`).
+- In `.ai/tasks/*.md` and PROGRESS `Title` cells, write human-readable values in the resolved user-document language.
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
@@ -105,6 +108,7 @@ Steps:
      - Acceptance Criteria
      - Files to Create/Modify
      - Verification
+   - Keep the section headers above exactly as written, but write each section value/prose in the resolved user-document language.
    - If task files already exist, do not generate new task files during rw-init.
    - Do NOT create `TASK-02`, `TASK-03`, etc.
 7) Initialize or update PROGRESS.md using this minimum structure:
@@ -120,6 +124,7 @@ Steps:
    - If `PROGRESS.md` already exists:
      - Keep existing Task Status rows and Log entries unchanged.
      - Add only missing TASK rows as `pending` with commit `-`.
+     - Use the same resolved user-document language for each newly added `Title` value.
    - Keep machine-parsed tokens (`Task Status`, `Log`, `pending`) exactly as written.
 8) Idempotency rules:
    - Rerunning rw-init must not erase existing task history or logs.

@@ -31,6 +31,9 @@ Rules:
 - Update PLAN.md only in `## Feature Notes (append-only)`.
 - Do not renumber or edit existing TASK IDs/files unless explicitly asked.
 - Do not implement product code.
+- Resolve user-document language from `.ai/CONTEXT.md` before writing task/progress prose (default Korean if ambiguous).
+- Keep machine/parser tokens and section headers unchanged (`Task Status`, `Log`, `pending`, `Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Verification`).
+- In `.ai/tasks/*.md` and PROGRESS `Title` cells, write human-readable values in the resolved user-document language.
 
 Feature input resolution (required):
 1) Read `.ai/features/`.
@@ -127,8 +130,10 @@ Workflow:
    - Verification
      - Use project-defined commands (do not hardcode language-specific tools unless the project is explicitly language-specific).
      - Require evidence format: `command`, `exit code`, `key output`.
+   - Keep the section headers above exactly as written, but write each section value/prose in the resolved user-document language.
 8) Update `.ai/PROGRESS.md` Task Status table by adding only new rows as `pending` with commit `-`.
    Keep existing rows unchanged.
+   - Use the same resolved user-document language for each new `Title` value.
 9) Add one new log entry in PROGRESS Log:
    - YYYY-MM-DD — Added feature planning tasks TASK-XX~TASK-YY for [feature-slug].
 10) Update selected `.ai/features/<filename>` file:
