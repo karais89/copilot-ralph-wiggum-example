@@ -47,23 +47,23 @@
 
 1. VS Code Copilot Chat에서 새 대화를 연다.
 2. 신규/빈 저장소에서는 `rw-new-project.prompt.md`를 먼저 실행한다(초기 1회).
-   - `rw-new-project`는 `rw-init + discovery` 통합 프롬프트다.
-   - `.ai` 스캐폴딩과 프로젝트 방향 확정을 한 번에 수행한다.
-3. `rw-feature.prompt.md`를 실행해 `.ai/features/`에 `READY_FOR_PLAN` 파일을 만든다.
-4. 선택한 모드의 `rw-plan-*.prompt.md` 내용을 붙여넣고 실행해 태스크를 만든다.
-5. 같은 모드의 `rw-run-*.prompt.md` 내용을 붙여넣고 실행해 오케스트레이션 루프를 돌린다.
-6. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
-7. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
-8. 스캐폴딩만 따로 필요하면 `rw-init.prompt.md`를 대안으로 사용한다.
+   - `rw-new-project`는 `rw-init + discovery + bootstrap feature/task 분해` 통합 프롬프트다.
+   - `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap task 생성까지 한 번에 수행한다.
+3. 같은 모드의 `rw-run-*.prompt.md` 내용을 붙여넣고 실행해 bootstrap 태스크를 먼저 구현한다.
+4. 이후 추가 기능은 `rw-feature.prompt.md` -> `rw-plan-*.prompt.md` -> `rw-run-*.prompt.md` 순서로 진행한다.
+5. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
+6. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
+7. 스캐폴딩만 따로 필요하면 `rw-init.prompt.md`를 대안으로 사용한다.
 
 ## 실행 순서
 
-1. 신규 프로젝트 초기화+방향 확정: `rw-new-project.prompt.md`
-2. feature 파일 생성: `rw-feature.prompt.md`
-3. 기능 추가 계획: 선택한 모드의 `rw-plan-*.prompt.md`
-4. 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
-5. 상태 확인: `.ai/PROGRESS.md`
-6. 스캐폴딩만 필요할 때(대안): `rw-init.prompt.md`
+1. 신규 프로젝트 초기화+방향 확정+bootstrap 분해: `rw-new-project.prompt.md`
+2. bootstrap 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
+3. 추가 기능 정의: `rw-feature.prompt.md`
+4. 추가 기능 계획: 선택한 모드의 `rw-plan-*.prompt.md`
+5. 추가 기능 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
+6. 상태 확인: `.ai/PROGRESS.md`
+7. 스캐폴딩만 필요할 때(대안): `rw-init.prompt.md`
 
 ## Feature 파일 입력 규칙
 
@@ -94,10 +94,10 @@
   - `CONTEXT`, PLAN/PROGRESS 뼈대, optional `TASK-01` 1개까지만 다룬다.
   - 신규 저장소에서는 기본적으로 `rw-new-project`를 우선 권장한다.
 - `rw-new-project.prompt.md`:
-  - `rw-init + discovery` 통합 프롬프트다.
-  - 빈/템플릿 저장소에서 `.ai` 스캐폴딩과 프로젝트 방향 확정을 한 번에 수행한다.
+  - `rw-init + discovery + bootstrap feature/task 분해` 통합 프롬프트다.
+  - 빈/템플릿 저장소에서 `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap task 생성을 한 번에 수행한다.
   - `PLAN.md`의 `개요`를 구체화하고 `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md`를 생성한다.
-  - `features`는 수정하지 않으며, 기능 분해는 `rw-plan-*`의 책임이다.
+  - bootstrap feature는 이 프롬프트에서 생성/소비할 수 있으며, 일반 기능 분해는 `rw-plan-*`의 책임이다.
 - `rw-feature.prompt.md`:
   - `rw-plan-*` 실행 전에 feature 입력 파일을 만들 때 사용한다.
   - 한 줄 입력(`featureSummary`)을 받아 feature 파일을 상세 스펙 형태로 생성한다.

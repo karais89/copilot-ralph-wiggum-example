@@ -163,12 +163,17 @@ assert_file ".ai/CONTEXT.md"
 assert_file ".ai/PLAN.md"
 assert_file ".ai/PROGRESS.md"
 assert_file ".ai/tasks/TASK-01-bootstrap-workspace.md"
-assert_no_task_02_plus_for_init_only "$CASE_LITE"
+assert_task_count_range "$CASE_LITE" 6 21
 assert_contains ".ai/CONTEXT.md" "User document language \\(`.ai/\\*` docs\\): Korean by default"
 assert_contains ".ai/PROGRESS.md" "^## Task Status"
 assert_contains ".ai/PROGRESS.md" "^## Log"
 assert_contains ".ai/PROGRESS.md" "^\\| Task \\| Title \\| Status \\| Commit \\|"
 assert_contains ".ai/PROGRESS.md" "^\\| TASK-01 \\|"
+assert_contains ".ai/PROGRESS.md" "^\\| TASK-0[2-9] \\|"
+
+BOOTSTRAP_FEATURE=$(find .ai/features -maxdepth 1 -name '*bootstrap*foundation*.md' | head -n 1)
+[ -n "$BOOTSTRAP_FEATURE" ] || fail "bootstrap feature file not created by rw-new-project"
+assert_contains "$BOOTSTRAP_FEATURE" "^Status: PLANNED$"
 assert_korean_prose_in_tasks "$CASE_LITE"
 ```
 
@@ -210,14 +215,18 @@ cmp -s "$SNAPSHOT_DIR/tasks.before.txt" "$SNAPSHOT_DIR/tasks.after.feature.txt" 
 
 ```bash
 cd "$CASE_LITE"
-assert_task_count_range "$CASE_LITE" 4 7
+TASK_COUNT_BEFORE_PLAN=$(find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | wc -l | tr -d ' ')
 assert_contains ".ai/PLAN.md" "^## Feature Notes \\(append-only\\)"
 assert_contains ".ai/PROGRESS.md" "^\\| TASK-0[2-9] \\|"
 assert_contains ".ai/PROGRESS.md" "pending"
 assert_korean_prose_in_tasks "$CASE_LITE"
 
+TASK_COUNT_AFTER_PLAN=$(find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | wc -l | tr -d ' ')
+TASK_DELTA=$((TASK_COUNT_AFTER_PLAN - TASK_COUNT_BEFORE_PLAN))
+[ "$TASK_DELTA" -ge 3 ] && [ "$TASK_DELTA" -le 6 ] || fail "rw-plan-lite task delta invalid: $TASK_DELTA (expected 3~6)"
+
 PLANNED_COUNT=$(rg -n "^Status: PLANNED$" .ai/features/*.md | wc -l | tr -d ' ')
-[ "$PLANNED_COUNT" -ge 1 ] || fail "feature status was not updated to PLANNED"
+[ "$PLANNED_COUNT" -ge 2 ] || fail "expected at least two PLANNED features (bootstrap + planned feature)"
 ```
 
 ### A-4. `rw-run-lite` 실행 (핵심)
@@ -349,6 +358,7 @@ fi
 - C-2 rw-run-strict: PASS/FAIL
 
 ## Key Findings
+- rw-new-project의 bootstrap feature/task 자동 생성 여부
 - runSubagent 가용성/안정성
 - rw-run 완료 여부(대기 task 0개)
 - 언어 정책 반영 여부 (TASK 제목/본문 한국어)

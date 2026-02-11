@@ -18,13 +18,13 @@ Responsibility boundary:
 | Stage | Responsibility |
 |---|---|
 | `rw-init` | Workspace scaffolding only (`CONTEXT`, minimal `PLAN`/`PROGRESS`, optional `TASK-01`) |
-| `rw-new-project` | Integrated new-project bootstrap (`rw-init` scaffolding + discovery) |
+| `rw-new-project` | Integrated new-project bootstrap (`rw-init` scaffolding + discovery + bootstrap feature/task decomposition) |
 | `rw-feature` | Feature definition (`.ai/features/*.md`) |
 | `rw-plan-*` | Feature-to-task decomposition (`TASK-XX`, `PLAN Feature Notes`, `PROGRESS` sync) |
 | `rw-run-*` | Task implementation in product code |
 
 Critical constraints (never override):
-- Do not infer features, product requirements, or functional scope. Those belong to `rw-feature` and `rw-plan-*`.
+- Do not infer arbitrary feature scope. General feature definition/decomposition belongs to `rw-feature` and `rw-plan-*` (bootstrap foundation is handled in `rw-new-project`).
 - If repository context is insufficient, skip purpose/stack/validation inference and write explicit placeholders instead.
 - Never create more than one task file during `rw-init`.
 - Never create `TASK-02` or higher during `rw-init`.
@@ -80,7 +80,7 @@ Steps:
    - PLAN overview lines (write exactly in Korean):
      - `- 프로젝트 목적 미정 (사용자 입력 필요).`
      - `- 기술 스택 미정.`
-     - `- 다음 단계: rw-new-project로 방향을 확정한 뒤 rw-feature를 실행하세요.`
+     - `- 다음 단계: rw-new-project로 방향/부트스트랩 태스크를 확정한 뒤 rw-run을 실행하세요.`
 4) Ensure scaffolding directories exist:
    - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`
 5) Create or update `PLAN.md` with strict boundaries:

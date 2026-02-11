@@ -9,7 +9,9 @@ Language policy reference: `.ai/CONTEXT.md`
 
 Quick summary:
 - Append one feature note to `PLAN.md`.
-- Create 3-6 new atomic `TASK-XX-*.md` files without renumbering existing tasks.
+- Create new atomic `TASK-XX-*.md` files without renumbering existing tasks.
+  - Default features: 3-6 tasks
+  - Bootstrap foundation features: 10-20 tasks (5 allowed only when clearly very small/simple)
 - Add only new `pending` rows to `PROGRESS.md`.
 
 Step 0 (Mandatory):
@@ -34,6 +36,11 @@ Rules:
 - Resolve user-document language from `.ai/CONTEXT.md` before writing task/progress prose (default Korean if ambiguous).
 - Keep machine/parser tokens and section headers unchanged (`Task Status`, `Log`, `pending`, `Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Verification`).
 - In `.ai/tasks/*.md` and PROGRESS `Title` cells, write human-readable values in the resolved user-document language.
+- Task sizing rule:
+  - Each task should be independently deliverable in roughly 30~120 minutes.
+  - If likely >120 minutes, split; if <30 minutes and not independently valuable, merge.
+- Verification rule:
+  - Each task must include at least one concrete verification command in `Verification`.
 
 Feature input resolution (required):
 1) Read `.ai/features/`.
@@ -120,7 +127,11 @@ Workflow:
 5) Append one new Feature Notes line to PLAN.md in this format:
    - YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.
 6) Determine next available TASK number from existing task files (max + 1).
-7) Create 3~6 new atomic task files for the feature under `.ai/tasks/` as `TASK-XX-<slug>.md`.
+7) Create new atomic task files for the feature under `.ai/tasks/` as `TASK-XX-<slug>.md`.
+   - Task count policy:
+     - Default features: 3~6 tasks.
+     - Bootstrap foundation features (slug/name indicates bootstrap+foundation): 10~20 tasks.
+     - If bootstrap scope is clearly very small/simple, 5 tasks are allowed.
    Each file must include:
    - Title
    - Dependencies
@@ -130,6 +141,7 @@ Workflow:
    - Verification
      - Use project-defined commands (do not hardcode language-specific tools unless the project is explicitly language-specific).
      - Require evidence format: `command`, `exit code`, `key output`.
+     - Include at least one concrete command per task.
    - Keep the section headers above exactly as written, but write each section value/prose in the resolved user-document language.
 8) Update `.ai/PROGRESS.md` Task Status table by adding only new rows as `pending` with commit `-`.
    Keep existing rows unchanged.

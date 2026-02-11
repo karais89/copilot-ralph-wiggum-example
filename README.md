@@ -10,15 +10,16 @@ This repository serves two purposes:
 ## How It Works
 
 ```
-rw-new-project  →  rw-feature  →  rw-plan-*  →  rw-run-*  →  rw-archive
-(신규/초기화+발견)    (기능별)        (계획)        (자동 루프)    (수동)
+rw-new-project  →  rw-run-*  →  rw-feature  →  rw-plan-*  →  rw-run-*  →  rw-archive
+(신규/초기화+bootstrap) (bootstrap 구현) (기능별)      (계획)        (자동 루프)    (수동)
 ```
 
-1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery in one run)
-2. **`rw-feature`** — Creates a structured feature specification file
-3. **`rw-plan-lite` / `rw-plan-strict`** — Breaks features into 3-8 atomic tasks
-4. **`rw-run-lite` / `rw-run-strict`** — Orchestration loop: spawns subagents to implement tasks sequentially until all complete
-5. **`rw-archive`** — Archives completed progress when it grows large
+1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery + bootstrap feature/task decomposition in one run)
+2. **`rw-run-lite` / `rw-run-strict`** — Implements bootstrap tasks first
+3. **`rw-feature`** — Creates additional feature specification files
+4. **`rw-plan-lite` / `rw-plan-strict`** — Breaks additional features into atomic tasks
+5. **`rw-run-lite` / `rw-run-strict`** — Continues autonomous implementation loop
+6. **`rw-archive`** — Archives completed progress when it grows large
 
 `rw-init` remains available as a scaffold-only fallback when you want non-interactive initialization.
 
@@ -86,11 +87,12 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 ### After Extraction
 
 1. Open your project in VS Code with GitHub Copilot
-2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + project-direction discovery in one run
-3. Run **`rw-feature`** to create a feature spec
-4. Run **`rw-plan-lite`** (or `rw-plan-strict`) to generate tasks
-5. Run **`rw-run-lite`** (or `rw-run-strict`) to start the autonomous loop
-6. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
+2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + project-direction discovery + bootstrap feature/task generation
+3. Run **`rw-run-lite`** (or `rw-run-strict`) to implement bootstrap tasks
+4. Run **`rw-feature`** to define additional product features
+5. Run **`rw-plan-lite`** (or `rw-plan-strict`) to generate tasks for that feature
+6. Run **`rw-run-lite`** (or `rw-run-strict`) to continue the autonomous loop
+7. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
 
 ## Orchestration File Reference
 
@@ -98,7 +100,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 
 | Prompt | Purpose |
 |---|---|
-| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + discovery) |
+| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + discovery + bootstrap feature/task decomposition) |
 | [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
 | [`rw-plan-lite`](.github/prompts/rw-plan-lite.prompt.md) | Generate task breakdown (Lite mode) |
@@ -115,8 +117,8 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 | [`GUIDE.md`](.ai/GUIDE.md) | Operational guide for the RW workflow |
 | [`PLAN.md`](.ai/PLAN.md) | Workspace metadata + append-only Feature Notes (`rw-new-project` creates/updates overview, `rw-plan-*` appends feature notes) |
 | [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (`rw-new-project` or `rw-init` creates skeleton, `rw-plan-*`/`rw-run-*` update entries) |
-| `tasks/TASK-XX-*.md` | Individual task definitions (`rw-new-project`/`rw-init` may create only `TASK-01` bootstrap; feature tasks are created by `rw-plan-*`) |
-| `features/*.md` | Feature specifications (created by `rw-feature`) |
+| `tasks/TASK-XX-*.md` | Individual task definitions (`rw-new-project` creates bootstrap `TASK-01+`; additional feature tasks are created by `rw-plan-*`) |
+| `features/*.md` | Feature specifications (bootstrap feature may be created by `rw-new-project`; additional ones are created by `rw-feature`) |
 
 ### Safety Mechanisms
 
