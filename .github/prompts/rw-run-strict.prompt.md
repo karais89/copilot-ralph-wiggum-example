@@ -97,6 +97,7 @@ Rules:
 - Select exactly one highest-priority unfinished task (not necessarily the first).
 - Do not select tasks whose dependencies are not satisfied.
 - Fully implement only the selected task.
+- Never call `#tool:agent/runSubagent` from this subagent (nested subagent calls are disallowed).
 - Run build/verification commands; if issues are found, fix them all.
 - Update <PROGRESS> (status to `completed`, commit message, and a Log entry).
 - Commit changes with a conventional commit message focused on user impact.
@@ -120,6 +121,7 @@ Procedure:
 
 Rule:
 - Validate exactly one task per invocation, then exit.
+- Never call `#tool:agent/runSubagent` from this reviewer subagent (nested subagent calls are disallowed).
 </REVIEWER_PROMPT>
 
 BEGIN ORCHESTRATION NOW.

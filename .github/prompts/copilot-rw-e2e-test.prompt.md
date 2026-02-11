@@ -218,7 +218,8 @@ PLANNED_COUNT=$(rg -n "^Status: PLANNED$" .ai/features/*.md | wc -l | tr -d ' ')
 
 ### A-4. `rw-run-lite` 실행 (핵심)
 
-- 반드시 Copilot Chat에서 실행하고, 완료 시점은 `✅ All tasks completed.` 출력으로 판단한다.
+- 반드시 Copilot Chat **최상위(Top-level) 턴**에서 실행하고, 다른 서브에이전트/중첩 프롬프트 내부에서 실행하지 마라.
+- 완료 시점은 `✅ All tasks completed.` 출력으로 판단한다.
 - 실행 중 `runSubagent unavailable` 또는 `MANUAL_FALLBACK_REQUIRED`가 보이면 즉시 실패 처리한다.
 
 실행 전 스냅샷:
@@ -302,6 +303,7 @@ assert_korean_prose_in_tasks "$CASE_READY_INIT"
 - `rw-run-strict`
 
 Strict 검증 규칙:
+- `rw-run-strict`도 반드시 Copilot Chat **최상위(Top-level) 턴**에서 실행한다.
 - `runSubagent unavailable` 또는 `MANUAL_FALLBACK_REQUIRED`가 보이면 즉시 `FAIL`.
 - `REVIEW-ESCALATE`가 발생하면 원인을 기록하고 `FAIL`.
 - 성공 기준은 `✅ All tasks completed.` 출력 + `PROGRESS`에 `pending/in-progress` 없음.
