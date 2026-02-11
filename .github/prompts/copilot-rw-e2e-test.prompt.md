@@ -208,14 +208,20 @@ cmp -s "$SNAPSHOT_DIR/tasks.before.txt" "$SNAPSHOT_DIR/tasks.after.feature.txt" 
 
 ### A-3. `rw-plan-lite` 실행
 
-- READY_FOR_PLAN 파일이 여러 개면 가장 최신 파일 하나를 선택.
+- READY_FOR_PLAN 파일이 여러 개면 Copilot의 단일 선택 질문에서 대상 파일 1개를 명시적으로 선택한다(`CANCEL` 금지).
 - 질문이 나오면 경계/검증/의존성 관련 항목을 반드시 확정.
+
+실행 전 스냅샷:
+
+```bash
+cd "$CASE_LITE"
+TASK_COUNT_BEFORE_PLAN=$(find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | wc -l | tr -d ' ')
+```
 
 실행 후 검증:
 
 ```bash
 cd "$CASE_LITE"
-TASK_COUNT_BEFORE_PLAN=$(find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | wc -l | tr -d ' ')
 assert_contains ".ai/PLAN.md" "^## Feature Notes \\(append-only\\)"
 assert_contains ".ai/PROGRESS.md" "^\\| TASK-0[2-9] \\|"
 assert_contains ".ai/PROGRESS.md" "pending"
@@ -233,7 +239,7 @@ PLANNED_COUNT=$(rg -n "^Status: PLANNED$" .ai/features/*.md | wc -l | tr -d ' ')
 
 - 반드시 Copilot Chat **최상위(Top-level) 턴**에서 실행하고, 다른 서브에이전트/중첩 프롬프트 내부에서 실행하지 마라.
 - 완료 시점은 `✅ All tasks completed.` 출력으로 판단한다.
-- 실행 중 `runSubagent unavailable` 또는 `MANUAL_FALLBACK_REQUIRED`가 보이면 즉시 실패 처리한다.
+- 실행 중 `runSubagent unavailable` 또는 `MANUAL_FALLBACK_REQUIRED` 또는 `TOP_LEVEL_REQUIRED`가 보이면 즉시 실패 처리한다.
 
 실행 전 스냅샷:
 
@@ -317,7 +323,7 @@ assert_korean_prose_in_tasks "$CASE_READY_INIT"
 
 Strict 검증 규칙:
 - `rw-run-strict`도 반드시 Copilot Chat **최상위(Top-level) 턴**에서 실행한다.
-- `runSubagent unavailable` 또는 `MANUAL_FALLBACK_REQUIRED`가 보이면 즉시 `FAIL`.
+- `runSubagent unavailable` 또는 `MANUAL_FALLBACK_REQUIRED` 또는 `TOP_LEVEL_REQUIRED`가 보이면 즉시 `FAIL`.
 - `REVIEW-ESCALATE`가 발생하면 원인을 기록하고 `FAIL`.
 - 성공 기준은 `✅ All tasks completed.` 출력 + `PROGRESS`에 `pending/in-progress` 없음.
 

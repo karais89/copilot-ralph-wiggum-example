@@ -43,7 +43,7 @@ Step 0 (Mandatory):
 Bootstrap template for `.ai/CONTEXT.md` (when missing):
 - `# 워크스페이스 컨텍스트`
 - `## 언어 정책`
-  - Prompt body language (`.github/prompts/*.prompt.md`): English (required)
+  - Prompt body language (`.github/prompts/rw-*.prompt.md`): English (required)
   - User document language (`.ai/*` docs): Korean by default
   - Commit message language: English (Conventional Commits)
 - `## 기계 파싱 토큰 (번역 금지)`
@@ -51,7 +51,7 @@ Bootstrap template for `.ai/CONTEXT.md` (when missing):
   - `pending`, `in-progress`, `completed`
   - `LANG_POLICY_MISSING`
 - `## 프롬프트 작성 규칙`
-  - Every prompt reads `.ai/CONTEXT.md` first via Step 0
+  - Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first via Step 0
 
 Create (or update without overwriting blindly) this structure:
 

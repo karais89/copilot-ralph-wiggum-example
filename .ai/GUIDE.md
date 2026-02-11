@@ -25,8 +25,9 @@
 ## 언어 정책
 
 - 기준 파일: `.ai/CONTEXT.md`
-- `.github/prompts/*.prompt.md`는 영어 본문으로 유지한다.
-- 각 프롬프트는 `Step 0 (Mandatory)`에서 `.ai/CONTEXT.md`를 먼저 읽고, 실패 시 `LANG_POLICY_MISSING`으로 중지한다.
+- 운영 프롬프트(`.github/prompts/rw-*.prompt.md`)는 영어 본문으로 유지한다.
+- 테스트/검증 프롬프트(`copilot-rw-e2e-test.prompt.md`)는 한국어/영어 중 팀 합의 언어를 사용해도 된다.
+- 운영 프롬프트(`rw-*`)는 `Step 0 (Mandatory)`에서 `.ai/CONTEXT.md`를 먼저 읽고, 실패 시 `LANG_POLICY_MISSING`으로 중지한다.
 - `.ai/*` 운영 문서는 기본 한국어로 유지한다.
 - 기존(legacy) 영어 문서는 즉시 전면 번역을 강제하지 않으며, 신규 작성/수정 시 한국어를 우선한다.
 - 언어가 섞여 충돌할 경우 `.ai/CONTEXT.md` 규칙을 우선 적용한다.
@@ -70,8 +71,9 @@
 - `rw-plan-lite`/`rw-plan-strict`는 **입력 인자 없이** `.ai/features/*.md`만 사용한다.
 - 파일 선택 규칙:
   - 입력 후보는 `.ai/features/*.md` 중 `FEATURE-TEMPLATE.md`, `README.md`를 제외한 파일
-  - `Status: READY_FOR_PLAN` 파일은 정확히 1개여야 한다.
-  - READY 후보가 2개 이상이면 자동 선택하지 않고 에러로 중단한다.
+  - `Status: READY_FOR_PLAN` 파일이 1개면 그 파일을 사용한다.
+  - READY 후보가 2개 이상이면 단일 선택 질문으로 대상 1개를 고른다.
+  - 질문에서 `CANCEL` 선택 또는 유효 선택 실패 시 `FEATURE_MULTI_READY`로 중단한다.
   - 권장 파일명: `YYYYMMDD-HHMM-<slug>.md`
 - 에러 처리(정확한 토큰):
   - `.ai/features` 폴더가 없거나 읽기 불가: `FEATURES_DIR_MISSING`
@@ -79,7 +81,7 @@
   - `.md` 파일은 있으나 `Status: READY_FOR_PLAN` 후보 없음: `FEATURE_NOT_READY`
   - `Status: READY_FOR_PLAN` 후보가 2개 이상: `FEATURE_MULTI_READY`
 - 에러 발생 시 첫 줄은 에러 토큰을 출력하고, 다음 줄에 생성/수정 가이드를 출력한 뒤 즉시 중단한다.
-- 에러 시 보완 질문은 하지 않는다.
+- 에러 시 보완 질문은 하지 않는다(단, 다중 READY 선택 질문 1회는 예외).
 - plan 완료 시 선택된 feature 파일 상태를 `PLANNED`로 갱신한다.
 - 권장 상태값(단순화): `DRAFT` -> `READY_FOR_PLAN` -> `PLANNED`
 - 보완 질문은 feature 파일이 정상 선택된 이후에만 수행하며, 모호성이 남으면 2~5 라운드(라운드당 1~3 질문)까지 허용한다.

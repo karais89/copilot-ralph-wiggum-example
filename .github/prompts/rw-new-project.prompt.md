@@ -23,7 +23,7 @@ Step 0 (Mandatory):
 Bootstrap template for `.ai/CONTEXT.md` (when missing):
 - `# 워크스페이스 컨텍스트`
 - `## 언어 정책`
-  - Prompt body language (`.github/prompts/*.prompt.md`): English (required)
+  - Prompt body language (`.github/prompts/rw-*.prompt.md`): English (required)
   - User document language (`.ai/*` docs): Korean by default
   - Commit message language: English (Conventional Commits)
 - `## 기계 파싱 토큰 (번역 금지)`
@@ -31,7 +31,7 @@ Bootstrap template for `.ai/CONTEXT.md` (when missing):
   - `pending`, `in-progress`, `completed`
   - `LANG_POLICY_MISSING`
 - `## 프롬프트 작성 규칙`
-  - Every prompt reads `.ai/CONTEXT.md` first via Step 0
+  - Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first via Step 0
 
 Project idea input (optional): ${input:projectIdea:Optional one-line project idea. Example: shared travel itinerary planner.}
 
@@ -100,7 +100,10 @@ Workflow:
      - For newly added rows, write the `Title` value in the same resolved user-document language.
 3) Resolve initial direction input:
    - If `projectIdea` is present, use it as seed.
-   - If missing, ask one open-ended question using `#tool:vscode/askQuestions`:
+   - If `projectIdea` is missing, first try rerun-safe reuse:
+     - If `.ai/PLAN.md` already contains meaningful overview lines (not placeholder-only), use the latest overview as seed.
+     - Else if `.ai/notes/PROJECT-CHARTER-*.md` exists, use the latest charter summary as seed.
+   - If still missing after rerun-safe reuse, ask one open-ended question using `#tool:vscode/askQuestions`:
      - intent: "What product/project do you want to build first?"
    - If `#tool:vscode/askQuestions` is unavailable, ask once in chat.
    - If still missing after one interaction, stop immediately and output exactly: `PROJECT_IDEA_MISSING`.

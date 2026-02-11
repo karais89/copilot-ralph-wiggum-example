@@ -122,7 +122,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 
 ### Safety Mechanisms
 
-- **Step 0** — Every prompt reads `.ai/CONTEXT.md` first; fails with `LANG_POLICY_MISSING` if missing
+- **Step 0** — Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first; fails with `LANG_POLICY_MISSING` if missing
 - **PAUSE.md** — Create `.ai/PAUSE.md` to halt the orchestration loop
 - **ARCHIVE_LOCK** — Prevents concurrent archive operations
 - **REVIEW-ESCALATE** — (Strict mode) 3 consecutive review failures trigger escalation and halt
