@@ -148,7 +148,9 @@ Workflow:
    - In `Recommended Next Step`, recommend `rw-run-lite` (or `rw-run-strict`) if bootstrap tasks are created; otherwise recommend `rw-feature`.
 7) Create bootstrap feature input (conditional):
    - Build candidates from `.ai/features/*.md`, excluding `FEATURE-TEMPLATE.md` and `README.md`.
-   - If an existing bootstrap feature file already exists (slug contains `bootstrap` and `foundation`), reuse it.
+   - Reuse existing bootstrap feature only when file body contains exact heading line:
+     - `# FEATURE: bootstrap-foundation`
+   - If multiple files match, select the latest by filename sort.
    - Otherwise create exactly one new file:
      - path: `.ai/features/YYYYMMDD-HHMM-bootstrap-foundation.md`
      - If same timestamp file exists, append `-v2`, `-v3`, ...

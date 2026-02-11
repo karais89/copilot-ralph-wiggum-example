@@ -60,10 +60,11 @@
   - 스캐폴딩 전용 비대화형 대안(`CONTEXT`, 최소 `PLAN`/`PROGRESS`, optional `TASK-01`)
   - 기능 요구사항 정의, 기능 분해, `TASK-02+` 생성 금지
 - `rw-new-project`
-  - `rw-init + discovery` 통합 프롬프트
-  - 빈/템플릿 저장소에서 스캐폴딩 + 프로젝트 방향 확정을 한 번에 수행
+  - `rw-init + discovery + bootstrap foundation 분해` 통합 프롬프트
+  - 빈/템플릿 저장소에서 스캐폴딩 + 프로젝트 방향 확정 + bootstrap feature/task 생성을 한 번에 수행
   - `PLAN` 개요 구체화 + `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md` 작성
-  - `TASK-02+` 생성 금지, feature 분해는 `rw-plan-*`에서 수행
+  - bootstrap foundation 범위에서 `TASK-02+` 생성 허용
+  - 일반 기능 분해는 `rw-plan-*`에서 수행
 - `rw-feature`
   - 기능 스펙 파일 작성(`.ai/features/*.md`, `Status: READY_FOR_PLAN`)
   - `PLAN`/`PROGRESS`/`tasks` 수정 금지

@@ -31,6 +31,7 @@ Step 0 (Mandatory):
 
 Important:
 - The orchestrator must never edit product code under `src/`.
+- The orchestrator may edit only: <PROGRESS>, <PLAN> (`Feature Notes` append-only), and `.ai/tasks/TASK-XX-*.md` (new files only when adding scope).
 - Assume one orchestrator session only (no concurrent orchestrators).
 - If `#tool:agent/runSubagent` is unavailable, switch to manual fallback mode (do not continue autonomous loop).
 
@@ -43,7 +44,7 @@ Repeat:
      - active Task Status table in <PROGRESS>
      - every `.ai/progress-archive/STATUS-*.md` file (glob)
   5) Read <PROGRESS> to determine whether unfinished tasks remain
-  6) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars:
+  6) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars OR Log entry count exceeds 40:
      print "⚠️ PROGRESS is growing large. The loop will continue. Recommended: create .ai/PAUSE.md, then run rw-archive.prompt.md manually."
   7) If active Task Status has no `pending`/`in-progress` rows, and every TASK ID from <TASKS> exists in either:
      - active <PROGRESS> Task Status table, or

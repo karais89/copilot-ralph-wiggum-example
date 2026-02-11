@@ -31,7 +31,8 @@ Step 0 (Mandatory):
 
 Important:
 - The orchestrator must never edit product code under `src/`.
-- The orchestrator may edit only: <PROGRESS>, <PLAN> (`Feature Notes` append-only), `.ai/tasks/TASK-XX-*.md` (new files only when adding scope), and `.ai/progress-archive/*`.
+- The orchestrator may edit only: <PROGRESS>, <PLAN> (`Feature Notes` append-only), and `.ai/tasks/TASK-XX-*.md` (new files only when adding scope).
+- The orchestrator may read `.ai/progress-archive/*` for reconciliation, but must not write archive files in Strict loop.
 - During Strict runs, the orchestrator never performs archive directly; archive is manual via `rw-archive.prompt.md`.
 - If `#tool:agent/runSubagent` is unavailable, switch to manual fallback mode (do not continue autonomous loop).
 
@@ -44,7 +45,7 @@ Repeat:
      - active Task Status table in <PROGRESS>
      - every `.ai/progress-archive/STATUS-*.md` file (glob)
   5) Read <PROGRESS> to determine whether unfinished tasks remain
-  6) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars:
+  6) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars OR Log entry count exceeds 40:
      print "📦 Manual archive required. Create .ai/PAUSE.md if missing, keep it present, run rw-archive.prompt.md, then resume." and stop
   7) If <PROGRESS> Log contains unresolved `REVIEW-ESCALATE` for any task
      (an entry `REVIEW-ESCALATE TASK-XX ...` with no later matching `REVIEW-ESCALATE-RESOLVED TASK-XX ...`),
@@ -85,7 +86,7 @@ Repeat:
 
 ## Manual PROGRESS archive rules (Strict)
 - Strict orchestrator never archives by itself
-- Archive trigger: completed rows > 20 OR <PROGRESS> size > 8,000 chars
+- Archive trigger: completed rows > 20 OR <PROGRESS> size > 8,000 chars OR Log entry count > 40
 - When triggered: stop orchestrator, create `.ai/PAUSE.md` if missing, keep it present, run `rw-archive.prompt.md` manually
 - After archive: delete `.ai/PAUSE.md` and resume Strict loop
 
