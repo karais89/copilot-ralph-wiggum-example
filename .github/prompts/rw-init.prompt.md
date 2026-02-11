@@ -1,15 +1,34 @@
 ---
 name: rw-init
-description: "Scaffold .ai folder: PLAN/tasks/PROGRESS (+ optional GUIDE)"
+description: "Scaffold .ai workspace only: CONTEXT/PLAN/PROGRESS and optional TASK-01 bootstrap"
 agent: agent
 ---
 
 Language policy reference: `.ai/CONTEXT.md`
 
 Quick summary:
-- Initialize the `.ai` workspace files (`PLAN`, `PROGRESS`, `tasks`, optional `GUIDE`).
-- If `.ai` already exists, update append-only sections and avoid bulk TASK generation.
+- Initialize `.ai` workspace scaffolding only.
+- Create minimal `PLAN.md` and `PROGRESS.md` skeletons when missing.
+- Create at most one bootstrap task (`TASK-01-bootstrap-workspace.md`) only when no task files exist.
+- If repository context is empty/template-only, do not infer project purpose/scope/requirements.
+- For new project kickoff with discovery, prefer `rw-new-project`.
 - Do not implement product code.
+
+Responsibility boundary:
+| Stage | Responsibility |
+|---|---|
+| `rw-init` | Workspace scaffolding only (`CONTEXT`, minimal `PLAN`/`PROGRESS`, optional `TASK-01`) |
+| `rw-new-project` | Integrated new-project bootstrap (`rw-init` scaffolding + discovery) |
+| `rw-feature` | Feature definition (`.ai/features/*.md`) |
+| `rw-plan-*` | Feature-to-task decomposition (`TASK-XX`, `PLAN Feature Notes`, `PROGRESS` sync) |
+| `rw-run-*` | Task implementation in product code |
+
+Critical constraints (never override):
+- Do not infer features, product requirements, or functional scope. Those belong to `rw-feature` and `rw-plan-*`.
+- If repository context is insufficient, skip purpose/stack/validation inference and write explicit placeholders instead.
+- Never create more than one task file during `rw-init`.
+- Never create `TASK-02` or higher during `rw-init`.
+- Never rewrite existing `PLAN.md` or `PROGRESS.md` contents wholesale.
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
@@ -34,52 +53,77 @@ Bootstrap template for `.ai/CONTEXT.md` (when missing):
 Create (or update without overwriting blindly) this structure:
 
 .ai/
-- PLAN.md (concise PRD + Feature Notes append-only)
-- PROGRESS.md (task status + log, initialized)
+- CONTEXT.md (language policy + parser-safe tokens)
+- PLAN.md (workspace metadata skeleton + Feature Notes append-only)
+- PROGRESS.md (Task Status + Log skeleton)
 - tasks/ (task files)
 - GUIDE.md (optional quickstart)
 
 Steps:
-1) Infer initialization inputs non-interactively from repository context.
+1) Resolve repository context readiness non-interactively.
    - Inspect available context sources first (README, package manifest, source layout, existing `.ai/*` files).
-   - Infer:
-     - Project goal
-     - Scope boundaries (in/out)
-     - Constraints and verification expectations
+   - Determine context mode:
+     - `CONTEXT_READY`: at least one strong project signal exists (meaningful README, non-empty manifest description, or product source files).
+     - `CONTEXT_EMPTY`: template-only/empty repository with no strong project signal.
    - Do not ask the user questions during rw-init.
-2) Resolve inferred values with safe defaults and continue (do not stop):
-   - Goal default: `Initialize project orchestration workspace for the current repository.`
-   - Scope default: `Focus on the current repository and minimal initial deliverables.`
-   - Constraints default: `Backward-compatible changes, minimal scope, and at least one canonical verification command succeeds (exit code 0).`
-3) Write PLAN.md (concise PRD) and include `## Feature Notes (append-only)` with one baseline note.
-   - In PLAN initial summary/notes, include 1-3 lines of `assumptions/defaults used` when any default above is applied.
-   - In the same section, record inferred goal/scope/constraints.
-   - In the baseline note under `## Feature Notes (append-only)`, state whether defaults were applied for goal/scope/constraints.
-4) Create minimal initialization task files under `.ai/tasks/`:
-   - If no `TASK-XX-*.md` exists yet, create exactly 1 bootstrap task:
+2) If `CONTEXT_READY`, infer minimal metadata only:
+   - Project name
+   - Short project purpose summary (1-3 lines)
+   - Primary tech stack keywords
+   - One canonical validation command when discoverable
+   - Do not infer features, detailed product requirements, or functional scope.
+3) If `CONTEXT_EMPTY`, do not infer project metadata:
+   - Project name: use repository directory name.
+   - PLAN overview lines (write exactly in Korean):
+     - `- 프로젝트 목적 미정 (사용자 입력 필요).`
+     - `- 기술 스택 미정.`
+     - `- 다음 단계: rw-new-project로 방향을 확정한 뒤 rw-feature를 실행하세요.`
+4) Ensure scaffolding directories exist:
+   - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`
+5) Create or update `PLAN.md` with strict boundaries:
+   - If `PLAN.md` is missing, create exactly:
+     - `# <project-name>`
+     - `## 개요`
+     - If `CONTEXT_READY`: 1-3 summary lines from Step 2 (purpose + stack + validation command)
+     - If `CONTEXT_EMPTY`: 1-3 placeholder lines from Step 3
+     - `## Feature Notes (append-only)` (empty section, no baseline note)
+   - If `PLAN.md` exists:
+     - Keep all existing content unchanged.
+     - If `## Feature Notes (append-only)` is missing, append the empty section at the end.
+   - Forbidden in rw-init PLAN content:
+     - Detailed functional requirements
+     - Data model/schema design
+     - Command/API endpoint lists
+     - Task decomposition notes
+6) Create minimal initialization task files under `.ai/tasks/`:
+   - If no `TASK-XX-*.md` exists yet, create exactly 1 bootstrap task file:
      - `TASK-01-bootstrap-workspace.md`
    - The task must include:
+     - Title
      - Dependencies
+     - Description
      - Acceptance Criteria
-     - Files to modify
+     - Files to Create/Modify
      - Verification
-   - If task files already exist, do not generate bulk tasks during rw-init.
-5) Initialize or update PROGRESS.md using this minimum structure:
+   - If task files already exist, do not generate new task files during rw-init.
+   - Do NOT create `TASK-02`, `TASK-03`, etc.
+7) Initialize or update PROGRESS.md using this minimum structure:
    - If `PROGRESS.md` is missing:
      - Create it with:
        - `# 진행 현황`
        - `## Task Status`
        - table header: `| Task | Title | Status | Commit |`
        - table separator: `|------|-------|--------|--------|`
-       - one row per current TASK as `pending` with commit `-`
+       - one row per currently existing task file as `pending` with commit `-`
        - `## Log`
-       - one initial log line: `- **YYYY-MM-DD** — Initial tasks created.`
+       - one initial log line: `- **YYYY-MM-DD** — Initial workspace scaffolded.`
    - If `PROGRESS.md` already exists:
      - Keep existing Task Status rows and Log entries unchanged.
      - Add only missing TASK rows as `pending` with commit `-`.
    - Keep machine-parsed tokens (`Task Status`, `Log`, `pending`) exactly as written.
-6) If .ai already exists, do not rewrite the whole PLAN; update Feature Notes only.
-   - Add new TASK-XX files only when explicitly requested.
+8) Idempotency rules:
+   - Rerunning rw-init must not erase existing task history or logs.
+   - If `.ai` already exists and required skeleton elements are present, perform no-op or minimal additive fixes only.
    - Never renumber existing TASK files.
 
 Do not implement product code.

@@ -4,21 +4,23 @@ An AI-driven software development orchestration technique for **GitHub Copilot**
 
 This repository serves two purposes:
 
-1. **The RW orchestration template** — 7 reusable prompt files + structural docs that can be extracted and dropped into any project
+1. **The RW orchestration template** — 8 reusable prompt files + structural docs that can be extracted and dropped into any project
 2. **A working example** — A Todo CLI app built entirely by this technique (70+ commits, 20 tasks, zero manual coding)
 
 ## How It Works
 
 ```
-rw-init  →  rw-feature  →  rw-plan-*  →  rw-run-*  →  rw-archive
-(1회)       (기능별)        (계획)        (자동 루프)    (수동)
+rw-new-project  →  rw-feature  →  rw-plan-*  →  rw-run-*  →  rw-archive
+(신규/초기화+발견)    (기능별)        (계획)        (자동 루프)    (수동)
 ```
 
-1. **`rw-init`** — Bootstraps the `.ai/` workspace (PLAN, PROGRESS, tasks)
+1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery in one run)
 2. **`rw-feature`** — Creates a structured feature specification file
 3. **`rw-plan-lite` / `rw-plan-strict`** — Breaks features into 3-8 atomic tasks
 4. **`rw-run-lite` / `rw-run-strict`** — Orchestration loop: spawns subagents to implement tasks sequentially until all complete
 5. **`rw-archive`** — Archives completed progress when it grows large
+
+`rw-init` remains available as a scaffold-only fallback when you want non-interactive initialization.
 
 ### Two Modes
 
@@ -49,12 +51,13 @@ cd copilot-ralph-wiggum-example
 ./scripts/extract-template.sh ~/your-project
 ```
 
-This copies 11 files into your project:
+This copies 12 files into your project:
 
 ```
 your-project/
-├── .github/prompts/           # 7 orchestration prompts
+├── .github/prompts/           # 8 orchestration prompts
 │   ├── rw-init.prompt.md
+│   ├── rw-new-project.prompt.md
 │   ├── rw-feature.prompt.md
 │   ├── rw-plan-lite.prompt.md
 │   ├── rw-plan-strict.prompt.md
@@ -72,7 +75,7 @@ your-project/
 ### Option 2: Manual Copy
 
 Copy these paths from this repo into your project:
-- `.github/prompts/*.prompt.md` (all 7 files)
+- `.github/prompts/*.prompt.md` (all 8 files)
 - `.ai/CONTEXT.md`
 - `.ai/GUIDE.md`
 - `.ai/features/FEATURE-TEMPLATE.md`
@@ -83,10 +86,11 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 ### After Extraction
 
 1. Open your project in VS Code with GitHub Copilot
-2. Open Copilot Chat and run **`rw-init`** — this creates `PLAN.md`, `PROGRESS.md`, and initial tasks by analyzing your repo
+2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + project-direction discovery in one run
 3. Run **`rw-feature`** to create a feature spec
 4. Run **`rw-plan-lite`** (or `rw-plan-strict`) to generate tasks
 5. Run **`rw-run-lite`** (or `rw-run-strict`) to start the autonomous loop
+6. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
 
 ## Orchestration File Reference
 
@@ -94,7 +98,8 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 
 | Prompt | Purpose |
 |---|---|
-| [`rw-init`](.github/prompts/rw-init.prompt.md) | Bootstrap `.ai/` workspace from repo context |
+| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + discovery) |
+| [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
 | [`rw-plan-lite`](.github/prompts/rw-plan-lite.prompt.md) | Generate task breakdown (Lite mode) |
 | [`rw-plan-strict`](.github/prompts/rw-plan-strict.prompt.md) | Generate task breakdown (Strict mode) |
@@ -108,9 +113,9 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 |---|---|
 | [`CONTEXT.md`](.ai/CONTEXT.md) | Language policy & machine-parseable tokens (read by every prompt at Step 0) |
 | [`GUIDE.md`](.ai/GUIDE.md) | Operational guide for the RW workflow |
-| [`PLAN.md`](.ai/PLAN.md) | Product requirements (created by `rw-init`, this file is Todo-specific in this repo) |
-| [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (created by `rw-init`) |
-| `tasks/TASK-XX-*.md` | Individual task definitions (created by `rw-plan-*`) |
+| [`PLAN.md`](.ai/PLAN.md) | Workspace metadata + append-only Feature Notes (`rw-new-project` creates/updates overview, `rw-plan-*` appends feature notes) |
+| [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (`rw-new-project` or `rw-init` creates skeleton, `rw-plan-*`/`rw-run-*` update entries) |
+| `tasks/TASK-XX-*.md` | Individual task definitions (`rw-new-project`/`rw-init` may create only `TASK-01` bootstrap; feature tasks are created by `rw-plan-*`) |
 | `features/*.md` | Feature specifications (created by `rw-feature`) |
 
 ### Safety Mechanisms

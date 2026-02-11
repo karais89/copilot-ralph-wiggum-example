@@ -36,6 +36,8 @@
   - `FEATURE_NOT_READY`
   - `FEATURE_MULTI_READY`
   - `FEATURE_SUMMARY_MISSING`
+- 신규 프로젝트 입력 오류 토큰:
+  - `PROJECT_IDEA_MISSING`
 - fallback 출력 토큰:
   - `MANUAL_FALLBACK_REQUIRED`
 - 파일/경로 계약:
@@ -51,6 +53,25 @@
 2. 모든 프롬프트에 `Step 0 (Mandatory)`를 두고 `.ai/CONTEXT.md`를 먼저 읽는다.
 3. `.ai/CONTEXT.md`를 읽을 수 없으면 `LANG_POLICY_MISSING`으로 즉시 중단한다.
 4. 출력/리포트는 섹션 단위로 언어를 통일한다.
+
+## 오케스트레이션 역할 경계
+
+- `rw-init`
+  - 스캐폴딩 전용 비대화형 대안(`CONTEXT`, 최소 `PLAN`/`PROGRESS`, optional `TASK-01`)
+  - 기능 요구사항 정의, 기능 분해, `TASK-02+` 생성 금지
+- `rw-new-project`
+  - `rw-init + discovery` 통합 프롬프트
+  - 빈/템플릿 저장소에서 스캐폴딩 + 프로젝트 방향 확정을 한 번에 수행
+  - `PLAN` 개요 구체화 + `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md` 작성
+  - `TASK-02+` 생성 금지, feature 분해는 `rw-plan-*`에서 수행
+- `rw-feature`
+  - 기능 스펙 파일 작성(`.ai/features/*.md`, `Status: READY_FOR_PLAN`)
+  - `PLAN`/`PROGRESS`/`tasks` 수정 금지
+- `rw-plan-lite` / `rw-plan-strict`
+  - feature 입력을 `TASK-XX`로 분해
+  - `PLAN`의 `Feature Notes` append + `PROGRESS` 상태 동기화
+- `rw-run-lite` / `rw-run-strict`
+  - 태스크 구현 루프 실행 및 검증
 
 ## 추가 가드레일
 

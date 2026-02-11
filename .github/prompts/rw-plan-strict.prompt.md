@@ -87,10 +87,33 @@ Normalization rules:
      - Verification evidence includes command, exit code, and 1-2 key output lines.
 
 Workflow:
-1) Read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and list existing `.ai/tasks/TASK-*.md` filenames. Open only the needed task files.
+1) Ensure baseline workspace files exist before planning:
+   - If `.ai/PLAN.md` is missing, create a minimal skeleton with:
+     - `# Workspace Plan`
+     - `## 개요`
+     - one short line: `rw-plan initialized PLAN.md because it was missing.`
+     - `## Feature Notes (append-only)` (empty section)
+   - If `.ai/PROGRESS.md` is missing, create:
+     - `# 진행 현황`
+     - `## Task Status`
+     - `| Task | Title | Status | Commit |`
+     - `|------|-------|--------|--------|`
+     - `## Log`
+   - Then read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and list existing `.ai/tasks/TASK-*.md` filenames. Open only the needed task files.
 2) Resolve feature input using the required precedence rules above.
-3) Ask up to 2 short clarification questions only for high-impact ambiguity after feature input is resolved. If details are sufficient, proceed immediately.
-4) Build a normalized feature spec (`Goal`, `Constraints`, `Acceptance`) using resolved input + defaults.
+3) Clarification-first planning:
+   - After feature input is resolved, run 2~5 clarification rounds when ambiguity remains.
+   - Ask 1~3 focused questions per round (single-choice preferred when practical).
+   - Resolve at least before decomposition (unless user selects `AI_DECIDE`):
+     - implementation/module boundaries
+     - dependency/order constraints between tasks
+     - verification commands and pass criteria
+     - out-of-scope boundaries
+     - risk-sensitive constraints (compatibility, migration, rollback)
+   - Do not stop questioning early if high-impact ambiguity remains and round budget is available.
+   - If details are sufficient early, proceed immediately.
+4) Build a normalized feature spec (`Goal`, `Constraints`, `Acceptance`) using resolved input.
+   - Apply defaults only when user explicitly chooses `AI_DECIDE` or clarification budget is exhausted.
 5) Append one new Feature Notes line to PLAN.md in this format:
    - YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.
 6) Determine next available TASK number from existing task files (max + 1).

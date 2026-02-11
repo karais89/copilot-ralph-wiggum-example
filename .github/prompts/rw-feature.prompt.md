@@ -29,10 +29,11 @@ Target files:
 
 Rules:
 - Do not edit `.ai/PLAN.md`, `.ai/PROGRESS.md`, or `.ai/tasks/*`.
+- Do not create any `TASK-XX` files or PROGRESS log/status entries in rw-feature.
 - Prefer ASCII slug/file names.
 - Keep machine tokens unchanged: `Status`, `READY_FOR_PLAN`.
-- Do not use multiple-choice questions.
-- Keep interaction minimal: ask clarification questions only if high-impact ambiguity remains after reading `featureSummary`.
+- Do not overuse multiple-choice questions; use them only when they reduce ambiguity quickly.
+- Clarification-first: if any high-impact ambiguity remains, ask follow-up questions persistently before using defaults.
 - Write `.ai/features/*.md` content in the user-document language resolved from `.ai/CONTEXT.md`.
 - If language policy is ambiguous for user-facing prose, default to Korean.
 - Keep only parser/machine tokens in English (`Status`, `READY_FOR_PLAN`, `PLANNED`, file/status tokens in notes if any).
@@ -49,13 +50,20 @@ Workflow:
    - Question intent (do not hardcode this English string in output): "What feature should be added? (Example: add export command with date filter)"
    - If `#tool:vscode/askQuestions` is unavailable, ask the same localized question in chat once.
    - If still missing after that single interaction, stop immediately and output exactly: `FEATURE_SUMMARY_MISSING`.
-6) If high-impact ambiguity remains after reading summary + repository context, use `#tool:vscode/askQuestions` once for clarification:
+6) If high-impact ambiguity remains after reading summary + repository context, run clarification rounds:
+   - Run 2~5 rounds while ambiguity remains.
+   - Each round asks 1~3 focused questions.
    - Prefer single-choice options (2-4 choices + optional `AI_DECIDE`) when practical.
-   - Use one short open-ended question only if options are not practical.
+   - Use short open-ended questions only when options are not practical.
+   - Clarify at least:
+     - primary user flow
+     - exact behavior/output expectations
+     - in-scope vs out-of-scope boundaries
+     - key edge cases and failure behavior
+     - verification baseline command/evidence
    - Clarification questions/options must be written in the resolved user-document language from Step 4.
-   - If `#tool:vscode/askQuestions` is unavailable, ask the same localized clarification in chat once.
-   - Do not run repeated clarification rounds.
-7) If user does not provide enough detail after that single clarification batch, apply safe defaults:
+   - If `#tool:vscode/askQuestions` is unavailable, ask the same localized clarifications in chat with the same round limits.
+7) If details are still insufficient after clarification rounds, apply safe defaults and explicitly record assumptions:
    - Constraints: backward compatible, minimal scope, project-defined canonical validation commands must pass.
    - Acceptance: user-visible behavior works, clear error messages, and at least one canonical verification command succeeds with exit code 0.
 8) Build slug from summary and generate filename `YYYYMMDD-HHMM-<slug>.md` using local time.

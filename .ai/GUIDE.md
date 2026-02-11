@@ -13,6 +13,7 @@
 
 .github/prompts/
 ├── rw-init.prompt.md
+├── rw-new-project.prompt.md
 ├── rw-feature.prompt.md
 ├── rw-archive.prompt.md
 ├── rw-plan-lite.prompt.md
@@ -45,20 +46,24 @@
 ## 사용 방법
 
 1. VS Code Copilot Chat에서 새 대화를 연다.
-2. `.ai/` 구조가 없으면 `rw-init.prompt.md`를 먼저 실행해 초기화한다(초기 1회).
+2. 신규/빈 저장소에서는 `rw-new-project.prompt.md`를 먼저 실행한다(초기 1회).
+   - `rw-new-project`는 `rw-init + discovery` 통합 프롬프트다.
+   - `.ai` 스캐폴딩과 프로젝트 방향 확정을 한 번에 수행한다.
 3. `rw-feature.prompt.md`를 실행해 `.ai/features/`에 `READY_FOR_PLAN` 파일을 만든다.
 4. 선택한 모드의 `rw-plan-*.prompt.md` 내용을 붙여넣고 실행해 태스크를 만든다.
 5. 같은 모드의 `rw-run-*.prompt.md` 내용을 붙여넣고 실행해 오케스트레이션 루프를 돌린다.
 6. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
 7. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
+8. 스캐폴딩만 따로 필요하면 `rw-init.prompt.md`를 대안으로 사용한다.
 
 ## 실행 순서
 
-1. 초기화(필요 시): `rw-init.prompt.md`
+1. 신규 프로젝트 초기화+방향 확정: `rw-new-project.prompt.md`
 2. feature 파일 생성: `rw-feature.prompt.md`
 3. 기능 추가 계획: 선택한 모드의 `rw-plan-*.prompt.md`
 4. 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
 5. 상태 확인: `.ai/PROGRESS.md`
+6. 스캐폴딩만 필요할 때(대안): `rw-init.prompt.md`
 
 ## Feature 파일 입력 규칙
 
@@ -85,12 +90,18 @@
 ## 보조 프롬프트 사용 시점
 
 - `rw-init.prompt.md`:
-  - 새 프로젝트이거나 `.ai/` 폴더가 없을 때만 실행한다.
-  - 이미 운영 중인 프로젝트에서는 재초기화 대신 `rw-plan-*`으로 기능을 추가한다.
+  - 스캐폴딩만 필요한 경우 사용하는 비대화형 대안 프롬프트다.
+  - `CONTEXT`, PLAN/PROGRESS 뼈대, optional `TASK-01` 1개까지만 다룬다.
+  - 신규 저장소에서는 기본적으로 `rw-new-project`를 우선 권장한다.
+- `rw-new-project.prompt.md`:
+  - `rw-init + discovery` 통합 프롬프트다.
+  - 빈/템플릿 저장소에서 `.ai` 스캐폴딩과 프로젝트 방향 확정을 한 번에 수행한다.
+  - `PLAN.md`의 `개요`를 구체화하고 `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md`를 생성한다.
+  - `features`는 수정하지 않으며, 기능 분해는 `rw-plan-*`의 책임이다.
 - `rw-feature.prompt.md`:
   - `rw-plan-*` 실행 전에 feature 입력 파일을 만들 때 사용한다.
   - 한 줄 입력(`featureSummary`)을 받아 feature 파일을 상세 스펙 형태로 생성한다.
-  - 선택형 질문은 사용하지 않는다.
+  - 선택형 질문은 필요한 경우(고영향 모호성 해소) 최소한으로만 사용한다.
   - 필요할 때만 최대 2개의 짧은 보완 질문을 한다.
   - 입력이 비어 있고 보완 질문 이후에도 요약이 없으면 `FEATURE_SUMMARY_MISSING`으로 중단한다.
   - 생성 파일은 `Status: READY_FOR_PLAN`으로 저장된다.
