@@ -30,7 +30,8 @@ Step 0 (Mandatory):
 4) Do not modify any file before Step 0 completes.
 
 Important:
-- The orchestrator must never edit product code under `src/`.
+- The orchestrator must never edit product code directly.
+- Product code paths are repository-dependent (web/app/game/unity/etc.); do not assume `src/` as the only location.
 - The orchestrator may edit only: <PROGRESS> and <PLAN> (`Feature Notes` append-only runtime notes only).
 - Never create/modify `.ai/tasks/TASK-XX-*.md` during `rw-run-strict`; task decomposition belongs to `rw-plan-*`.
 - The orchestrator may read `.ai/progress-archive/*` for reconciliation, but must not write archive files in Strict loop.

@@ -6,6 +6,27 @@
         "/^source /tmp/rw-copilot-e2e-odtTE3/assert\\.sh && type assert_file && type assert_rw_run_completed && echo \"All assertion functions OK\"$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "\"$SRC_REPO/scripts/extract-template.sh\"": true,
+        "cat > \"$CASE_READY_INIT/README.md\" <<'EOF'": true,
+        "mkdir -p \"$CASE_READY_INIT/app\"": true,
+        "cat > \"$CASE_READY_INIT/app/main.module.txt\" <<'EOF'": true,
+        "cp .ai/PLAN.md \"$SNAPSHOT_DIR/plan.before.md\"": true,
+        "cp .ai/PROGRESS.md \"$SNAPSHOT_DIR/progress.before.md\"": true,
+        "cp .ai/PLAN.md \"$SNAPSHOT_DIR/plan.before.reinit.md\"": true,
+        "cp .ai/PROGRESS.md \"$SNAPSHOT_DIR/progress.before.reinit.md\"": true,
+        "find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > \"$SNAPSHOT_DIR/tasks.before.txt\"": true,
+        "find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > \"$SNAPSHOT_DIR/tasks.after.feature.txt\"": true,
+        "find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > \"$SNAPSHOT_DIR/tasks.before.reinit.txt\"": true,
+        "find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > \"$SNAPSHOT_DIR/tasks.after.reinit.txt\"": true,
+        "test": true,
+        "/^git(?: -c [^ ]+=[^ ]+| -C [^ ]+)* (?:(?:status|log|rev-parse)(?: .*)?|rev-list --count HEAD(?: > .+)?|init(?: -q)?|config user\\.(?:name|email) .+|add -A|commit -qm [\"']chore: bootstrap rw template[\"'])$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npm install": true,
+        "npx tsc": true,
+        "npx ts-node": true,
+        "git rev-parse": true
     }
 }

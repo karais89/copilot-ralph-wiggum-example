@@ -41,24 +41,17 @@ echo "TEST_ROOT=$TEST_ROOT"
 echo "SNAPSHOT_DIR=$SNAPSHOT_DIR"
 ```
 
-2. `CASE_READY_INIT`에는 컨텍스트 신호를 추가해라 (`rw-init` 검증용).
+2. `CASE_READY_INIT`에는 스택 중립 컨텍스트 신호를 추가해라 (`rw-init` 검증용).
 
 ```bash
 cat > "$CASE_READY_INIT/README.md" <<'EOF'
-# Billing CLI
-작은 팀의 비용 정산을 자동화하는 CLI 도구.
+# Project Atlas
+웹/모바일/게임 클라이언트에서 공통으로 쓰는 진행 상태 동기화 코어.
 EOF
 
-cat > "$CASE_READY_INIT/package.json" <<'EOF'
-{
-  "name": "billing-cli",
-  "version": "0.1.0",
-  "description": "CLI for team billing automation",
-  "scripts": {
-    "build": "echo build",
-    "test": "echo test"
-  }
-}
+mkdir -p "$CASE_READY_INIT/app"
+cat > "$CASE_READY_INIT/app/main.module.txt" <<'EOF'
+core module placeholder
 EOF
 ```
 
@@ -151,8 +144,8 @@ assert_commit_count_increased() {
   - 핵심 가치: `회의 후 액션 누락 방지`
   - MVP 범위: `액션아이템 추가/목록/완료 처리`
   - 제외 범위: `외부 연동, 인증, 권한`
-  - 제약: `Node.js + TypeScript, 작은 범위`
-  - 검증 명령: `npm test` (없으면 `AI_DECIDE` 허용)
+  - 제약: `스택 중립(웹/앱/게임 가능), 작은 범위`
+  - 검증 명령: `프로젝트 표준 검증 명령 1개`(미정이면 `AI_DECIDE` 허용)
 
 실행 후 검증:
 
@@ -295,7 +288,7 @@ assert_rw_run_completed "$CASE_LITE"
 ```bash
 cd "$CASE_READY_INIT"
 assert_file "README.md"
-assert_file "package.json"
+assert_file "app/main.module.txt"
 ```
 
 `rw-init` 실행 후:

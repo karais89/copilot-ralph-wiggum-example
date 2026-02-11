@@ -38,7 +38,7 @@ rw-new-project  →  rw-run-*  →  rw-feature  →  rw-plan-*  →  rw-run-*  �
 - **Context isolation** — Each subagent gets a fresh context, preventing "message too big" errors
 - **Full traceability** — Every step logged in PROGRESS.md and committed
 - **Autonomous execution** — Can run for hours without supervision
-- **Language/toolchain agnostic** — Prompts contain zero hardcoded language or framework references
+- **Language/toolchain agnostic** — Prompts target repository-defined commands and structure (works for web, app, and game/Unity projects)
 
 ## Use in Your Own Project
 
