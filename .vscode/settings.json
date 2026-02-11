@@ -1,0 +1,11 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "return": true,
+        "type": true,
+        "fi": true,
+        "/^source /tmp/rw-copilot-e2e-odtTE3/assert\\.sh && type assert_file && type assert_rw_run_completed && echo \"All assertion functions OK\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

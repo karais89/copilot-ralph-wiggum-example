@@ -23,18 +23,22 @@
 set -euo pipefail
 
 SRC_REPO="$(pwd)"
-TEST_ROOT="$(mktemp -d /tmp/rw-copilot-e2e-XXXXXX)"
+TEST_BASE="$SRC_REPO/.tmp/rw-copilot-e2e"
+RUN_ID="$(date +%Y%m%d-%H%M%S)"
+TEST_ROOT="$TEST_BASE/$RUN_ID"
 CASE_LITE="$TEST_ROOT/case-lite"
 CASE_READY_INIT="$TEST_ROOT/case-ready-init"
 CASE_STRICT="$TEST_ROOT/case-strict"
+SNAPSHOT_DIR="$TEST_ROOT/_snapshots"
 
-mkdir -p "$CASE_LITE" "$CASE_READY_INIT" "$CASE_STRICT"
+mkdir -p "$CASE_LITE" "$CASE_READY_INIT" "$CASE_STRICT" "$SNAPSHOT_DIR"
 "$SRC_REPO/scripts/extract-template.sh" "$CASE_LITE"
 "$SRC_REPO/scripts/extract-template.sh" "$CASE_READY_INIT"
 "$SRC_REPO/scripts/extract-template.sh" "$CASE_STRICT"
 
 echo "SRC_REPO=$SRC_REPO"
 echo "TEST_ROOT=$TEST_ROOT"
+echo "SNAPSHOT_DIR=$SNAPSHOT_DIR"
 ```
 
 2. `CASE_READY_INIT`에는 컨텍스트 신호를 추가해라 (`rw-init` 검증용).
@@ -177,9 +181,9 @@ assert_korean_prose_in_tasks "$CASE_LITE"
 
 ```bash
 cd "$CASE_LITE"
-cp .ai/PLAN.md /tmp/plan.before.md
-cp .ai/PROGRESS.md /tmp/progress.before.md
-find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > /tmp/tasks.before.txt
+cp .ai/PLAN.md "$SNAPSHOT_DIR/plan.before.md"
+cp .ai/PROGRESS.md "$SNAPSHOT_DIR/progress.before.md"
+find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > "$SNAPSHOT_DIR/tasks.before.txt"
 ```
 
 `rw-feature` 실행 후:
@@ -191,10 +195,10 @@ FEATURE_FILE_COUNT=$(find .ai/features -maxdepth 1 -name '*.md' ! -name 'FEATURE
 
 FEATURE_FILE=$(find .ai/features -maxdepth 1 -name '*.md' ! -name 'FEATURE-TEMPLATE.md' ! -name 'README.md' | sort | tail -n 1)
 assert_contains "$FEATURE_FILE" "^Status: READY_FOR_PLAN$"
-cmp -s .ai/PLAN.md /tmp/plan.before.md || fail "PLAN changed by rw-feature"
-cmp -s .ai/PROGRESS.md /tmp/progress.before.md || fail "PROGRESS changed by rw-feature"
-find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > /tmp/tasks.after.feature.txt
-cmp -s /tmp/tasks.before.txt /tmp/tasks.after.feature.txt || fail "tasks changed by rw-feature"
+cmp -s .ai/PLAN.md "$SNAPSHOT_DIR/plan.before.md" || fail "PLAN changed by rw-feature"
+cmp -s .ai/PROGRESS.md "$SNAPSHOT_DIR/progress.before.md" || fail "PROGRESS changed by rw-feature"
+find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > "$SNAPSHOT_DIR/tasks.after.feature.txt"
+cmp -s "$SNAPSHOT_DIR/tasks.before.txt" "$SNAPSHOT_DIR/tasks.after.feature.txt" || fail "tasks changed by rw-feature"
 ```
 
 ### A-3. `rw-plan-lite` 실행
@@ -226,15 +230,15 @@ PLANNED_COUNT=$(rg -n "^Status: PLANNED$" .ai/features/*.md | wc -l | tr -d ' ')
 
 ```bash
 cd "$CASE_LITE"
-git rev-list --count HEAD > /tmp/rw_case_lite_commits_before.txt
-echo "COMMITS_BEFORE_RUN_LITE=$(cat /tmp/rw_case_lite_commits_before.txt)"
+git rev-list --count HEAD > "$SNAPSHOT_DIR/rw_case_lite_commits_before.txt"
+echo "COMMITS_BEFORE_RUN_LITE=$(cat "$SNAPSHOT_DIR/rw_case_lite_commits_before.txt")"
 ```
 
 `rw-run-lite` 실행 후 검증:
 
 ```bash
 cd "$CASE_LITE"
-COMMITS_BEFORE_RUN_LITE="$(cat /tmp/rw_case_lite_commits_before.txt)"
+COMMITS_BEFORE_RUN_LITE="$(cat "$SNAPSHOT_DIR/rw_case_lite_commits_before.txt")"
 COMMITS_AFTER_RUN_LITE="$(git rev-list --count HEAD)"
 echo "COMMITS_AFTER_RUN_LITE=$COMMITS_AFTER_RUN_LITE"
 assert_commit_count_increased "$COMMITS_BEFORE_RUN_LITE" "$COMMITS_AFTER_RUN_LITE"
@@ -252,9 +256,9 @@ fi
 
 ```bash
 cd "$CASE_LITE"
-cp .ai/PLAN.md /tmp/plan.before.reinit.md
-cp .ai/PROGRESS.md /tmp/progress.before.reinit.md
-find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > /tmp/tasks.before.reinit.txt
+cp .ai/PLAN.md "$SNAPSHOT_DIR/plan.before.reinit.md"
+cp .ai/PROGRESS.md "$SNAPSHOT_DIR/progress.before.reinit.md"
+find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > "$SNAPSHOT_DIR/tasks.before.reinit.txt"
 ```
 
 `rw-init` 실행 후 검증:
@@ -264,8 +268,8 @@ cd "$CASE_LITE"
 assert_contains ".ai/PLAN.md" "^## Feature Notes \\(append-only\\)"
 assert_contains ".ai/PROGRESS.md" "^## Task Status"
 assert_contains ".ai/PROGRESS.md" "^## Log"
-find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > /tmp/tasks.after.reinit.txt
-cmp -s /tmp/tasks.before.reinit.txt /tmp/tasks.after.reinit.txt || fail "task files changed unexpectedly by rw-init rerun"
+find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > "$SNAPSHOT_DIR/tasks.after.reinit.txt"
+cmp -s "$SNAPSHOT_DIR/tasks.before.reinit.txt" "$SNAPSHOT_DIR/tasks.after.reinit.txt" || fail "task files changed unexpectedly by rw-init rerun"
 assert_rw_run_completed "$CASE_LITE"
 ```
 
