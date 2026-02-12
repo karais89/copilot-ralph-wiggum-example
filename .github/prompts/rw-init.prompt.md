@@ -18,14 +18,14 @@ Responsibility boundary:
 | Stage | Responsibility |
 |---|---|
 | `rw-init` | Workspace scaffolding only (`CONTEXT`, minimal `PLAN`/`PROGRESS`, optional `TASK-01`) |
-| `rw-new-project` | Integrated new-project bootstrap (`rw-init` scaffolding + discovery + bootstrap feature/task decomposition) |
+| `rw-new-project` | Integrated new-project bootstrap (`rw-init` scaffolding + discovery + bootstrap feature seed generation) |
 | `rw-doctor` | Preflight environment check before autonomous runs (`top-level`, `runSubagent`, `git`, `.ai` readiness) |
 | `rw-feature` | Feature definition (`.ai/features/*.md`) |
 | `rw-plan` | Feature-to-task decomposition (`TASK-XX`, `PLAN Feature Notes`, `PROGRESS` sync) |
 | `rw-run` | Task implementation in product code |
 
 Critical constraints (never override):
-- Do not infer arbitrary feature scope. General feature definition/decomposition belongs to `rw-feature` and `rw-plan` (bootstrap foundation is handled in `rw-new-project`).
+- Do not infer arbitrary feature scope. General feature definition/decomposition belongs to `rw-feature` and `rw-plan` (rw-new-project seeds bootstrap feature only).
 - If repository context is insufficient, skip purpose/stack/validation inference and write explicit placeholders instead.
 - Never create more than one task file during `rw-init`.
 - Never create `TASK-02` or higher during `rw-init`.
@@ -81,11 +81,11 @@ Steps:
    - One canonical validation command when discoverable
    - Do not infer features, detailed product requirements, or functional scope.
 3) If `CONTEXT_EMPTY`, do not infer project metadata:
-   - Project name: use repository directory name.
-   - PLAN overview lines (localized to the resolved user-document language; Korean by default):
-     - `- Project purpose is undecided (user input required).`
-     - `- Technology stack is undecided.`
-     - `- Next step: run rw-new-project to finalize direction/bootstrap tasks, then run rw-run.`
+     - Project name: use repository directory name.
+     - PLAN overview lines (localized to the resolved user-document language; Korean by default):
+       - `- Project purpose is undecided (user input required).`
+       - `- Technology stack is undecided.`
+       - `- Next step: run rw-new-project to finalize direction/bootstrap feature, then run rw-plan and rw-run.`
 4) Ensure scaffolding directories exist:
    - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/runtime/`, `.ai/runtime/rw-targets/`
    - Set default target id to `workspace-root`.
