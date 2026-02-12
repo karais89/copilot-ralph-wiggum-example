@@ -57,14 +57,17 @@ Workflow:
 3) Two-step adaptive discovery (intent first, then targeted clarification):
    - Round 1 (intent capture):
      - ensure one clear intent sentence exists.
-     - if seed is empty, ask one plain-language question first:
+     - if seed is empty, ask one plain-language question via `#tool:vscode/askQuestions` first:
        - `무엇을 만들고 싶은지 한 문장으로 알려주세요. 기술/설계 용어는 몰라도 됩니다.`
+     - if `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
      - if still unresolved after one fallback, stop and output:
        - `PROJECT_IDEA_MISSING`
    - Round 2 (adaptive clarification):
      - infer likely project shape from Round 1 intent.
      - generate only high-impact follow-up questions that reduce implementation risk.
      - ask up to `DISCOVERY_MAX_FOLLOWUP_QUESTIONS` (max 3), and only for unresolved items.
+     - use `#tool:vscode/askQuestions` for this round (single grouped interaction preferred).
+     - if `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
      - preferred focus areas (pick only what is needed):
        - primary target user/use context
        - first-release scope boundary (must-have vs later)
