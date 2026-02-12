@@ -26,7 +26,7 @@
 
 - 기준 파일: `.ai/CONTEXT.md`
 - 운영 프롬프트(`.github/prompts/rw-*.prompt.md`)는 영어 본문으로 유지한다.
-- 테스트/검증 프롬프트(`.github/prompts/copilot-rw-*.prompt.md`)는 한국어/영어 중 팀 합의 언어를 사용해도 된다.
+- 별도 `copilot-rw-*` 테스트 프롬프트는 이 브랜치에서 유지하지 않는다.
 - 운영 프롬프트(`rw-*`)는 `Step 0 (Mandatory)`에서 `.ai/CONTEXT.md`를 먼저 읽고, 실패 시 `LANG_POLICY_MISSING`으로 중지한다.
 - `.ai/*` 운영 문서는 기본 한국어로 유지한다.
 - 기존(legacy) 영어 문서는 즉시 전면 번역을 강제하지 않으며, 신규 작성/수정 시 한국어를 우선한다.
