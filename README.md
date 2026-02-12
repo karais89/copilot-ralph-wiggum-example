@@ -15,7 +15,7 @@ rw-new-project  →  rw-run  →  rw-review  →  rw-feature  →  rw-plan  → 
 ```
 
 1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + low-friction discovery + bootstrap feature/task decomposition in one run)
-2. **`rw-doctor`** — Optional standalone preflight diagnostic (rw-run can auto-run equivalent checks when doctor stamp is missing/stale)
+2. **`rw-doctor`** — Optional standalone preflight diagnostic (rw-run always executes equivalent preflight once before loop)
 3. **`rw-run`** — Runs implementation subagent loop
 4. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
 5. **`rw-feature`** — Creates additional feature specification files
@@ -106,7 +106,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
      - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
      - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
    - discovery is adaptive: ask intent first, then generate only high-impact follow-up questions from that intent (safe defaults for unanswered items)
-3. Run **`rw-run`** to implement tasks (auto preflight runs when needed)
+3. Run **`rw-run`** to implement tasks (auto preflight runs once before loop)
 4. Run **`rw-review`** to validate the completed batch
 5. If review leaves pending tasks, re-run **`rw-run`** and then run **`rw-review`** again
 6. Run **`rw-feature`** to define additional product features
@@ -182,7 +182,7 @@ For verification, run the core flow directly in Copilot Chat:
 
 - **Step 0** — Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first; fails with `LANG_POLICY_MISSING` if missing
 - **rw-doctor** — Standalone preflight diagnostic for top-level turn, runSubagent availability, git readiness, and `.ai` structure
-- **RW_DOCTOR_AUTORUN_BEGIN / RW_DOCTOR_AUTORUN_PASS** — `rw-run` auto-preflight path when doctor stamp is missing/stale
+- **RW_DOCTOR_AUTORUN_BEGIN / RW_DOCTOR_AUTORUN_PASS** — `rw-run` auto-preflight path that runs once before each loop execution
 - **PAUSE.md** — Create `.ai/PAUSE.md` to halt the orchestration loop
 - **ARCHIVE_LOCK** — Prevents concurrent archive operations
 - **REVIEW-ESCALATE** — 3 consecutive review failures trigger escalation and require manual intervention

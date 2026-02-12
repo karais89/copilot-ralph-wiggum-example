@@ -61,7 +61,7 @@ scripts/
      - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
      - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
 3. `rw-run.prompt.md`를 실행한다.
-   - doctor 스탬프가 없거나 오래되면 `rw-run`이 같은 턴에서 doctor preflight를 자동 수행한다.
+   - `rw-run`은 루프 진입 전에 같은 턴에서 doctor-equivalent preflight를 항상 1회 수행한다.
    - VS Code 워크스페이스 루트와 실제 대상 프로젝트 루트가 다르면, active target id + registry를 먼저 갱신한다.
      - `workspace-root/.ai/runtime/rw-active-target-id.txt`
      - `workspace-root/.ai/runtime/rw-targets/<target-id>.env` (`TARGET_ROOT=<absolute-path>`)
@@ -80,7 +80,7 @@ scripts/
 ## 실행 순서
 
 1. 신규 프로젝트 초기화+방향 확정+bootstrap 분해: `rw-new-project.prompt.md`
-2. bootstrap 태스크 구현 루프: `rw-run.prompt.md` (필요 시 doctor preflight 자동 실행)
+2. bootstrap 태스크 구현 루프: `rw-run.prompt.md` (루프 진입 전 doctor preflight 자동 1회 실행)
 3. bootstrap 배치 리뷰: `rw-review.prompt.md`
 4. 추가 기능 정의: `rw-feature.prompt.md`
 5. 추가 기능 계획: `rw-plan.prompt.md`
@@ -178,7 +178,7 @@ scripts/
 ## rw-run 운영 규칙
 
 - `runSubagent`가 없으면 `RW_ENV_UNSUPPORTED`를 출력하고 자동 루프를 즉시 중단한다.
-- `rw-run`은 `rw-doctor` PASS 스탬프(`.ai/runtime/rw-doctor-last-pass.env`)가 없거나 불일치하면, 같은 턴에서 doctor-equivalent preflight를 자동 실행하고 통과 시 계속 진행한다.
+- `rw-run`은 같은 턴에서 doctor-equivalent preflight를 항상 1회 실행하고, 통과 시 루프로 진입한다.
 - preflight를 먼저 눈으로 확인하고 싶을 때만 `rw-doctor`를 수동 실행한다.
 - `rw-doctor`와 `rw-run`은 동일한 타깃 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/*.env`, legacy `.ai/runtime/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).
 - 오케스트레이터는 제품 코드를 직접 수정하지 않는다.
