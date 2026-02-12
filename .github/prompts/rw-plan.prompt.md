@@ -10,8 +10,10 @@ Language policy reference: `.ai/CONTEXT.md`
 Quick summary:
 - Append one feature note to `PLAN.md`.
 - Create new atomic `TASK-XX-*.md` files without renumbering existing tasks.
-  - Default features: 3-7 tasks
-  - Bootstrap foundation features: 10-20 tasks (5 allowed only when clearly very small/simple)
+  - `Planning Profile: STANDARD` (default): existing policy
+    - Default features: 3-7 tasks
+    - Bootstrap foundation features: 10-20 tasks (5 allowed only when clearly very small/simple)
+  - `Planning Profile: FAST_TEST`: 2-3 tasks (all feature types, test-speed priority)
 - Ensure new `pending` rows are visible in active `PROGRESS.md` even when archives exist.
 
 Step 0 (Mandatory):
@@ -75,8 +77,12 @@ Feature input resolution (required):
    - Select the latest READY filename by lexical sort and continue.
    - Print `FEATURE_MULTI_READY_AUTOSELECTED=<selected-filename>`.
 8) If exactly one READY candidate exists, select that file.
-9) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
-10) In any unresolved error case above, stop immediately without additional clarification questions.
+9) Resolve planning profile from selected feature file:
+   - If exact line `Planning Profile: FAST_TEST` exists, set `PLANNING_PROFILE=FAST_TEST`.
+   - Else if exact line `Planning Profile: STANDARD` exists, set `PLANNING_PROFILE=STANDARD`.
+   - Else set `PLANNING_PROFILE=STANDARD` (default).
+10) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
+11) In any unresolved error case above, stop immediately without additional clarification questions.
 
 Normalization rules:
 1) Backward compatibility: if resolved input already includes structured sections (`goal`, `constraints`, `acceptance`), preserve and use them.
@@ -116,9 +122,11 @@ Workflow:
 6) Determine next available TASK number from existing task files (max + 1).
 7) Create new atomic task files for the feature under `.ai/tasks/` as `TASK-XX-<slug>.md`.
    - Task count policy:
-     - Default features: 3~7 tasks.
-     - Bootstrap foundation features (slug/name indicates bootstrap+foundation): 10~20 tasks.
-     - If bootstrap scope is clearly very small/simple, 5 tasks are allowed.
+     - If `PLANNING_PROFILE=FAST_TEST`: 2~3 tasks (including bootstrap foundation features).
+     - If `PLANNING_PROFILE=STANDARD`:
+       - Default features: 3~7 tasks.
+       - Bootstrap foundation features (slug/name indicates bootstrap+foundation): 10~20 tasks.
+       - If bootstrap scope is clearly very small/simple, 5 tasks are allowed.
    Each file must include:
    - Title
    - Dependencies
@@ -147,5 +155,6 @@ Output format at end:
 - Created task files list
 - PROGRESS rows added count
 - Feature file status update result
+- `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
 - `FEATURE_MULTI_READY_AUTOSELECTED=<filename|none>`
 - `NEXT_COMMAND=rw-run`

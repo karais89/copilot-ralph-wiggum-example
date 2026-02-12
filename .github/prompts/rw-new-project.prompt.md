@@ -105,6 +105,7 @@ Workflow:
    - else create from `.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md` (fallback to inline equivalent structure)
    - file path pattern: `.ai/features/YYYYMMDD-HHMM-bootstrap-foundation.md`
    - ensure status is `Status: READY_FOR_PLAN`
+   - ensure planning profile line exists; default to `Planning Profile: STANDARD` when missing
    - do not change bootstrap feature status to `PLANNED` in this prompt
 
 7) Decide next command:

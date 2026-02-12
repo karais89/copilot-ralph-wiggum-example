@@ -1,5 +1,6 @@
 # FEATURE: bootstrap-foundation
 Status: READY_FOR_PLAN
+Planning Profile: STANDARD
 
 ## Summary
 - <summary>

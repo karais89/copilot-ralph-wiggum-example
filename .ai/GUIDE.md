@@ -92,9 +92,24 @@ scripts/
 9. 상태 확인: `.ai/PROGRESS.md`
 10. 스캐폴딩만 필요할 때(대안): `rw-init.prompt.md`
 
+## 운영 단순화 규칙 (고정)
+
+- 기본 실행 경로는 하나로 고정한다:
+  - `rw-new-project -> rw-plan -> rw-run -> rw-review`
+- 추가 기능도 동일 패턴만 사용한다:
+  - `rw-feature -> rw-plan -> rw-run -> rw-review`
+- 예외 프롬프트는 조건부로만 사용한다:
+  - `rw-doctor`: preflight를 별도 진단해야 할 때만
+  - `rw-archive`: `rw-run`이 archive 임계치로 중단됐을 때만
+- 기본 경로에서 벗어나는 결정은 반드시 에러 토큰 또는 `NEXT_COMMAND`를 근거로 한다.
+
 ## Feature 파일 입력 규칙
 
 - `rw-plan`은 **입력 인자 없이** `.ai/features/*.md`만 사용한다.
+- 선택된 feature 파일의 `Planning Profile` 토큰을 읽어 task 정책을 적용한다.
+  - `Planning Profile: STANDARD` (기본): 기존 정책 유지
+  - `Planning Profile: FAST_TEST`: 빠른 검증용으로 2~3 tasks 생성
+- 테스트 사이클에서는 `FAST_TEST`를 기본으로 권장한다.
 - 파일 선택 규칙:
   - 입력 후보는 `.ai/features/*.md` 중 `FEATURE-TEMPLATE.md`, `README.md`를 제외한 파일
   - `Status: READY_FOR_PLAN` 파일이 1개면 그 파일을 사용한다.
@@ -178,6 +193,18 @@ scripts/
   - `rw-run` -> `NEXT_COMMAND=rw-review` / `rw-archive` / `rw-run`
   - `rw-review` -> `NEXT_COMMAND=rw-archive` / `rw-run`
   - `rw-archive` -> `NEXT_COMMAND=rw-run`
+
+## 실패 토큰 3분류 (운영 기준)
+
+- `ENV` (환경/도구/루트)
+  - 예: `RW_ENV_UNSUPPORTED`, `TOP_LEVEL_REQUIRED`, `RW_TARGET_ROOT_INVALID`, `GIT_REPO_MISSING`, `RW_WORKSPACE_MISSING`
+  - 처리: 환경/루트/도구 가용성 먼저 복구 후 같은 프롬프트 재실행
+- `FLOW` (순서/상태)
+  - 예: `FEATURE_NOT_READY`, `FEATURE_FILE_MISSING`, `RW_TASK_DEPENDENCY_BLOCKED`, `REVIEW_BLOCKED`
+  - 처리: `NEXT_COMMAND`를 따라 상태/순서를 맞춘 뒤 재실행
+- `DATA` (필수 파일/토큰/가독성)
+  - 예: `LANG_POLICY_MISSING`, `RW_CORE_FILE_UNREADABLE`
+  - 처리: 필수 파일/헤더/토큰을 복구한 뒤 재실행
 
 ## rw-run 운영 규칙
 

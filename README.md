@@ -111,6 +111,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
      - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
    - discovery is adaptive: ask intent first, then generate only high-impact follow-up questions from that intent (safe defaults for unanswered items)
 3. Run **`rw-plan`** to generate bootstrap tasks from the seeded bootstrap feature
+   - For quick smoke tests, set `Planning Profile: FAST_TEST` in the target feature file before running `rw-plan` (generates 2-3 tasks).
 4. Run **`rw-run`** to implement tasks (auto preflight runs once before loop)
 5. Run **`rw-review`** to validate the completed batch
 6. If review leaves pending tasks, re-run **`rw-run`** and then run **`rw-review`** again
@@ -157,6 +158,36 @@ For verification, run the core flow directly in Copilot Chat:
 5. `rw-feature`
 6. `rw-plan`
 7. `rw-run`
+8. `rw-review`
+
+### Default Operation Path (Single Path)
+
+- Default path (always start here):
+  - `rw-new-project -> rw-plan -> rw-run -> rw-review`
+- Continue feature work with:
+  - `rw-feature -> rw-plan -> rw-run -> rw-review`
+- Use exception prompts only when needed:
+  - `rw-doctor`: only when checking preflight blockers explicitly
+  - `rw-archive`: only when archive thresholds stop `rw-run`
+
+### Failure Triage (3 Groups)
+
+- `ENV` (environment/tooling/root resolution)
+  - Examples: `RW_ENV_UNSUPPORTED`, `TOP_LEVEL_REQUIRED`, `RW_TARGET_ROOT_INVALID`, `GIT_REPO_MISSING`
+  - Action: fix environment/root/tool availability first, then rerun same command.
+- `FLOW` (workflow order/state mismatch)
+  - Examples: `FEATURE_NOT_READY`, `FEATURE_FILE_MISSING`, `RW_TASK_DEPENDENCY_BLOCKED`, `REVIEW_BLOCKED`
+  - Action: follow `NEXT_COMMAND` and correct status/order before rerun.
+- `DATA` (workspace file readability/format)
+  - Examples: `LANG_POLICY_MISSING`, `RW_CORE_FILE_UNREADABLE`
+  - Action: restore required files/headers/tokens, then rerun.
+
+### Fast Test Default
+
+- For test runs, treat `Planning Profile: FAST_TEST` as the default.
+- Before `rw-plan`, set this line in the selected feature file:
+  - `Planning Profile: FAST_TEST`
+- This keeps planning output in the 2-3 task range for quick validation cycles.
 
 ## Orchestration File Reference
 

@@ -11,6 +11,7 @@ Quick summary:
 - Prepare one feature input file for planning.
 - Write exactly one new `.ai/features/YYYYMMDD-HHMM-<slug>.md` file.
 - Set `Status: READY_FOR_PLAN` so `rw-plan` can consume it.
+- Set `Planning Profile: STANDARD` by default (optional override to `FAST_TEST` for quick test planning).
 - Validate the feature need explicitly (`User`, `Problem`, `Desired Outcome`, `Acceptance Signal`).
 
 Step 0 (Mandatory):
@@ -30,7 +31,7 @@ Rules:
 - Do not edit `.ai/PLAN.md`, `.ai/PROGRESS.md`, or `.ai/tasks/*`.
 - Do not create any `TASK-XX` files or PROGRESS log/status entries in rw-feature.
 - Prefer ASCII slug/file names.
-- Keep machine tokens unchanged: `Status`, `READY_FOR_PLAN`.
+- Keep machine tokens unchanged: `Status`, `READY_FOR_PLAN`, `Planning Profile`, `STANDARD`, `FAST_TEST`.
 - Must resolve the feature need with four fields:
   - `User`
   - `Problem`
@@ -80,6 +81,7 @@ Workflow:
 10) Create exactly one feature file with this structure:
    - `# FEATURE: <slug>`
    - `Status: READY_FOR_PLAN`
+   - `Planning Profile: STANDARD`
    - `## Summary`
    - `## Need Statement`
      - `- User: ...`
