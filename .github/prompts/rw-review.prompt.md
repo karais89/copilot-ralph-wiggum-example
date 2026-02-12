@@ -1,6 +1,6 @@
 ---
 name: rw-review
-description: "Strict reviewer: validate latest completed task and update REVIEW_FAIL/REVIEW-ESCALATE state"
+description: "Manual reviewer: validate latest completed task and update REVIEW_OK/REVIEW_FAIL/REVIEW-ESCALATE state"
 agent: agent
 argument-hint: "No input. Target root is resolved by .ai/runtime/rw-active-target-id.txt (preferred) or .ai/runtime/rw-active-target-root.txt (fallback)."
 ---
@@ -8,9 +8,9 @@ argument-hint: "No input. Target root is resolved by .ai/runtime/rw-active-targe
 Language policy reference: `<CONTEXT>`
 
 Quick summary:
-- Run this in strict mode to review one latest completed task.
+- Run this manually to review one latest completed task.
 - Validate acceptance criteria and verification evidence.
-- Write review outcomes to `PROGRESS` using `REVIEW_FAIL` / `REVIEW-ESCALATE`.
+- Write review outcomes to `PROGRESS` using `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`.
 
 Path resolution (mandatory before Step 0):
 - Define:
@@ -47,11 +47,11 @@ Step 0 (Mandatory):
 6) Do not modify any file before Step 0 completes, except auto-repair of target-pointer files during path resolution (`TARGET_ACTIVE_ID_FILE`, `TARGET_REGISTRY_DIR/*`, `TARGET_POINTER_FILE`).
 
 Rules:
-- This prompt may run either:
-  - directly in a top-level Copilot Chat turn, or
-  - as a reviewer subagent dispatched by `rw-run-strict`.
+- This prompt must run in a top-level Copilot Chat turn.
+  - If not top-level, print `TOP_LEVEL_REQUIRED` and stop.
 - Do not modify product code.
 - Only update review-related state in `<PROGRESS>`:
+  - `REVIEW_OK TASK-XX: verification passed`
   - `REVIEW_FAIL TASK-XX (n/3): <root-cause>`
   - `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`
   - `REVIEW-ESCALATE-RESOLVED TASK-XX: <resolution>` (manual recovery path, user-driven)
@@ -78,6 +78,7 @@ Procedure:
    - print `REVIEW_FAIL TASK-XX`
    - stop.
 6) If no issues are found:
+   - append `REVIEW_OK TASK-XX: verification passed`
    - print `REVIEW_OK TASK-XX`
    - print `✅ TASK-XX verified`
    - stop.

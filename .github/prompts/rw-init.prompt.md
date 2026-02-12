@@ -22,7 +22,7 @@ Responsibility boundary:
 | `rw-doctor` | Preflight environment check before autonomous runs (`top-level`, `runSubagent`, `git`, `.ai` readiness) |
 | `rw-feature` | Feature definition (`.ai/features/*.md`) |
 | `rw-plan` | Feature-to-task decomposition (`TASK-XX`, `PLAN Feature Notes`, `PROGRESS` sync) |
-| `rw-run-*` | Task implementation in product code |
+| `rw-run` | Task implementation in product code |
 
 Critical constraints (never override):
 - Do not infer arbitrary feature scope. General feature definition/decomposition belongs to `rw-feature` and `rw-plan` (bootstrap foundation is handled in `rw-new-project`).
@@ -85,7 +85,7 @@ Steps:
    - PLAN overview lines (localized to the resolved user-document language; Korean by default):
      - `- Project purpose is undecided (user input required).`
      - `- Technology stack is undecided.`
-     - `- Next step: run rw-new-project to finalize direction/bootstrap tasks, then run rw-run-lite or rw-run-strict.`
+     - `- Next step: run rw-new-project to finalize direction/bootstrap tasks, then run rw-run.`
 4) Ensure scaffolding directories exist:
    - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/runtime/`, `.ai/runtime/rw-targets/`
    - Set default target id to `workspace-root`.

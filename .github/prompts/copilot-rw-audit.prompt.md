@@ -17,9 +17,9 @@
 
 ## 1) Static Audit
 - 단계 책임 경계 충돌 여부:
-  - `rw-new-project / rw-doctor / rw-feature / rw-plan / rw-run-* / rw-review / rw-archive`
+  - `rw-new-project / rw-doctor / rw-feature / rw-plan / rw-run / rw-review / rw-archive`
 - 입력/출력 토큰 일관성:
-  - `LANG_POLICY_MISSING`, `RW_TARGET_ROOT_INVALID`, `RW_DOCTOR_PASS`, `RW_DOCTOR_BLOCKED`, `RW_ENV_UNSUPPORTED`, `Status`, `READY_FOR_PLAN`, `PLANNED`, `Task Status`, `Log`
+  - `LANG_POLICY_MISSING`, `RW_TARGET_ROOT_INVALID`, `RW_DOCTOR_PASS`, `RW_DOCTOR_BLOCKED`, `RW_ENV_UNSUPPORTED`, `REVIEW_REQUIRED`, `REVIEW_OK`, `REVIEW_FAIL`, `REVIEW-ESCALATE`, `Status`, `READY_FOR_PLAN`, `PLANNED`, `Task Status`, `Log`
 - idempotency 규칙 충돌 여부
 - 언어 정책 누락/충돌 여부:
   - 운영 프롬프트 본문 영어 유지 규칙
@@ -28,7 +28,7 @@
 - task 생성 규칙 충돌 여부:
   - bootstrap `10~20`
   - bootstrap 단순 범위 예외 `5`
-  - 일반 feature: Lite/Strict 공통 `3~7`
+  - 일반 feature: `3~7`
   - task 크기 `30~120`분
   - 각 task `Verification` 명령 `>=1`
 
@@ -38,8 +38,8 @@
 - context-ready 프로젝트
 - rerun(idempotency) 시나리오
 - `rw-run`에서 nested `runSubagent` 위험 잔존 여부
-- Top-level 실행 강제 규칙과 `rw-run-*` 진입/중단 규칙 정합성
-- `rw-doctor` preflight 결과(`RW_DOCTOR_PASS`/`RW_DOCTOR_BLOCKED`)와 `rw-run-*` 진입 규칙 정합성
+- Top-level 실행 강제 규칙과 `rw-run` 진입/중단 규칙 정합성
+- `rw-doctor` preflight 결과(`RW_DOCTOR_PASS`/`RW_DOCTOR_BLOCKED`)와 `rw-run` 진입 규칙 정합성
 - target root invalid 처리(`RW_TARGET_ROOT_INVALID`)와 즉시 중단 규칙 정합성
 - target-root 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/<id>.env`, legacy `.ai/runtime/rw-active-target-root.txt`) 규칙 누락/불일치 여부
 - `rw-init`/`rw-new-project`에서 포인터 세트 자동 생성·갱신 규칙이 실제 실행 흐름과 맞는지

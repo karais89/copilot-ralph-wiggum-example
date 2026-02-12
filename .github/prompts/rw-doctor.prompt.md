@@ -8,7 +8,7 @@ argument-hint: "No input. Target root is resolved by .ai/runtime/rw-active-targe
 Language policy reference: `<CONTEXT>`
 
 Quick summary:
-- Run this before `rw-run-lite` or `rw-run-strict`.
+- Run this before `rw-run`.
 - Validate environment prerequisites for autonomous mode.
 - Print machine-readable PASS/FAIL tokens and blocker list.
 
@@ -98,4 +98,4 @@ Result rules:
     - `Workspace structure: PASS`
     - `Core files readability: PASS`
   - Final line:
-    - `Safe to run rw-run-lite or rw-run-strict.`
+    - `Safe to run rw-run.`

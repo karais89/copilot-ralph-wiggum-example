@@ -10,7 +10,7 @@ Quick summary:
 - Manually archive completed rows and older logs from `.ai/PROGRESS.md`.
 - Require `.ai/PAUSE.md` before archive.
 - Use `.ai/ARCHIVE_LOCK` to prevent concurrent archive runs.
-- Keep all review logs (`REVIEW_FAIL` / `REVIEW-ESCALATE` / `REVIEW-ESCALATE-RESOLVED`) in active PROGRESS.
+- Keep all review logs (`REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` / `REVIEW-ESCALATE-RESOLVED`) in active PROGRESS.
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
@@ -66,14 +66,14 @@ Rules:
 - If archive cannot complete safely, keep `.ai/ARCHIVE_LOCK` and report manual recovery steps.
 - Keep PROGRESS.md small (active tasks only).
 - Run archive only when `archive_needed=true` or `force_archive=true`.
-- This prompt is the only archive path for both Lite and Strict. Always run manually while `.ai/PAUSE.md` is present.
+- This prompt is the only archive path for the single `rw-run` policy. Always run manually while `.ai/PAUSE.md` is present.
 - In PROGRESS.md keep:
   - Task Status table: pending/in-progress only
-  - Log: most recent 20 non-review entries + all `REVIEW_FAIL` / `REVIEW-ESCALATE` / `REVIEW-ESCALATE-RESOLVED` entries
+  - Log: most recent 20 non-review entries + all `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` / `REVIEW-ESCALATE-RESOLVED` entries
 - Move:
   - completed rows -> STATUS archive (append-only)
   - older non-review logs -> LOG archive (append-only)
-  - never move or trim `REVIEW_FAIL` / `REVIEW-ESCALATE` / `REVIEW-ESCALATE-RESOLVED` lines from active PROGRESS log
+  - never move or trim `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` / `REVIEW-ESCALATE-RESOLVED` lines from active PROGRESS log
 - If there are no completed rows in PROGRESS, skip STATUS archive and archive logs only (if needed).
 - Leave pointers in PROGRESS.md to the latest archive files.
 

@@ -93,7 +93,7 @@ Workflow:
        - `## Overview`
        - `- Project purpose is undecided (user input required).`
        - `- Technology stack is undecided.`
-       - `- Next step: generate bootstrap feature/tasks with this prompt, then run rw-run-lite or rw-run-strict.`
+       - `- Next step: generate bootstrap feature/tasks with this prompt, then run rw-run.`
        - `## Feature Notes (append-only)`
      - If exists, keep content and ensure `## Feature Notes (append-only)` section exists.
    - `TASK-01`:
@@ -173,7 +173,7 @@ Workflow:
      - `## Open Questions`
      - `## Assumptions and Defaults Used`
      - `## Recommended Next Step`
-   - In `Recommended Next Step`, recommend `rw-run-lite` (or `rw-run-strict`) if bootstrap tasks are created; otherwise recommend `rw-feature`.
+   - In `Recommended Next Step`, recommend `rw-run` if bootstrap tasks are created; otherwise recommend `rw-feature`.
 7) Create bootstrap feature input (conditional):
    - Build candidates from `.ai/features/*.md`, excluding `FEATURE-TEMPLATE.md` and `README.md`.
    - Reuse existing bootstrap feature only when file body contains exact heading line:
@@ -235,4 +235,4 @@ Output format at end:
 - Bootstrap task range and count (if created)
 - Clarification rounds used count
 - Unresolved open questions count
-- Recommended next command (`rw-run-lite`/`rw-run-strict` or `rw-feature`)
+- Recommended next command (`rw-run` or `rw-feature`)
