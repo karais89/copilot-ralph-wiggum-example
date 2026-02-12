@@ -50,7 +50,7 @@ cd copilot-ralph-wiggum-example
 ./scripts/extract-template.sh ~/your-project
 ```
 
-This copies 14 files into your project:
+This copies 18 files into your project:
 
 ```
 your-project/
@@ -65,13 +65,18 @@ your-project/
 │   ├── rw-archive.prompt.md
 │   └── RW-INTERACTIVE-POLICY.md
 ├── scripts/
-│   └── rw-resolve-target-root.sh
+│   ├── rw-resolve-target-root.sh
+│   └── rw-bootstrap-scaffold.sh
 └── .ai/                       # Structural files
     ├── CONTEXT.md             # Language policy & parser tokens
     ├── GUIDE.md               # Operational guide
-    └── features/
-        ├── FEATURE-TEMPLATE.md
-        └── README.md
+    ├── features/
+    │   ├── FEATURE-TEMPLATE.md
+    │   └── README.md
+    └── templates/
+        ├── CONTEXT-BOOTSTRAP.md
+        ├── PROJECT-CHARTER-TEMPLATE.md
+        └── BOOTSTRAP-FEATURE-TEMPLATE.md
 ```
 
 ### Option 2: Manual Copy
@@ -80,10 +85,14 @@ Copy these paths from this repo into your project:
 - `.github/prompts/*.prompt.md` (all 8 orchestration files)
 - `.github/prompts/RW-INTERACTIVE-POLICY.md`
 - `scripts/rw-resolve-target-root.sh`
+- `scripts/rw-bootstrap-scaffold.sh`
 - `.ai/CONTEXT.md`
 - `.ai/GUIDE.md`
 - `.ai/features/FEATURE-TEMPLATE.md`
 - `.ai/features/README.md`
+- `.ai/templates/CONTEXT-BOOTSTRAP.md`
+- `.ai/templates/PROJECT-CHARTER-TEMPLATE.md`
+- `.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md`
 
 Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`
 
@@ -91,6 +100,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 
 1. Open your project in VS Code with GitHub Copilot
 2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + project-direction discovery + bootstrap feature/task generation
+   - `rw-new-project` uses `scripts/rw-bootstrap-scaffold.sh` as the default scaffold path.
    - `rw-new-project` refreshes target pointers automatically:
      - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
      - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`

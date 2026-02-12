@@ -9,6 +9,7 @@
 ├── PLAN.md
 ├── PROGRESS.md
 ├── features/
+├── templates/
 └── tasks/
 
 .github/prompts/
@@ -20,6 +21,10 @@
 ├── rw-run.prompt.md
 ├── rw-review.prompt.md
 └── rw-archive.prompt.md
+
+scripts/
+├── rw-resolve-target-root.sh
+└── rw-bootstrap-scaffold.sh
 ```
 
 ## 언어 정책
@@ -40,12 +45,14 @@
 - archive 임계치 도달 시 `rw-run`은 중단하고 `rw-archive`를 수동 실행한다.
 - 대화형 입력 fallback은 `.github/prompts/RW-INTERACTIVE-POLICY.md` 단일 정책을 따른다.
 - target root 해석은 `scripts/rw-resolve-target-root.sh`를 공통 기준으로 사용한다.
+- 신규 스캐폴딩은 `scripts/rw-bootstrap-scaffold.sh`를 공통 기준으로 사용한다.
 
 ## 사용 방법
 
 1. VS Code Copilot Chat에서 새 대화를 연다.
 2. 신규/빈 저장소에서는 `rw-new-project.prompt.md`를 먼저 실행한다(초기 1회).
    - `rw-new-project`는 `rw-init + discovery + bootstrap feature/task 분해` 통합 프롬프트다.
+   - 스캐폴딩은 우선 `scripts/rw-bootstrap-scaffold.sh`를 사용한다.
    - `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap task 생성까지 한 번에 수행한다.
    - 실행 중 아래 타깃 포인터를 현재 워크스페이스 루트 기준으로 자동 갱신한다.
      - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`

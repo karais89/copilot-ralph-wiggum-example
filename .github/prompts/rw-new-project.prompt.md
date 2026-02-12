@@ -1,6 +1,6 @@
 ---
 name: rw-new-project
-description: "Integrated new-project bootstrap: scaffolding + discovery + bootstrap feature/task planning in one prompt."
+description: "Integrated new-project bootstrap: scaffold + bounded discovery + bootstrap feature/task planning"
 agent: agent
 argument-hint: "Optional one-line project idea. Example: shared travel itinerary planner."
 ---
@@ -8,235 +8,132 @@ argument-hint: "Optional one-line project idea. Example: shared travel itinerary
 Language policy reference: `.ai/CONTEXT.md`
 
 Quick summary:
-- Use this prompt when the repository is new/empty and project intent is not yet defined.
-- Perform workspace scaffolding (`CONTEXT`, `PLAN`, `PROGRESS`, optional `TASK-01`) and project discovery in one run.
-- Create one bootstrap feature and decompose bootstrap foundation tasks (`TASK-02+`) for the agreed project charter.
-- Update `PLAN.md` overview and create one discovery note under `.ai/notes/`.
-- Keep discovery interactive but bounded: fixed 4 discovery questions, max 2 rounds.
+- Use this prompt for new/empty repositories.
+- Keep role boundary: `rw-init` responsibilities are included here, plus bounded discovery and bootstrap decomposition.
+- Use shared scaffold script and templates to minimize ad-hoc branching.
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
-2) If `.ai/CONTEXT.md` is missing, create it first with a minimal bootstrap language-policy template, then read it.
+2) If missing, create it from `.ai/templates/CONTEXT-BOOTSTRAP.md` when available; otherwise create a minimal bootstrap context file.
 3) If `.ai/CONTEXT.md` exists but is unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
 4) Validate language policy internally and proceed silently (no confirmation line).
 5) Do not modify any file before Step 0 completes, except creating `.ai/CONTEXT.md` when missing.
 
-Bootstrap template for `.ai/CONTEXT.md` (when missing):
-- `# Workspace Context`
-- `## Language Policy`
-  - Prompt body language (`.github/prompts/rw-*.prompt.md`): English (required)
-  - User document language (`.ai/*` docs): Korean by default
-  - Commit message language: English (Conventional Commits)
-- `## Machine-Parsed Tokens (Do Not Translate)`
-  - `Task Status`, `Log`
-  - `pending`, `in-progress`, `completed`
-  - `LANG_POLICY_MISSING`
-- `## Prompt Authoring Rules`
-  - Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first via Step 0
+Inputs:
+- `projectIdea` (optional)
+- literal marker `[NON_INTERACTIVE]` in `projectIdea` (optional)
 
-Project idea input (optional): ${input:projectIdea:Optional one-line project idea. Example: shared travel itinerary planner.}
-Non-interactive marker (optional): include literal token `[NON_INTERACTIVE]` in `projectIdea` to force non-interactive bootstrap.
-
-You are initializing a new Ralph orchestration workspace and defining initial project direction.
-
-Target files:
-- `.ai/CONTEXT.md` (create only if missing)
-- `.ai/PLAN.md` (required)
-- `.ai/PROGRESS.md` (required)
-- `.ai/runtime/rw-active-target-id.txt` (required, active target id pointer)
-- `.ai/runtime/rw-targets/<target-id>.env` (required, target registry entry)
-- `.ai/runtime/rw-active-target-root.txt` (required, target root pointer; legacy compatibility)
-- `.ai/tasks/TASK-01-bootstrap-workspace.md` (optional, create only when no task files exist)
-- `.ai/tasks/TASK-02-*.md` ... (bootstrap foundation tasks, conditional)
-- `.ai/features/YYYYMMDD-HHMM-bootstrap-foundation.md` (bootstrap feature, conditional)
-- `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md` (required, create exactly one)
+Constants (do not change during one run):
+- `DISCOVERY_FIELDS=4`
+- `DISCOVERY_MAX_ROUNDS=2`
+- `BOOTSTRAP_DEFAULT_TASK_COUNT=10`
+- `BOOTSTRAP_SMALL_SCOPE_TASK_COUNT=5`
+- `TASK_SIZE_MIN_MINUTES=30`
+- `TASK_SIZE_MAX_MINUTES=120`
 
 Rules:
 - Do not edit product code.
-- This prompt must run in a top-level Copilot Chat turn. If invoked in nested/subagent context, output `TOP_LEVEL_REQUIRED` and stop.
-- This prompt may create exactly one bootstrap feature file under `.ai/features/`.
-- This prompt may create `TASK-02+` only for bootstrap foundation decomposition.
-- Keep existing `PROGRESS` task rows/log entries unchanged on rerun; add only missing task rows.
-- Keep `.ai/PLAN.md` concise; do not add full PRD/spec decomposition.
-- Keep machine tokens untouched where present (`Task Status`, `Log`, status enums).
-- Write user-facing content in language resolved from `.ai/CONTEXT.md` (default Korean if ambiguous).
-- Keep task section headers unchanged (`Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Verification`) and write section values/prose in the resolved user-document language.
+- This prompt must run in a top-level Copilot Chat turn.
+  - If not top-level, output `TOP_LEVEL_REQUIRED` and stop.
 - Interactive fallback must follow `.github/prompts/RW-INTERACTIVE-POLICY.md`.
-- Structured discovery questions (interactive mode only):
-  - Ask exactly these 4 domains in Round 1:
-    - target users
-    - core user value/problem
-    - MVP scope (in/out)
-    - constraints + one verification baseline command
-  - Use single-choice options with `AI_DECIDE` when practical.
-  - Round 2 is optional and limited to unresolved high-impact items only (max 2 focused questions).
-  - Do not run more than 2 rounds.
-- Non-interactive mode:
-  - Enable when either:
-    - `projectIdea` contains literal token `[NON_INTERACTIVE]`, or
-    - `.ai/runtime/rw-noninteractive.flag` exists.
-  - In this mode, never call `#tool:vscode/askQuestions` and never ask interactive follow-up questions.
-  - Resolve missing values with safe defaults (`AI_DECIDE` equivalent) and continue.
-- Bootstrap task sizing rule:
-  - Each task should be independently deliverable in roughly 30~120 minutes.
-  - If a task is likely >120 minutes, split it.
-  - If a task is likely <30 minutes and not independently valuable, merge it.
-  - Each task must include at least one concrete verification command in `Verification`.
-- Bootstrap task count rule:
-  - Default target: 10 tasks.
-  - Very small/simple bootstrap scope: 5 tasks.
-  - Keep bootstrap decomposition compact in `rw-new-project`; additional decomposition belongs to `rw-plan`.
+- Keep machine tokens unchanged (`Task Status`, `Log`, `pending`, `Status`, `READY_FOR_PLAN`, `PLANNED`).
+- Keep task section headers unchanged (`Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Verification`).
+- Write user-facing prose in language resolved from `.ai/CONTEXT.md` (default Korean if ambiguous).
+- Keep bootstrap decomposition compact in `rw-new-project`; additional decomposition belongs to `rw-plan`.
+- Task policy:
+  - size target: 30~120 minutes per task
+  - if likely >120 minutes split, if <30 minutes and not independently valuable merge
+  - each task must include at least one concrete verification command
+- Idempotency:
+  - never renumber existing tasks
+  - never rewrite existing history in `PLAN Feature Notes` or `PROGRESS Log`
+  - add missing rows/files only
 
 Workflow:
-1) Ensure scaffolding directories exist:
-   - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/features/`, `.ai/runtime/`, `.ai/runtime/rw-targets/`
-   - Set default target id to `workspace-root`.
-   - Write current workspace root absolute path to `.ai/runtime/rw-active-target-root.txt` (legacy compatibility; overwrite if exists).
-   - Write `workspace-root` to `.ai/runtime/rw-active-target-id.txt` (overwrite if exists).
-   - Write `.ai/runtime/rw-targets/workspace-root.env` with:
-     - `TARGET_ID=workspace-root`
-     - `TARGET_ROOT=<current-workspace-root-absolute-path>`
-   - Always keep `.ai/runtime/rw-active-target-root.txt` as a plain absolute path.
-2) Bootstrap minimal workspace files:
-   - `PLAN.md`:
-     - If missing, create:
-       - `# <repository-name>`
-       - `## Overview`
-       - `- Project purpose is undecided (user input required).`
-       - `- Technology stack is undecided.`
-       - `- Next step: generate bootstrap feature/tasks with this prompt, then run rw-run.`
-       - `## Feature Notes (append-only)`
-     - If exists, keep content and ensure `## Feature Notes (append-only)` section exists.
-   - `TASK-01`:
-     - If no `TASK-XX-*.md` exists, create `TASK-01-bootstrap-workspace.md` with:
-       - Title
-       - Dependencies
-       - Description
-       - Acceptance Criteria
-       - Files to Create/Modify
-       - Verification
-       - Keep the section headers above exactly as written, but write all values/prose in the resolved user-document language.
-   - `PROGRESS.md`:
-     - If missing, create:
-       - `# Progress`
-       - `## Task Status`
-       - `| Task | Title | Status | Commit |`
-       - `|------|-------|--------|--------|`
-       - one row per existing task file as `pending` with commit `-`
-       - `## Log`
-       - `- **YYYY-MM-DD** — Initial workspace scaffolded by rw-new-project.`
-     - If exists, keep existing rows/logs and add only missing task rows as `pending`.
-     - For newly added rows, write the `Title` value in the same resolved user-document language.
-3) Resolve initial direction seed:
-   - Determine `NON_INTERACTIVE_MODE` first:
-     - true if `projectIdea` contains `[NON_INTERACTIVE]` OR `.ai/runtime/rw-noninteractive.flag` exists.
-     - if marker token is present in `projectIdea`, remove only that marker token and keep remaining text.
-   - Resolve seed with deterministic precedence:
-     - `projectIdea` (cleaned) if present
-     - else latest meaningful PLAN overview
-     - else latest PROJECT-CHARTER summary
-     - else default seed: `A minimal CLI to capture and summarize meeting action items`
-4) Structured discovery rounds (question-first, bounded):
-   - If `NON_INTERACTIVE_MODE=true`, skip interactive rounds and apply defaults (`AI_DECIDE` equivalent).
-   - If `NON_INTERACTIVE_MODE=false`, run at most 2 rounds:
-     - Round 1 (mandatory): collect exactly 4 domains:
+1) Scaffold baseline via shared script:
+   - Preferred: run `scripts/rw-bootstrap-scaffold.sh "<workspace-root-absolute-path>"`.
+   - If script is unavailable, perform equivalent minimal scaffold manually:
+     - ensure `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/features/`, `.ai/runtime/`, `.ai/runtime/rw-targets/`.
+     - ensure pointer trio exists and is synchronized:
+       - `.ai/runtime/rw-active-target-id.txt`
+       - `.ai/runtime/rw-targets/workspace-root.env`
+       - `.ai/runtime/rw-active-target-root.txt`
+     - create `PLAN.md`, `PROGRESS.md`, and optional `TASK-01-bootstrap-workspace.md` only when missing.
+
+2) Resolve `NON_INTERACTIVE_MODE`:
+   - true if `projectIdea` contains `[NON_INTERACTIVE]` OR `.ai/runtime/rw-noninteractive.flag` exists.
+   - remove marker token from `projectIdea` if present.
+
+3) Resolve direction seed deterministically:
+   - `projectIdea` (cleaned) if present
+   - else latest meaningful `PLAN` overview
+   - else latest `PROJECT-CHARTER` summary
+   - else default seed: `A minimal CLI to capture and summarize meeting action items`
+
+4) Bounded discovery:
+   - If `NON_INTERACTIVE_MODE=true`, skip questions and apply defaults.
+   - If `NON_INTERACTIVE_MODE=false`:
+     - Round 1 (required): collect exactly 4 fields:
        - target users
-       - core user value/problem
+       - core value/problem
        - MVP in-scope vs out-of-scope
        - constraints/preferences + verification baseline command
-     - Preferred tool: `#tool:vscode/askQuestions` in one grouped interaction.
-     - If unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
-     - Round 2 (optional): only for unresolved high-impact ambiguity, max 2 focused questions.
+     - Round 2 (optional): ask at most 2 follow-up questions for unresolved high-impact ambiguity.
    - After Round 2, fill unresolved fields with safe defaults and continue.
-   - Record unresolved ambiguities in:
-     - `## Open Questions`
-     - `## Assumptions and Defaults Used`
-5) Update `.ai/PLAN.md` overview:
-   - Keep title line (`# ...`) unchanged unless missing.
-   - Replace placeholder-style overview lines when present.
-   - If overview already has meaningful content, append a dated direction update block instead of full rewrite.
-   - Ensure `## Feature Notes (append-only)` exists and remains unchanged.
-   - Keep overview to 5-10 concise lines:
-     - project purpose
-     - target users
-     - MVP scope
-     - key constraints
-     - verification baseline
-6) Create exactly one discovery note file:
-   - Path: `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md` (local date)
-   - If same-day file exists, append `-v2`, `-v3`, ...
-   - Required sections:
-     - `# Project Charter`
-     - `## Summary`
-     - `## Target Users`
-     - `## Problem and Value`
-     - `## MVP In Scope`
-     - `## Out of Scope`
-     - `## Constraints and Preferences`
-     - `## Verification Baseline`
-     - `## Open Questions`
-     - `## Assumptions and Defaults Used`
-     - `## Recommended Next Step`
-   - In `Recommended Next Step`, recommend `rw-run` if bootstrap tasks are created; otherwise recommend `rw-feature`.
-7) Create bootstrap feature input (conditional):
-   - Build candidates from `.ai/features/*.md`, excluding `FEATURE-TEMPLATE.md` and `README.md`.
-   - Reuse existing bootstrap feature only when file body contains exact heading line:
-     - `# FEATURE: bootstrap-foundation`
-   - If multiple files match, select the latest by filename sort.
-   - Otherwise create exactly one new file:
-     - path: `.ai/features/YYYYMMDD-HHMM-bootstrap-foundation.md`
-     - If same timestamp file exists, append `-v2`, `-v3`, ...
-     - Required structure:
-       - `# FEATURE: bootstrap-foundation`
-       - `Status: READY_FOR_PLAN`
-       - `## Summary`
-       - `## User Value`
-       - `## Goal`
-       - `## In Scope`
-       - `## Out of Scope`
-       - `## Functional Requirements`
-       - `## Constraints`
-       - `## Acceptance`
-       - `## Edge Cases and Error Handling`
-       - `## Verification Baseline`
-       - `## Risks and Open Questions`
-       - `## Notes`
-   - Content source: use the finalized project charter from Steps 3~6.
-8) Bootstrap task decomposition (conditional, no product-code implementation):
-   - Decompose only if no `TASK-02+` files currently exist.
-   - Determine next task number from existing tasks (`TASK-01` may already exist); start at max+1.
-   - Determine bootstrap task count deterministically:
-     - Use 5 only when scope is clearly very small/simple (narrow CLI/util with minimal modules).
-     - Otherwise use 10.
-   - Generate atomic tasks as `TASK-XX-<slug>.md` with required sections:
-     - Title
-     - Dependencies
-     - Description
-     - Acceptance Criteria
-     - Files to Create/Modify
-     - Verification
-   - Enforce sizing: each task should be approximately 30~120 minutes.
-   - Enforce verification: each task includes at least one concrete command in `Verification`.
-   - Focus tasks on foundation only (repo setup, architecture skeleton, baseline tests/verification, core guardrails implied by charter).
-   - Update `.ai/PLAN.md` `## Feature Notes (append-only)` with one bootstrap line:
-     - `YYYY-MM-DD: [bootstrap-foundation] ... Related tasks: TASK-XX~TASK-YY.`
-   - Update `.ai/PROGRESS.md` by adding new task rows as `pending` with commit `-` and append one bootstrap planning log line.
-   - Update bootstrap feature status:
-     - `Status: READY_FOR_PLAN` -> `Status: PLANNED`
-     - Append plan output note with task range and date.
-   - If `TASK-02+` already exists, skip decomposition and keep existing task history unchanged.
-9) Idempotency:
-   - Rerunning this prompt must not erase existing history (`PLAN Feature Notes`, `PROGRESS` logs/rows).
-   - Apply additive/minimal updates only when files already exist.
-   - Never renumber or rewrite existing `TASK-02+` files generated in prior runs.
 
-Output format at end:
-- Scaffolding result (`PLAN`/`PROGRESS`/`TASK-01`)
-- PLAN overview update result (updated/appended)
-- Charter note file path
-- Bootstrap feature file path and status
-- Bootstrap task generation result (created/skipped)
-- Bootstrap task range and count (if created)
-- Discovery rounds used count (max 2)
-- Unresolved open questions count
-- Recommended next command (`rw-run` or `rw-feature`)
+5) Update `PLAN.md` overview (concise):
+   - keep title unchanged unless missing
+   - ensure `## Feature Notes (append-only)` exists
+   - write/update 5~10 lines only: purpose, users, MVP scope, constraints, verification baseline
+
+6) Create one project charter note from template:
+   - use `.ai/templates/PROJECT-CHARTER-TEMPLATE.md` when available
+   - output path: `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md` (or `-v2`, `-v3`, ...)
+   - include sections:
+     - Summary
+     - Target Users
+     - Problem and Value
+     - MVP In Scope
+     - Out of Scope
+     - Constraints and Preferences
+     - Verification Baseline
+     - Open Questions
+     - Assumptions and Defaults Used
+     - Recommended Next Step
+
+7) Create or reuse bootstrap feature input:
+   - reuse the latest `.ai/features/*.md` containing exact heading `# FEATURE: bootstrap-foundation`
+   - else create from `.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md` (fallback to inline equivalent structure)
+   - file path pattern: `.ai/features/YYYYMMDD-HHMM-bootstrap-foundation.md`
+   - ensure status is `Status: READY_FOR_PLAN`
+
+8) Bootstrap task decomposition (no product code implementation):
+   - run only when no `TASK-02+` files exist
+   - determine task count deterministically:
+     - use `BOOTSTRAP_SMALL_SCOPE_TASK_COUNT` (5) only for clearly small/simple scope
+     - otherwise use `BOOTSTRAP_DEFAULT_TASK_COUNT` (10)
+   - create `TASK-XX-<slug>.md` files with required sections
+   - update:
+     - `PLAN.md` `Feature Notes` append one bootstrap line with task range
+     - `PROGRESS.md` add pending rows and one bootstrap planning log entry
+   - update bootstrap feature status:
+     - `Status: READY_FOR_PLAN` -> `Status: PLANNED`
+     - append short plan output note with task range/date
+   - if `TASK-02+` already exists, skip decomposition
+
+9) Recommended next command:
+   - `rw-run` when bootstrap tasks are created or pending
+   - otherwise `rw-feature`
+
+Output format (machine-friendly, fixed keys):
+- `SCAFFOLD_RESULT=<created|updated|skipped>`
+- `PLAN_OVERVIEW_RESULT=<created|updated|appended|unchanged>`
+- `CHARTER_FILE=<path>`
+- `BOOTSTRAP_FEATURE_FILE=<path>`
+- `BOOTSTRAP_FEATURE_STATUS=<READY_FOR_PLAN|PLANNED>`
+- `BOOTSTRAP_TASKS=<created|skipped>`
+- `TASK_RANGE=<TASK-XX~TASK-YY|none>`
+- `TASK_COUNT=<n>`
+- `DISCOVERY_ROUNDS=<0|1|2>`
+- `UNRESOLVED_OPEN_QUESTIONS=<n>`
+- `NEXT_COMMAND=<rw-run|rw-feature>`
