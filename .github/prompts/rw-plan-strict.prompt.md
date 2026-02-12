@@ -43,13 +43,13 @@ Rules:
   - Each task must include at least one concrete verification command in `Verification`.
 - Non-interactive mode:
   - Enable when either:
-    - `.tmp/rw-noninteractive.flag` exists.
+    - `.ai/runtime/rw-noninteractive.flag` exists.
   - In this mode, never call `#tool:vscode/askQuestions` and never ask interactive follow-up questions.
   - Resolve selection/clarification with deterministic defaults and continue.
 
 Feature input resolution (required):
 1) Determine `NON_INTERACTIVE_MODE`:
-   - true if `.tmp/rw-noninteractive.flag` exists.
+   - true if `.ai/runtime/rw-noninteractive.flag` exists.
 2) Read `.ai/features/`.
 3) If `.ai/features/` is missing or unreadable, stop immediately and print:
    - first line exactly: `FEATURES_DIR_MISSING`

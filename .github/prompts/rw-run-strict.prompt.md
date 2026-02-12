@@ -2,7 +2,7 @@
 name: rw-run-strict
 description: "Ralph Strict: orchestration loop using PLAN/TASKS/PROGRESS and subagents + reviewer"
 agent: agent
-argument-hint: "No input. Target root is resolved by .tmp/rw-active-target-id.txt (preferred) or .tmp/rw-active-target-root.txt (fallback)."
+argument-hint: "No input. Target root is resolved by .ai/runtime/rw-active-target-id.txt (preferred) or .ai/runtime/rw-active-target-root.txt (fallback)."
 ---
 
 Language policy reference: `<CONTEXT>`
@@ -14,11 +14,11 @@ Quick summary:
 
 Path resolution (mandatory before Step 0):
 - Define:
-  - `TARGET_ACTIVE_ID_FILE` as `workspace-root/.tmp/rw-active-target-id.txt`
-  - `TARGET_REGISTRY_DIR` as `workspace-root/.tmp/rw-targets/`
-  - `TARGET_POINTER_FILE` as `workspace-root/.tmp/rw-active-target-root.txt` (legacy fallback)
+  - `TARGET_ACTIVE_ID_FILE` as `workspace-root/.ai/runtime/rw-active-target-id.txt`
+  - `TARGET_REGISTRY_DIR` as `workspace-root/.ai/runtime/rw-targets/`
+  - `TARGET_POINTER_FILE` as `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
 - Ignore any prompt argument for target-root resolution.
-- Ensure `workspace-root/.tmp/` exists.
+- Ensure `workspace-root/.ai/runtime/` exists.
 - Resolve `RAW_TARGET` and `TARGET_ID` in this order:
   1) If `TARGET_ACTIVE_ID_FILE` has a readable first non-empty line and `TARGET_REGISTRY_DIR/<TARGET_ID>.env` exists with `TARGET_ROOT=<absolute-path>`, use that `TARGET_ROOT` as `RAW_TARGET`.
   2) Else if `TARGET_POINTER_FILE` exists and first non-empty line is readable, use that line as `RAW_TARGET` and set `TARGET_ID=legacy-root-pointer`.

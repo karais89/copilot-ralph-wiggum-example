@@ -12,15 +12,6 @@ read_first_non_empty() {
   sed -n '/./{p;q;}' "$file"
 }
 
-normalize_target_root() {
-  local raw="$1"
-  if [ "${raw#TEST_HARNESS:}" != "$raw" ]; then
-    printf '%s\n' "${raw#TEST_HARNESS:}"
-  else
-    printf '%s\n' "$raw"
-  fi
-}
-
 validate_target_id() {
   local target_id="$1"
   printf '%s\n' "$target_id" | rg -q '^[A-Za-z0-9][A-Za-z0-9._-]{1,63}$' || fail "invalid target id: $target_id"
@@ -49,19 +40,19 @@ SRC_REPO="${2:-$(pwd)}"
 TARGET_ID="${3:-}"
 TARGET_ROOT_INPUT="${4:-}"
 
-TMP_DIR="$SRC_REPO/.tmp"
-TARGET_POINTER_FILE="$TMP_DIR/rw-active-target-root.txt"
-ACTIVE_TARGET_ID_FILE="$TMP_DIR/rw-active-target-id.txt"
-TARGETS_DIR="$TMP_DIR/rw-targets"
+RUNTIME_DIR="$SRC_REPO/.ai/runtime"
+TARGET_POINTER_FILE="$RUNTIME_DIR/rw-active-target-root.txt"
+ACTIVE_TARGET_ID_FILE="$RUNTIME_DIR/rw-active-target-id.txt"
+TARGETS_DIR="$RUNTIME_DIR/rw-targets"
 
-mkdir -p "$TMP_DIR" "$TARGETS_DIR"
+mkdir -p "$RUNTIME_DIR" "$TARGETS_DIR"
 
 case "$CMD" in
   set-active)
     [ -n "$TARGET_ID" ] || fail "missing TARGET_ID"
     [ -n "$TARGET_ROOT_INPUT" ] || fail "missing TARGET_ROOT"
     validate_target_id "$TARGET_ID"
-    TARGET_ROOT="$(normalize_target_root "$TARGET_ROOT_INPUT")"
+    TARGET_ROOT="$TARGET_ROOT_INPUT"
     validate_target_root "$TARGET_ROOT"
     TARGET_ENV_FILE="$TARGETS_DIR/$TARGET_ID.env"
     {
@@ -82,7 +73,6 @@ case "$CMD" in
       TARGET_ENV_FILE="$TARGETS_DIR/$ACTIVE_ID.env"
       TARGET_ROOT="$(read_target_root_from_env "$TARGET_ENV_FILE" || true)"
       if [ -n "$TARGET_ROOT" ]; then
-        TARGET_ROOT="$(normalize_target_root "$TARGET_ROOT")"
         validate_target_root "$TARGET_ROOT"
         printf '%s\n' "$TARGET_ROOT" > "$TARGET_POINTER_FILE"
         echo "RW_TARGET_RESOLVED_OK"
@@ -94,7 +84,7 @@ case "$CMD" in
 
     RAW_TARGET="$(read_first_non_empty "$TARGET_POINTER_FILE")"
     if [ -n "$RAW_TARGET" ]; then
-      TARGET_ROOT="$(normalize_target_root "$RAW_TARGET")"
+      TARGET_ROOT="$RAW_TARGET"
       validate_target_root "$TARGET_ROOT"
       FALLBACK_ID="${ACTIVE_ID:-legacy-root-pointer}"
       if [ -z "${ACTIVE_ID:-}" ]; then

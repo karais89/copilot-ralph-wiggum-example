@@ -62,11 +62,10 @@ Create (or update without overwriting blindly) this structure:
 - PROGRESS.md (Task Status + Log skeleton)
 - tasks/ (task files)
 - GUIDE.md (optional quickstart)
-
-.tmp/
-- rw-active-target-id.txt (active target id pointer)
-- rw-targets/<target-id>.env (target registry entry; includes TARGET_ROOT)
-- rw-active-target-root.txt (target root pointer)
+- runtime/
+  - rw-active-target-id.txt (active target id pointer)
+  - rw-targets/<target-id>.env (target registry entry; includes TARGET_ROOT)
+  - rw-active-target-root.txt (target root pointer)
 
 Steps:
 1) Resolve repository context readiness non-interactively.
@@ -88,14 +87,14 @@ Steps:
      - `- Technology stack is undecided.`
      - `- Next step: run rw-new-project to finalize direction/bootstrap tasks, then run rw-run-lite or rw-run-strict.`
 4) Ensure scaffolding directories exist:
-   - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.tmp/`, `.tmp/rw-targets/`
+   - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/runtime/`, `.ai/runtime/rw-targets/`
    - Set default target id to `workspace-root`.
-   - Write current workspace root absolute path to `.tmp/rw-active-target-root.txt` (legacy compatibility; overwrite if exists).
-   - Write `workspace-root` to `.tmp/rw-active-target-id.txt` (overwrite if exists).
-   - Write `.tmp/rw-targets/workspace-root.env` with:
+   - Write current workspace root absolute path to `.ai/runtime/rw-active-target-root.txt` (legacy compatibility; overwrite if exists).
+   - Write `workspace-root` to `.ai/runtime/rw-active-target-id.txt` (overwrite if exists).
+   - Write `.ai/runtime/rw-targets/workspace-root.env` with:
      - `TARGET_ID=workspace-root`
      - `TARGET_ROOT=<current-workspace-root-absolute-path>`
-   - Always keep `.tmp/rw-active-target-root.txt` as a plain absolute path.
+   - Always keep `.ai/runtime/rw-active-target-root.txt` as a plain absolute path.
 5) Create or update `PLAN.md` with strict boundaries:
    - If `PLAN.md` is missing, create exactly:
      - `# <project-name>`

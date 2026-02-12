@@ -38,7 +38,7 @@ Rules:
 - Non-interactive mode:
   - Enable when either:
     - `featureSummary` contains literal token `[NON_INTERACTIVE]`, or
-    - `.tmp/rw-noninteractive.flag` exists.
+    - `.ai/runtime/rw-noninteractive.flag` exists.
   - In this mode, never call `#tool:vscode/askQuestions` and never ask interactive follow-up questions.
   - Resolve missing values with safe defaults (`AI_DECIDE` equivalent) and continue.
 - Write `.ai/features/*.md` content in the user-document language resolved from `.ai/CONTEXT.md`.
@@ -52,7 +52,7 @@ Workflow:
 3) If `.ai/features/README.md` is missing, create a minimal usage note with status flow (`DRAFT` -> `READY_FOR_PLAN` -> `PLANNED`).
 4) Resolve output language for user-facing prose from `.ai/CONTEXT.md` (user document language policy).
 5) Resolve `NON_INTERACTIVE_MODE` first:
-   - true if `featureSummary` contains `[NON_INTERACTIVE]` OR `.tmp/rw-noninteractive.flag` exists.
+   - true if `featureSummary` contains `[NON_INTERACTIVE]` OR `.ai/runtime/rw-noninteractive.flag` exists.
    - if marker token is present in `featureSummary`, remove only that marker token and keep remaining text.
 6) Resolve initial summary:
    - Use `featureSummary` if provided.

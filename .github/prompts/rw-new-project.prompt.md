@@ -42,9 +42,9 @@ Target files:
 - `.ai/CONTEXT.md` (create only if missing)
 - `.ai/PLAN.md` (required)
 - `.ai/PROGRESS.md` (required)
-- `.tmp/rw-active-target-id.txt` (required, active target id pointer)
-- `.tmp/rw-targets/<target-id>.env` (required, target registry entry)
-- `.tmp/rw-active-target-root.txt` (required, target root pointer; legacy compatibility)
+- `.ai/runtime/rw-active-target-id.txt` (required, active target id pointer)
+- `.ai/runtime/rw-targets/<target-id>.env` (required, target registry entry)
+- `.ai/runtime/rw-active-target-root.txt` (required, target root pointer; legacy compatibility)
 - `.ai/tasks/TASK-01-bootstrap-workspace.md` (optional, create only when no task files exist)
 - `.ai/tasks/TASK-02-*.md` ... (bootstrap foundation tasks, conditional)
 - `.ai/features/YYYYMMDD-HHMM-bootstrap-foundation.md` (bootstrap feature, conditional)
@@ -64,7 +64,7 @@ Rules:
 - Non-interactive mode:
   - Enable when either:
     - `projectIdea` contains literal token `[NON_INTERACTIVE]`, or
-    - `.tmp/rw-noninteractive.flag` exists.
+    - `.ai/runtime/rw-noninteractive.flag` exists.
   - In this mode, never call `#tool:vscode/askQuestions` and never ask interactive follow-up questions.
   - Resolve missing values with safe defaults (`AI_DECIDE` equivalent) and continue.
 - Bootstrap task sizing rule:
@@ -78,14 +78,14 @@ Rules:
 
 Workflow:
 1) Ensure scaffolding directories exist:
-   - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/features/`, `.tmp/`, `.tmp/rw-targets/`
+   - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/features/`, `.ai/runtime/`, `.ai/runtime/rw-targets/`
    - Set default target id to `workspace-root`.
-   - Write current workspace root absolute path to `.tmp/rw-active-target-root.txt` (legacy compatibility; overwrite if exists).
-   - Write `workspace-root` to `.tmp/rw-active-target-id.txt` (overwrite if exists).
-   - Write `.tmp/rw-targets/workspace-root.env` with:
+   - Write current workspace root absolute path to `.ai/runtime/rw-active-target-root.txt` (legacy compatibility; overwrite if exists).
+   - Write `workspace-root` to `.ai/runtime/rw-active-target-id.txt` (overwrite if exists).
+   - Write `.ai/runtime/rw-targets/workspace-root.env` with:
      - `TARGET_ID=workspace-root`
      - `TARGET_ROOT=<current-workspace-root-absolute-path>`
-   - Always keep `.tmp/rw-active-target-root.txt` as a plain absolute path.
+   - Always keep `.ai/runtime/rw-active-target-root.txt` as a plain absolute path.
 2) Bootstrap minimal workspace files:
    - `PLAN.md`:
      - If missing, create:
@@ -118,7 +118,7 @@ Workflow:
      - For newly added rows, write the `Title` value in the same resolved user-document language.
 3) Resolve initial direction input:
    - Determine `NON_INTERACTIVE_MODE` first:
-     - true if `projectIdea` contains `[NON_INTERACTIVE]` OR `.tmp/rw-noninteractive.flag` exists.
+     - true if `projectIdea` contains `[NON_INTERACTIVE]` OR `.ai/runtime/rw-noninteractive.flag` exists.
      - if marker token is present in `projectIdea`, remove only that marker token and keep remaining text.
    - If `projectIdea` is present, use it as seed.
    - If `projectIdea` is missing, first try rerun-safe reuse:

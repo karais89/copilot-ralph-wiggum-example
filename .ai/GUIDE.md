@@ -52,14 +52,14 @@
    - `rw-new-project`는 `rw-init + discovery + bootstrap feature/task 분해` 통합 프롬프트다.
    - `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap task 생성까지 한 번에 수행한다.
    - 실행 중 아래 타깃 포인터를 현재 워크스페이스 루트 기준으로 자동 갱신한다.
-     - `workspace-root/.tmp/rw-active-target-id.txt` -> `workspace-root`
-     - `workspace-root/.tmp/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
-     - `workspace-root/.tmp/rw-active-target-root.txt` (legacy fallback)
+     - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
+     - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
+     - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
 3. `rw-run-*.prompt.md` 실행 전 `rw-doctor.prompt.md`를 먼저 실행해 preflight를 확인한다.
-   - VS Code 워크스페이스 루트와 실제 대상 프로젝트 루트가 다르면(`.tmp/.../case-*` 등), active target id + registry를 먼저 갱신한다.
-     - `workspace-root/.tmp/rw-active-target-id.txt`
-     - `workspace-root/.tmp/rw-targets/<target-id>.env` (`TARGET_ROOT=<absolute-path>`)
-   - legacy 호환을 위해 `workspace-root/.tmp/rw-active-target-root.txt`도 같은 경로로 동기화한다.
+   - VS Code 워크스페이스 루트와 실제 대상 프로젝트 루트가 다르면(테스트 하니스 경로 예: `.tmp/.../case-*`), active target id + registry를 먼저 갱신한다.
+     - `workspace-root/.ai/runtime/rw-active-target-id.txt`
+     - `workspace-root/.ai/runtime/rw-targets/<target-id>.env` (`TARGET_ROOT=<absolute-path>`)
+   - legacy 호환을 위해 `workspace-root/.ai/runtime/rw-active-target-root.txt`도 같은 경로로 동기화한다.
    - 비대화형 실행에서도 같은 규칙으로 타깃 루트를 고정한다.
    - 수동 전환이 필요하면 워크스페이스 루트에서:
      - `./scripts/rw-target-registry.sh set-active "$(pwd)" <target-id> "<absolute-target-root>"`
@@ -130,9 +130,9 @@
   - `rw-run-lite`/`rw-run-strict` 실행 전 preflight 검사 프롬프트다.
   - 검사 항목: top-level 실행 여부, `runSubagent` 가용성, git 저장소 상태, `.ai` 필수 경로/파일 접근성.
   - 기본 타깃 루트는 아래 순서로 읽는다.
-    1) `workspace-root/.tmp/rw-active-target-id.txt`
-    2) `workspace-root/.tmp/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
-    3) `workspace-root/.tmp/rw-active-target-root.txt` (legacy fallback)
+    1) `workspace-root/.ai/runtime/rw-active-target-id.txt`
+    2) `workspace-root/.ai/runtime/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
+    3) `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
   - 포인터가 비어 있거나 유효하지 않은 경로를 가리키면 `RW_TARGET_ROOT_INVALID`로 즉시 중단한다.
   - 통과 시 `RW_DOCTOR_PASS`, 실패 시 `RW_DOCTOR_BLOCKED`를 출력한다.
 - `rw-archive.prompt.md`:
@@ -143,9 +143,9 @@
 
 ## Lite 운영 규칙
 
-- `runSubagent`가 없으면 자동 루프를 중단하고 수동 fallback 절차를 출력한다.
+- `runSubagent`가 없으면 `RW_ENV_UNSUPPORTED`를 출력하고 자동 루프를 즉시 중단한다.
 - `rw-run-*` 실행 전 `rw-doctor`를 먼저 실행해 환경을 확인한다.
-- `rw-doctor`와 `rw-run-*`는 동일한 타깃 포인터 세트(`.tmp/rw-active-target-id.txt`, `.tmp/rw-targets/*.env`, legacy `.tmp/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).
+- `rw-doctor`와 `rw-run-*`는 동일한 타깃 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/*.env`, legacy `.ai/runtime/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).
 - 오케스트레이터는 제품 코드를 직접 수정하지 않는다.
 - 제품 코드 경로는 저장소 구조(웹/앱/게임/유니티 등)에 따라 다르므로 `src/` 고정 가정을 두지 않는다.
 - `PLAN.md`는 `Feature Notes`만 append 한다.
@@ -204,7 +204,7 @@
 ## 자주 있는 실패
 
 - `runSubagent unavailable`: 실행 환경/모델에서 도구 지원 여부 확인
-- `RW_TARGET_ROOT_INVALID`: `.tmp/rw-active-target-id.txt` + `.tmp/rw-targets/<target-id>.env` 또는 legacy `.tmp/rw-active-target-root.txt`를 절대 경로로 복구 후 재실행
+- `RW_TARGET_ROOT_INVALID`: `.ai/runtime/rw-active-target-id.txt` + `.ai/runtime/rw-targets/<target-id>.env` 또는 legacy `.ai/runtime/rw-active-target-root.txt`를 절대 경로로 복구 후 재실행
 - TASK 번호 충돌: 최신 브랜치로 업데이트 후 선택 모드의 `rw-plan-*` 재실행
 - PROGRESS 누락: Task Status 행과 Log를 수동 보정 후 선택 모드의 `rw-run-*` 재개
 - `REVIEW-ESCALATE` 발생(Strict): 태스크/요구사항을 수동 수정 후 `REVIEW-ESCALATE-RESOLVED TASK-XX: <해결 요약>`를 `PROGRESS` Log에 append하고 `rw-run-strict`를 재실행

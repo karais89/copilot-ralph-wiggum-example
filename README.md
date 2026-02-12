@@ -91,9 +91,9 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 1. Open your project in VS Code with GitHub Copilot
 2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + project-direction discovery + bootstrap feature/task generation
    - `rw-new-project` refreshes target pointers automatically:
-     - `workspace-root/.tmp/rw-active-target-id.txt` -> `workspace-root`
-     - `workspace-root/.tmp/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
-     - `workspace-root/.tmp/rw-active-target-root.txt` (legacy fallback)
+     - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
+     - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
+     - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
 3. Run **`rw-doctor`** before autonomous execution
 4. Run **`rw-run-lite`** (or `rw-run-strict`) to implement bootstrap tasks
 5. Run **`rw-feature`** to define additional product features
@@ -106,9 +106,9 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 ### Target Root Resolution
 
 `rw-doctor` and `rw-run-*` resolve target root in this order:
-1. `workspace-root/.tmp/rw-active-target-id.txt`
-2. `workspace-root/.tmp/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
-3. `workspace-root/.tmp/rw-active-target-root.txt` (legacy fallback)
+1. `workspace-root/.ai/runtime/rw-active-target-id.txt`
+2. `workspace-root/.ai/runtime/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
+3. `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
 
 Manual target switch from workspace root:
 
