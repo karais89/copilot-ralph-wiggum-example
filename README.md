@@ -14,7 +14,7 @@ rw-new-project  →  rw-run  →  rw-review  →  rw-feature  →  rw-plan  → 
 (신규/초기화+bootstrap) (구현 루프)      (수동 리뷰)    (기능별)      (계획)        (구현 루프)    (수동 리뷰)    (수동)
 ```
 
-1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery + bootstrap feature/task decomposition in one run, with bounded discovery: fixed 4 questions / max 2 rounds)
+1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + low-friction discovery + bootstrap feature/task decomposition in one run)
 2. **`rw-doctor`** — Optional standalone preflight diagnostic (rw-run can auto-run equivalent checks when doctor stamp is missing/stale)
 3. **`rw-run`** — Runs implementation subagent loop
 4. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
@@ -99,13 +99,13 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 ### After Extraction
 
 1. Open your project in VS Code with GitHub Copilot
-2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + project-direction discovery + bootstrap feature/task generation
+2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + lightweight project-direction discovery + bootstrap feature/task generation
    - `rw-new-project` uses `scripts/rw-bootstrap-scaffold.sh` as the default scaffold path.
    - `rw-new-project` refreshes target pointers automatically:
      - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
      - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
      - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
-   - discovery is interactive but bounded: fixed 4 topics (users/value/MVP/constraints+verification), max 2 rounds
+   - discovery is low-friction: one-sentence idea first, then optional single follow-up only when truly needed (safe defaults otherwise)
 3. Run **`rw-run`** to implement tasks (auto preflight runs when needed)
 4. Run **`rw-review`** to validate the completed batch
 5. If review leaves pending tasks, re-run **`rw-run`** and then run **`rw-review`** again
@@ -158,7 +158,7 @@ For verification, run the core flow directly in Copilot Chat:
 
 | Prompt | Purpose |
 |---|---|
-| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + bounded discovery + bootstrap feature/task decomposition + optional bootstrap auto-commit) |
+| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + low-friction discovery + bootstrap feature/task decomposition + optional bootstrap auto-commit) |
 | [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
 | [`rw-doctor`](.github/prompts/rw-doctor.prompt.md) | Standalone preflight check for top-level/runSubagent/git/.ai readiness and PASS-stamp write |
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |

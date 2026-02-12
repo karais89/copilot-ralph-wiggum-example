@@ -1,6 +1,6 @@
 ---
 name: rw-new-project
-description: "Integrated new-project bootstrap: scaffold + bounded discovery + bootstrap feature/task planning"
+description: "Integrated new-project bootstrap: scaffold + low-friction discovery + bootstrap feature/task planning"
 agent: agent
 argument-hint: "Optional one-line project idea. Example: shared travel itinerary planner."
 ---
@@ -9,7 +9,7 @@ Language policy reference: `.ai/CONTEXT.md`
 
 Quick summary:
 - Use this prompt for new/empty repositories.
-- Keep role boundary: `rw-init` responsibilities are included here, plus bounded discovery and bootstrap decomposition.
+- Keep role boundary: `rw-init` responsibilities are included here, plus low-friction discovery and bootstrap decomposition.
 - Use shared scaffold script and templates to minimize ad-hoc branching.
 
 Step 0 (Mandatory):
@@ -25,8 +25,8 @@ Inputs:
 - literal marker `[NO_AUTO_COMMIT]` in `projectIdea` (optional)
 
 Constants (do not change during one run):
-- `DISCOVERY_FIELDS=4`
-- `DISCOVERY_MAX_ROUNDS=2`
+- `DISCOVERY_MAX_QUESTIONS=2`
+- `DISCOVERY_MAX_ROUNDS=1`
 - `BOOTSTRAP_DEFAULT_TASK_COUNT=10`
 - `BOOTSTRAP_SMALL_SCOPE_TASK_COUNT=5`
 - `TASK_SIZE_MIN_MINUTES=30`
@@ -76,21 +76,22 @@ Workflow:
    - else latest `PROJECT-CHARTER` summary
    - else default seed: `A minimal CLI to capture and summarize meeting action items`
 
-4) Bounded discovery:
+4) Low-friction discovery (do not overload the user):
    - If `NON_INTERACTIVE_MODE=true`, skip questions and apply defaults.
    - If `NON_INTERACTIVE_MODE=false`:
-     - Round 1 (required): collect exactly 4 fields:
-       - target users
-       - core value/problem
-       - MVP in-scope vs out-of-scope
-       - constraints/preferences + verification baseline command
-     - Round 2 (optional): ask at most 2 follow-up questions for unresolved high-impact ambiguity.
-   - After Round 2, fill unresolved fields with safe defaults and continue.
+     - If cleaned `projectIdea` is non-empty:
+       - do not require structured answers; infer details from this one-line idea.
+     - If cleaned `projectIdea` is empty:
+       - ask exactly one plain-language question:
+         - `무엇을 만들고 싶은지 한 문장으로 알려주세요. 기술/설계 용어는 몰라도 됩니다.`
+     - Ask at most one additional follow-up question only when a critical blocker remains (max total questions: 2).
+   - Never force separate answers for users/value/MVP/constraints.
+   - Fill missing details with safe defaults and continue.
 
 5) Update `PLAN.md` overview (concise):
    - keep title unchanged unless missing
    - ensure `## Feature Notes (append-only)` exists
-   - write/update 5~10 lines only: purpose, users, MVP scope, constraints, verification baseline
+   - write/update 5~10 lines only: purpose, inferred users, MVP scope, inferred constraints, verification baseline (default when missing)
 
 6) Create one project charter note from template:
    - use `.ai/templates/PROJECT-CHARTER-TEMPLATE.md` when available
@@ -168,7 +169,7 @@ Output format (machine-friendly, fixed keys):
 - `BOOTSTRAP_TASKS=<created|skipped>`
 - `TASK_RANGE=<TASK-XX~TASK-YY|none>`
 - `TASK_COUNT=<n>`
-- `DISCOVERY_ROUNDS=<0|1|2>`
+- `DISCOVERY_ROUNDS=<0|1>`
 - `UNRESOLVED_OPEN_QUESTIONS=<n>`
 - `BOOTSTRAP_COMMIT_RESULT=<created|skipped|failed>`
 - `BOOTSTRAP_COMMIT_SHA=<sha|none>`
