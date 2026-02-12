@@ -124,6 +124,7 @@ scripts/
   - 빈/템플릿 저장소에서 `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap feature 생성까지 한 번에 수행한다.
   - 태스크 분해/커밋은 하지 않으며 `rw-plan` 이후 단계에서 처리한다.
   - discovery는 2단계다: (1) 의도 한 문장 수집 (2) 의도 기반 맞춤형 보완 질문(최대 3개).
+  - 보완 질문은 `askQuestions` 객관식 우선이며, 필요 시 `직접 입력` 선택을 허용한다.
   - 고정 체크리스트를 강제하지 않고, 실제 리스크가 있는 항목만 질문한다.
   - `PLAN.md`의 `개요`를 구체화하고 `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md`를 생성한다.
   - bootstrap feature는 `Status: READY_FOR_PLAN` 상태로 남겨두며, 분해 책임은 `rw-plan`에 있다.

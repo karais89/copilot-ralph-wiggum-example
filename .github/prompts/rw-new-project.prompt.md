@@ -67,6 +67,11 @@ Workflow:
      - generate only high-impact follow-up questions that reduce implementation risk.
      - ask up to `DISCOVERY_MAX_FOLLOWUP_QUESTIONS` (max 3), and only for unresolved items.
      - use `#tool:vscode/askQuestions` for this round (single grouped interaction preferred).
+     - question style for this round:
+       - prefer single-choice options first (2~4 choices) so users can select quickly.
+       - always allow explicit custom input path (`직접 입력`) when choices are insufficient.
+       - include `AI_DECIDE` option for low-risk defaults when appropriate.
+       - if `직접 입력` is chosen, ask at most one short follow-up for that item.
      - if `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
      - preferred focus areas (pick only what is needed):
        - primary target user/use context
