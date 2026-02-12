@@ -130,9 +130,10 @@ scripts/
 - `rw-feature.prompt.md`:
   - `rw-plan` 실행 전에 feature 입력 파일을 만들 때 사용한다.
   - 한 줄 입력(`featureSummary`)을 받아 feature 파일을 상세 스펙 형태로 생성한다.
-  - 선택형 질문은 필요한 경우(고영향 모호성 해소) 최소한으로만 사용한다.
-  - 모호성이 남으면 2~5 라운드 보완 질문을 수행하고, 각 라운드에서 1~3개의 집중 질문을 한다.
-  - 입력이 비어 있고 보완 질문 이후에도 요약이 없으면 `FEATURE_SUMMARY_MISSING`으로 중단한다.
+  - 니즈 게이트(`User`, `Problem`, `Desired Outcome`, `Acceptance Signal`)를 반드시 채운다.
+  - 질문은 최대 1라운드/최대 2문항으로 제한한다.
+  - 입력이 비어 있고 1회 보완 이후에도 요약이 없으면 `FEATURE_SUMMARY_MISSING`으로 중단한다.
+  - 보완 이후에도 핵심 니즈(`User`, `Problem`, `Desired Outcome`)가 비어 있으면 `FEATURE_NEED_INSUFFICIENT`으로 중단한다.
   - 생성 파일은 `Status: READY_FOR_PLAN`으로 저장된다.
   - feature 파일 본문은 한국어로 작성하고, 기계 파싱 토큰(`Status`, `READY_FOR_PLAN`, `PLANNED`)만 영어를 유지한다.
 - `rw-doctor.prompt.md`:
