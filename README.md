@@ -17,7 +17,7 @@ rw-new-project  →  rw-doctor  →  rw-run  →  rw-review  →  rw-feature  �
 1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery + bootstrap feature/task decomposition in one run)
 2. **`rw-doctor`** — Validates top-level/runSubagent/git/.ai preflight before autonomous runs (supports target-root pointer file)
 3. **`rw-run`** — Runs implementation subagent loop
-4. **`rw-review`** — Reviews latest completed task and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`
+4. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch (parallel-safe batches) and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`
 5. **`rw-feature`** — Creates additional feature specification files
 6. **`rw-plan`** — Breaks additional features into atomic tasks
 7. **`rw-archive`** — Archives completed progress when it grows large
@@ -27,7 +27,7 @@ rw-new-project  →  rw-doctor  →  rw-run  →  rw-review  →  rw-feature  �
 ### Runtime Policy
 
 - Single `rw-run` policy (no lite/strict split).
-- Review is manual and explicit via `rw-review`.
+- Review is manual and explicit via `rw-review` (subagent-backed batch review, parallel-safe when possible).
 - Archive threshold is hard-stop; run resumes after manual `rw-archive`.
 
 ### Key Benefits
@@ -92,12 +92,12 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
      - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
 3. Run **`rw-doctor`** before autonomous execution
 4. Run **`rw-run`** to implement tasks
-5. If `rw-run` prints `REVIEW_REQUIRED TASK-XX`, run **`rw-review`**
-6. Re-run **`rw-run`** and repeat step 5 until the current batch is complete
+5. Run **`rw-review`** to validate the completed batch
+6. If review leaves pending tasks, re-run **`rw-run`** and then run **`rw-review`** again
 7. Run **`rw-feature`** to define additional product features
 8. Run **`rw-plan`** to generate tasks for that feature
 9. Run **`rw-doctor`** again before the next autonomous execution
-10. Run **`rw-run`** and continue with `rw-review` when required
+10. Run **`rw-run`**, then run **`rw-review`**
 11. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
    - `rw-init` refreshes the same target-pointer trio as `rw-new-project`
 
@@ -124,7 +124,7 @@ For verification, run the core flow directly in Copilot Chat:
 
 1. `rw-new-project`
 2. `rw-run`
-3. `rw-review` (when `REVIEW_REQUIRED TASK-XX` appears)
+3. `rw-review` (batch review after run)
 4. `rw-feature`
 5. `rw-plan`
 6. `rw-run`
@@ -141,7 +141,7 @@ For verification, run the core flow directly in Copilot Chat:
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
 | [`rw-plan`](.github/prompts/rw-plan.prompt.md) | Generate task breakdown for one READY_FOR_PLAN feature |
 | [`rw-run`](.github/prompts/rw-run.prompt.md) | Orchestration loop for implementation subagent dispatch (target-root pointer file) |
-| [`rw-review`](.github/prompts/rw-review.prompt.md) | Manual reviewer rules for validating one latest completed task |
+| [`rw-review`](.github/prompts/rw-review.prompt.md) | Manual reviewer rules for subagent-backed batch validation of completed tasks |
 | [`rw-archive`](.github/prompts/rw-archive.prompt.md) | Archive completed progress |
 
 ### Workspace (`.ai/`)

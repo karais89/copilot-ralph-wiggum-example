@@ -1,6 +1,6 @@
 # Ralph Wiggum 운영 가이드
 
-`runSubagent` 기반으로 **기능 계획 → 태스크 구현**만 간결하게 돌리는 운영 가이드입니다.
+`runSubagent` 기반으로 **기능 계획 → 태스크 구현 → 배치 리뷰**를 간결하게 돌리는 운영 가이드입니다.
 
 ## 최소 구조
 
@@ -60,7 +60,7 @@
      - `./scripts/rw-target-registry.sh resolve-active "$(pwd)"`
 4. `rw-run.prompt.md` 내용을 붙여넣고 실행해 bootstrap 태스크를 먼저 구현한다.
    - `rw-run`도 동일한 타깃 포인터 세트(`active-target-id`, `rw-targets/*.env`, legacy root pointer)를 읽어 동작한다(인자 전달 불필요).
-5. `rw-run`에서 `REVIEW_REQUIRED TASK-XX`가 출력되면 `rw-review.prompt.md`를 실행한다.
+5. `rw-run` 완료 후 `rw-review.prompt.md`를 실행한다(배치 리뷰).
 6. 이후 추가 기능은 `rw-feature.prompt.md` -> `rw-plan.prompt.md` -> `rw-doctor.prompt.md` -> `rw-run.prompt.md` 순서로 진행한다.
 7. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
 8. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
@@ -72,13 +72,14 @@
 1. 신규 프로젝트 초기화+방향 확정+bootstrap 분해: `rw-new-project.prompt.md`
 2. 실행 전 preflight: `rw-doctor.prompt.md`
 3. bootstrap 태스크 구현 루프: `rw-run.prompt.md`
-4. 추가 기능 정의: `rw-feature.prompt.md`
-5. 추가 기능 계획: `rw-plan.prompt.md`
-6. 추가 기능 구현 전 preflight: `rw-doctor.prompt.md`
-7. 추가 기능 구현 루프: `rw-run.prompt.md`
-8. 상태 확인: `.ai/PROGRESS.md`
-9. 리뷰 필요 시 수동 리뷰: `rw-review.prompt.md`
-10. 스캐폴딩만 필요할 때(대안): `rw-init.prompt.md`
+4. bootstrap 배치 리뷰: `rw-review.prompt.md`
+5. 추가 기능 정의: `rw-feature.prompt.md`
+6. 추가 기능 계획: `rw-plan.prompt.md`
+7. 추가 기능 구현 전 preflight: `rw-doctor.prompt.md`
+8. 추가 기능 구현 루프: `rw-run.prompt.md`
+9. 추가 기능 배치 리뷰: `rw-review.prompt.md`
+10. 상태 확인: `.ai/PROGRESS.md`
+11. 스캐폴딩만 필요할 때(대안): `rw-init.prompt.md`
 
 ## Feature 파일 입력 규칙
 
@@ -133,7 +134,9 @@
   - 통과 시 `RW_DOCTOR_PASS`, 실패 시 `RW_DOCTOR_BLOCKED`를 출력한다.
 - `rw-review.prompt.md`:
   - 수동 리뷰 전용 프롬프트다(top-level 실행).
-  - 최신 completed 태스크 1개만 검증하고 `REVIEW_OK`/`REVIEW_FAIL`/`REVIEW-ESCALATE`를 갱신한다.
+  - active `Task Status`의 completed 태스크를 배치로 검증한다.
+  - 태스크별 reviewer subagent를 디스패치하며, 안전할 때 병렬 배치(최대 3개)를 허용한다.
+  - 리뷰 결과를 집계한 뒤 `REVIEW_OK`/`REVIEW_FAIL`/`REVIEW-ESCALATE`를 `PROGRESS`에 반영한다.
 - `rw-archive.prompt.md`:
   - `PROGRESS.md`가 커졌을 때 수동 실행한다.
   - 기준: `PROGRESS.md > 8000 chars` 또는 `completed > 20` 또는 `log > 40`.
@@ -191,11 +194,14 @@
 - 이 브랜치에서는 복잡한 `copilot-rw-*` 테스트 프롬프트를 사용하지 않는다.
 - 운영 검증은 코어 루프를 직접 실행한다:
   1. `rw-new-project`
-  2. `rw-run`
-  3. `rw-review` (when `REVIEW_REQUIRED TASK-XX` appears)
-  4. `rw-feature`
-  5. `rw-plan`
-  6. `rw-run`
+  2. `rw-doctor`
+  3. `rw-run`
+  4. `rw-review` (batch review after run)
+  5. `rw-feature`
+  6. `rw-plan`
+  7. `rw-doctor`
+  8. `rw-run`
+  9. `rw-review`
 
 규칙:
 - 한 턴에서 프롬프트는 하나만 실행한다.

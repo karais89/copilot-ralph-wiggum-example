@@ -19,7 +19,7 @@
 - 단계 책임 경계 충돌 여부:
   - `rw-new-project / rw-doctor / rw-feature / rw-plan / rw-run / rw-review / rw-archive`
 - 입력/출력 토큰 일관성:
-  - `LANG_POLICY_MISSING`, `RW_TARGET_ROOT_INVALID`, `RW_DOCTOR_PASS`, `RW_DOCTOR_BLOCKED`, `RW_ENV_UNSUPPORTED`, `REVIEW_REQUIRED`, `REVIEW_OK`, `REVIEW_FAIL`, `REVIEW-ESCALATE`, `Status`, `READY_FOR_PLAN`, `PLANNED`, `Task Status`, `Log`
+  - `LANG_POLICY_MISSING`, `RW_TARGET_ROOT_INVALID`, `RW_DOCTOR_PASS`, `RW_DOCTOR_BLOCKED`, `RW_ENV_UNSUPPORTED`, `REVIEW_OK`, `REVIEW_FAIL`, `REVIEW-ESCALATE`, `REVIEW_BATCH_OK`, `REVIEW_BATCH_FAIL`, `RUNSUBAGENT_REVIEW_DISPATCH_COUNT`, `Status`, `READY_FOR_PLAN`, `PLANNED`, `Task Status`, `Log`
 - idempotency 규칙 충돌 여부
 - 언어 정책 누락/충돌 여부:
   - 운영 프롬프트 본문 영어 유지 규칙

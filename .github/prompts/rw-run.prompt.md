@@ -9,7 +9,7 @@ Language policy reference: `<CONTEXT>`
 
 Quick summary:
 - The orchestrator runs implementation subagents sequentially until all tasks are complete.
-- Review is a separate manual step via `rw-review.prompt.md`.
+- Run `rw-review.prompt.md` after `rw-run` completes to review completed tasks in batch.
 - Archive is always manual via `rw-archive.prompt.md`.
 
 Path resolution (mandatory before Step 0):
@@ -88,14 +88,9 @@ Repeat:
      - If any `pending` or `in-progress` row exists, set `UNFINISHED_TASK_SEEN=true`
   7) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars OR Log entry count exceeds 40:
      print "📦 Manual archive required. Create TARGET_ROOT/.ai/PAUSE.md if missing, keep it present, run rw-archive.prompt.md, then resume." and stop
-  8) Review gate:
-     - Find the latest active Log line matching `TASK-XX completed`.
-     - If found and there is no later line for the same task matching any of:
-       - `REVIEW_OK TASK-XX`
-       - `REVIEW_FAIL TASK-XX`
-       - `REVIEW-ESCALATE TASK-XX`
-       then print `REVIEW_REQUIRED TASK-XX` and stop.
-     - If the latest review state for that task is `REVIEW-ESCALATE TASK-XX` and there is no later matching `REVIEW-ESCALATE-RESOLVED TASK-XX`, print `REVIEW_BLOCKED TASK-XX` and stop.
+  8) If <PROGRESS> Log contains unresolved `REVIEW-ESCALATE` for any task
+     (an entry `REVIEW-ESCALATE TASK-XX ...` with no later matching `REVIEW-ESCALATE-RESOLVED TASK-XX ...`),
+     print `REVIEW_BLOCKED TASK-XX` and stop
   9) If active Task Status has no `pending`/`in-progress` rows, and every TASK ID from <TASKS> exists in either:
      - active <PROGRESS> Task Status table, or
      - any `<ARCHIVE_DIR>/STATUS-*.md` file (glob),
@@ -104,7 +99,9 @@ Repeat:
        - Append one log line to <PROGRESS>:
          - `- **YYYY-MM-DD** — RUNSUBAGENT_DISPATCH_COUNT: <RUNSUBAGENT_DISPATCH_COUNT>`
        - print `RUNSUBAGENT_DISPATCH_COUNT=<RUNSUBAGENT_DISPATCH_COUNT>`
-       - print "✅ All tasks completed." and exit
+       - print "✅ All tasks completed."
+       - print "Next: run rw-review.prompt.md to review completed tasks."
+       - exit
   10) If `#tool:agent/runSubagent` is unavailable:
      - print `runSubagent unavailable`
      - print `RW_ENV_UNSUPPORTED`
@@ -125,7 +122,7 @@ Repeat:
 - Never append `RUNSUBAGENT_DISPATCH_COUNT` unless the current loop iteration is exiting through Step 9 (all tasks completed with no `pending`/`in-progress` rows).
 - If `pending` or `in-progress` rows remain, continue the loop (or stop only via explicit blocker tokens). Do not emit completion-style summary logs.
 - Never resurrect archived completed tasks to `pending`
-- `rw-run` never dispatches reviewer subagents; review is manual via `rw-review.prompt.md`.
+- `rw-run` never dispatches reviewer subagents; review is manual via `rw-review.prompt.md` after run completion.
 - If requirements are missing/changed, stop and ask for `rw-feature` -> `rw-plan` before continuing implementation
 - Keep `PLAN.md` concise; place details in task files
 

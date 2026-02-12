@@ -1,6 +1,6 @@
 ---
 name: rw-review
-description: "Manual reviewer: validate latest completed task and update REVIEW_OK/REVIEW_FAIL/REVIEW-ESCALATE state"
+description: "Manual reviewer: subagent-backed batch validation for completed tasks with REVIEW_OK/REVIEW_FAIL/REVIEW-ESCALATE updates"
 agent: agent
 argument-hint: "No input. Target root is resolved by .ai/runtime/rw-active-target-id.txt (preferred) or .ai/runtime/rw-active-target-root.txt (fallback)."
 ---
@@ -8,8 +8,8 @@ argument-hint: "No input. Target root is resolved by .ai/runtime/rw-active-targe
 Language policy reference: `<CONTEXT>`
 
 Quick summary:
-- Run this manually to review one latest completed task.
-- Validate acceptance criteria and verification evidence.
+- Run this manually after `rw-run` to review completed tasks in batch.
+- Dispatch review subagents per task (parallel batches when safe/available).
 - Write review outcomes to `PROGRESS` using `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`.
 
 Path resolution (mandatory before Step 0):
@@ -56,29 +56,80 @@ Rules:
   - `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`
   - `REVIEW-ESCALATE-RESOLVED TASK-XX: <resolution>` (manual recovery path, user-driven)
 - Never fabricate review results.
-- Validate exactly one task and exit.
-- Never call `#tool:agent/runSubagent` from this prompt.
+- Review all currently `completed` tasks in active Task Status.
+- This prompt must dispatch `#tool:agent/runSubagent` for per-task validation.
+- Subagents must not modify repository files; orchestrator writes `<PROGRESS>` only after collecting results.
+- Each review candidate task must be dispatched exactly once in the current review run.
 
 Procedure:
-1) Read `<PROGRESS>` and find the latest `completed` task in active `Task Status`.
+1) Read `<PROGRESS>` and collect all `completed` tasks in active `Task Status`.
 2) If no completed task exists, print `REVIEW_TARGET_MISSING` and stop.
-3) Open matching task file in `<TASKS>/TASK-XX-*.md`.
-4) Check Acceptance Criteria coverage and run verification commands listed in the task.
-5) If issues are found:
-   - Count prior `REVIEW_FAIL TASK-XX` occurrences in active `<PROGRESS>` Log.
-   - If prior count is 0:
-     - append `REVIEW_FAIL TASK-XX (1/3): <root-cause>`
-     - revert task status to `pending`
-   - If prior count is 1:
-     - append `REVIEW_FAIL TASK-XX (2/3): <root-cause>`
-     - revert task status to `pending`
-   - If prior count is 2 or more:
-     - append `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`
-     - revert task status to `pending`
-   - print `REVIEW_FAIL TASK-XX`
+3) Build review candidates:
+   - For each completed task (`TASK-XX`), locate its latest completion log (`TASK-XX completed`).
+   - If there is already a later review log for the same task (`REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`), skip it as already reviewed.
+   - Remaining tasks are the review candidate set.
+4) If candidate set is empty:
+   - print `REVIEW_NOTHING_TO_DO`
+   - print `REVIEW_SUMMARY total=0 ok=0 fail=0 escalate=0 skipped=<completed-count>`
    - stop.
-6) If no issues are found:
-   - append `REVIEW_OK TASK-XX: verification passed`
-   - print `REVIEW_OK TASK-XX`
-   - print `✅ TASK-XX verified`
+5) If `#tool:agent/runSubagent` is unavailable:
+   - print `runSubagent unavailable`
+   - print `RW_ENV_UNSUPPORTED`
    - stop.
+6) Dispatch review subagents for each candidate task:
+   - Preferred execution: parallel batches (batch size up to 3) when concurrency is supported and verification commands are parallel-safe.
+   - If commands share mutable resources (fixed port, shared DB/file lock, global cache mutation), force sequential dispatch.
+   - Fallback: sequential dispatch per task.
+   - Before each dispatch print `RUNSUBAGENT_REVIEW_DISPATCH_BEGIN TASK-XX`.
+   - After success print `RUNSUBAGENT_REVIEW_DISPATCH_OK TASK-XX`.
+   - Subagent output contract (exactly one final line per task):
+     - `REVIEW_RESULT TASK-XX OK`
+     - or `REVIEW_RESULT TASK-XX FAIL: <root-cause>`
+7) Aggregate subagent results and update `<PROGRESS>` once:
+   - If result is OK:
+     - append `REVIEW_OK TASK-XX: verification passed`
+   - If result is FAIL:
+     - Count prior `REVIEW_FAIL TASK-XX` occurrences in active `<PROGRESS>` Log.
+     - If prior count is 0:
+       - append `REVIEW_FAIL TASK-XX (1/3): <root-cause>`
+       - revert task status to `pending`
+     - If prior count is 1:
+       - append `REVIEW_FAIL TASK-XX (2/3): <root-cause>`
+       - revert task status to `pending`
+     - If prior count is 2 or more:
+       - append `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`
+       - revert task status to `pending`
+8) Print summary:
+   - `REVIEW_SUMMARY total=<n> ok=<a> fail=<b> escalate=<c> skipped=<d>`
+   - `RUNSUBAGENT_REVIEW_DISPATCH_COUNT=<n>`
+9) If any fail/escalate occurred:
+   - print `REVIEW_BATCH_FAIL`
+   - stop.
+10) Otherwise:
+   - print `REVIEW_BATCH_OK`
+   - print `✅ Completed tasks verified`
+   - stop.
+
+<REVIEW_SUBAGENT_PROMPT>
+You are a task reviewer subagent for one task (`TASK-XX`) under `TARGET_ROOT`.
+
+Inputs:
+- task id: `TASK-XX`
+- tasks dir: `<TASKS>`
+- progress file: `<PROGRESS>`
+- plan file: `<PLAN>`
+
+Rules:
+- Find and read exactly one matching task file in `<TASKS>/TASK-XX-*.md`.
+- Validate acceptance criteria coverage.
+- Run verification commands listed in that task file.
+- Read repository files only as needed for validation.
+- Do not modify any file.
+- Never call `#tool:agent/runSubagent` (nested calls are disallowed).
+- Never fabricate outputs.
+
+Output contract:
+- End with exactly one line:
+  - `REVIEW_RESULT TASK-XX OK`
+  - or `REVIEW_RESULT TASK-XX FAIL: <root-cause>`
+</REVIEW_SUBAGENT_PROMPT>
