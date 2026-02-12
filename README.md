@@ -14,7 +14,7 @@ rw-new-project  →  rw-doctor  →  rw-run  →  rw-review  →  rw-feature  �
 (신규/초기화+bootstrap) (사전점검)     (구현 루프)      (수동 리뷰)    (기능별)      (계획)        (구현 루프)    (수동 리뷰)    (수동)
 ```
 
-1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery + bootstrap feature/task decomposition in one run)
+1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery + bootstrap feature/task decomposition in one run, with bounded discovery: fixed 4 questions / max 2 rounds)
 2. **`rw-doctor`** — Validates top-level/runSubagent/git/.ai preflight before autonomous runs (supports target-root pointer file)
 3. **`rw-run`** — Runs implementation subagent loop
 4. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch (parallel-safe batches) and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`
@@ -90,6 +90,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
      - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
      - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
      - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
+   - discovery is interactive but bounded: fixed 4 topics (users/value/MVP/constraints+verification), max 2 rounds
 3. Run **`rw-doctor`** before autonomous execution
 4. Run **`rw-run`** to implement tasks
 5. Run **`rw-review`** to validate the completed batch
@@ -135,7 +136,7 @@ For verification, run the core flow directly in Copilot Chat:
 
 | Prompt | Purpose |
 |---|---|
-| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + discovery + bootstrap feature/task decomposition) |
+| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + bounded discovery + bootstrap feature/task decomposition) |
 | [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
 | [`rw-doctor`](.github/prompts/rw-doctor.prompt.md) | Preflight check for top-level/runSubagent/git/.ai readiness before autonomous runs (target-root pointer file) |
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |

@@ -12,6 +12,7 @@ Quick summary:
 - Perform workspace scaffolding (`CONTEXT`, `PLAN`, `PROGRESS`, optional `TASK-01`) and project discovery in one run.
 - Create one bootstrap feature and decompose bootstrap foundation tasks (`TASK-02+`) for the agreed project charter.
 - Update `PLAN.md` overview and create one discovery note under `.ai/notes/`.
+- Keep discovery interactive but bounded: fixed 4 discovery questions, max 2 rounds.
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
@@ -60,7 +61,15 @@ Rules:
 - Keep machine tokens untouched where present (`Task Status`, `Log`, status enums).
 - Write user-facing content in language resolved from `.ai/CONTEXT.md` (default Korean if ambiguous).
 - Keep task section headers unchanged (`Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Verification`) and write section values/prose in the resolved user-document language.
-- Clarification-first: for ambiguous requirements, ask follow-up questions persistently before applying defaults, except in non-interactive mode.
+- Structured discovery questions (interactive mode only):
+  - Ask exactly these 4 domains in Round 1:
+    - target users
+    - core user value/problem
+    - MVP scope (in/out)
+    - constraints + one verification baseline command
+  - Use single-choice options with `AI_DECIDE` when practical.
+  - Round 2 is optional and limited to unresolved high-impact items only (max 2 focused questions).
+  - Do not run more than 2 rounds.
 - Non-interactive mode:
   - Enable when either:
     - `projectIdea` contains literal token `[NON_INTERACTIVE]`, or
@@ -73,8 +82,9 @@ Rules:
   - If a task is likely <30 minutes and not independently valuable, merge it.
   - Each task must include at least one concrete verification command in `Verification`.
 - Bootstrap task count rule:
-  - Default target: 10~20 tasks.
-  - Very small/simple bootstrap scope: 5 tasks allowed.
+  - Default target: 10 tasks.
+  - Very small/simple bootstrap scope: 5 tasks.
+  - Keep bootstrap decomposition compact in `rw-new-project`; additional decomposition belongs to `rw-plan`.
 
 Workflow:
 1) Ensure scaffolding directories exist:
@@ -116,37 +126,30 @@ Workflow:
        - `- **YYYY-MM-DD** — Initial workspace scaffolded by rw-new-project.`
      - If exists, keep existing rows/logs and add only missing task rows as `pending`.
      - For newly added rows, write the `Title` value in the same resolved user-document language.
-3) Resolve initial direction input:
+3) Resolve initial direction seed:
    - Determine `NON_INTERACTIVE_MODE` first:
      - true if `projectIdea` contains `[NON_INTERACTIVE]` OR `.ai/runtime/rw-noninteractive.flag` exists.
      - if marker token is present in `projectIdea`, remove only that marker token and keep remaining text.
-   - If `projectIdea` is present, use it as seed.
-   - If `projectIdea` is missing, first try rerun-safe reuse:
-     - If `.ai/PLAN.md` already contains meaningful overview lines (not placeholder-only), use the latest overview as seed.
-     - Else if `.ai/notes/PROJECT-CHARTER-*.md` exists, use the latest charter summary as seed.
-   - If still missing after rerun-safe reuse:
-     - If `NON_INTERACTIVE_MODE=true`, use default seed:
-       - `A minimal CLI to capture and summarize meeting action items`
-     - Else ask one open-ended question using `#tool:vscode/askQuestions`:
-       - intent: "What product/project do you want to build first?"
-     - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, ask once in chat.
-     - If `NON_INTERACTIVE_MODE=false` and still missing after one interaction, stop immediately and output exactly: `PROJECT_IDEA_MISSING`.
-4) Clarification rounds (interactive, persistent):
+   - Resolve seed with deterministic precedence:
+     - `projectIdea` (cleaned) if present
+     - else latest meaningful PLAN overview
+     - else latest PROJECT-CHARTER summary
+     - else default seed: `A minimal CLI to capture and summarize meeting action items`
+4) Structured discovery rounds (question-first, bounded):
    - If `NON_INTERACTIVE_MODE=true`, skip interactive rounds and apply defaults (`AI_DECIDE` equivalent).
-   - If `NON_INTERACTIVE_MODE=false`, run 3~6 short clarification rounds when ambiguity exists.
-   - In each interactive round, ask 1~3 focused questions (single-choice preferred when practical).
-   - Resolve all of the following before finalizing (unless user explicitly chooses `AI_DECIDE`):
-     - target users
-     - core user value/problem
-     - MVP in-scope vs out-of-scope
-     - constraints/preferences (stack/time/risk)
-     - one verification baseline command (if known)
-   - Prefer single-choice options where practical; use short open-ended questions only when options are not practical.
-   - Do not settle early if ambiguity remains and question budget is still available.
-   - Apply defaults only when:
-     - user explicitly selects `AI_DECIDE`, or
-     - round budget is exhausted.
-   - Record every unresolved ambiguity in `## Open Questions` and `## Assumptions and Defaults Used`.
+   - If `NON_INTERACTIVE_MODE=false`, run at most 2 rounds:
+     - Round 1 (mandatory): collect exactly 4 domains:
+       - target users
+       - core user value/problem
+       - MVP in-scope vs out-of-scope
+       - constraints/preferences + verification baseline command
+     - Preferred tool: `#tool:vscode/askQuestions` in one grouped interaction.
+     - If `#tool:vscode/askQuestions` is unavailable, ask the same 4 prompts in chat once.
+     - Round 2 (optional): only for unresolved high-impact ambiguity, max 2 focused questions.
+   - After Round 2, fill unresolved fields with safe defaults and continue.
+   - Record unresolved ambiguities in:
+     - `## Open Questions`
+     - `## Assumptions and Defaults Used`
 5) Update `.ai/PLAN.md` overview:
    - Keep title line (`# ...`) unchanged unless missing.
    - Replace placeholder-style overview lines when present.
@@ -201,9 +204,9 @@ Workflow:
 8) Bootstrap task decomposition (conditional, no product-code implementation):
    - Decompose only if no `TASK-02+` files currently exist.
    - Determine next task number from existing tasks (`TASK-01` may already exist); start at max+1.
-   - Determine bootstrap task count:
-     - Use 10~20 by default.
-     - Use 5 only when bootstrap scope is clearly very small/simple.
+   - Determine bootstrap task count deterministically:
+     - Use 5 only when scope is clearly very small/simple (narrow CLI/util with minimal modules).
+     - Otherwise use 10.
    - Generate atomic tasks as `TASK-XX-<slug>.md` with required sections:
      - Title
      - Dependencies
@@ -233,6 +236,6 @@ Output format at end:
 - Bootstrap feature file path and status
 - Bootstrap task generation result (created/skipped)
 - Bootstrap task range and count (if created)
-- Clarification rounds used count
+- Discovery rounds used count (max 2)
 - Unresolved open questions count
 - Recommended next command (`rw-run` or `rw-feature`)

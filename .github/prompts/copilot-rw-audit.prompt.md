@@ -26,7 +26,7 @@
   - 사용자 문서 한국어 기본 규칙
   - parser 토큰 영어 고정 규칙
 - task 생성 규칙 충돌 여부:
-  - bootstrap `10~20`
+  - bootstrap 기본 `10` (허용 범위 `10~20`)
   - bootstrap 단순 범위 예외 `5`
   - 일반 feature: `3~7`
   - task 크기 `30~120`분

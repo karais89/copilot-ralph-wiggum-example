@@ -113,6 +113,8 @@
 - `rw-new-project.prompt.md`:
   - `rw-init + discovery + bootstrap feature/task 분해` 통합 프롬프트다.
   - 빈/템플릿 저장소에서 `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap task 생성을 한 번에 수행한다.
+  - discovery는 질문형을 유지하되 고정 4개 항목(대상 사용자/핵심 가치/MVP 범위/제약+검증 기준)만 수집한다.
+  - discovery 라운드는 최대 2회로 제한한다(1회 필수 + 1회 보완 선택).
   - `PLAN.md`의 `개요`를 구체화하고 `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md`를 생성한다.
   - bootstrap feature는 이 프롬프트에서 생성/소비할 수 있으며, 일반 기능 분해는 `rw-plan`의 책임이다.
 - `rw-feature.prompt.md`:
