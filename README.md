@@ -105,7 +105,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
      - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
      - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
      - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
-   - discovery is low-friction: one-sentence idea first, then optional single follow-up only when truly needed (safe defaults otherwise)
+   - discovery is adaptive: ask intent first, then generate only high-impact follow-up questions from that intent (safe defaults for unanswered items)
 3. Run **`rw-run`** to implement tasks (auto preflight runs when needed)
 4. Run **`rw-review`** to validate the completed batch
 5. If review leaves pending tasks, re-run **`rw-run`** and then run **`rw-review`** again

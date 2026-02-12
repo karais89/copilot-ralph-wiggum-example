@@ -25,8 +25,8 @@ Inputs:
 - literal marker `[NO_AUTO_COMMIT]` in `projectIdea` (optional)
 
 Constants (do not change during one run):
-- `DISCOVERY_MAX_QUESTIONS=2`
-- `DISCOVERY_MAX_ROUNDS=1`
+- `DISCOVERY_MAX_ROUNDS=2`
+- `DISCOVERY_MAX_FOLLOWUP_QUESTIONS=3`
 - `BOOTSTRAP_DEFAULT_TASK_COUNT=10`
 - `BOOTSTRAP_SMALL_SCOPE_TASK_COUNT=5`
 - `TASK_SIZE_MIN_MINUTES=30`
@@ -76,17 +76,26 @@ Workflow:
    - else latest `PROJECT-CHARTER` summary
    - else default seed: `A minimal CLI to capture and summarize meeting action items`
 
-4) Low-friction discovery (do not overload the user):
+4) Two-step adaptive discovery (intent first, then targeted clarification):
    - If `NON_INTERACTIVE_MODE=true`, skip questions and apply defaults.
    - If `NON_INTERACTIVE_MODE=false`:
-     - If cleaned `projectIdea` is non-empty:
-       - do not require structured answers; infer details from this one-line idea.
-     - If cleaned `projectIdea` is empty:
-       - ask exactly one plain-language question:
+     - Round 1 (intent capture):
+       - ensure one clear intent sentence exists.
+       - if cleaned `projectIdea` is empty, ask one plain-language question first:
          - `무엇을 만들고 싶은지 한 문장으로 알려주세요. 기술/설계 용어는 몰라도 됩니다.`
-     - Ask at most one additional follow-up question only when a critical blocker remains (max total questions: 2).
-   - Never force separate answers for users/value/MVP/constraints.
-   - Fill missing details with safe defaults and continue.
+       - if still unresolved after one fallback, stop and output:
+         - `PROJECT_IDEA_MISSING`
+     - Round 2 (adaptive clarification):
+       - infer likely project shape from Round 1 intent.
+       - generate only high-impact follow-up questions that reduce implementation risk.
+       - ask up to `DISCOVERY_MAX_FOLLOWUP_QUESTIONS` (max 3), and only for unresolved items.
+       - do not ask fixed/generic questionnaires.
+       - preferred focus areas (pick only what is needed):
+         - primary target user/use context
+         - first-release scope boundary (must-have vs later)
+         - platform/runtime constraints and baseline verification command
+       - unanswered items are filled with safe defaults and explicitly recorded in assumptions.
+   - Keep user burden low: avoid jargon and avoid asking what can be safely inferred.
 
 5) Update `PLAN.md` overview (concise):
    - keep title unchanged unless missing
@@ -169,7 +178,7 @@ Output format (machine-friendly, fixed keys):
 - `BOOTSTRAP_TASKS=<created|skipped>`
 - `TASK_RANGE=<TASK-XX~TASK-YY|none>`
 - `TASK_COUNT=<n>`
-- `DISCOVERY_ROUNDS=<0|1>`
+- `DISCOVERY_ROUNDS=<0|1|2>`
 - `UNRESOLVED_OPEN_QUESTIONS=<n>`
 - `BOOTSTRAP_COMMIT_RESULT=<created|skipped|failed>`
 - `BOOTSTRAP_COMMIT_SHA=<sha|none>`

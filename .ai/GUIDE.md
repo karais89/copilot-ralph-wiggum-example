@@ -52,7 +52,8 @@ scripts/
 1. VS Code Copilot Chat에서 새 대화를 연다.
 2. 신규/빈 저장소에서는 `rw-new-project.prompt.md`를 먼저 실행한다(초기 1회).
    - `rw-new-project`는 `rw-init + low-friction discovery + bootstrap feature/task 분해` 통합 프롬프트다.
-   - 한 줄 아이디어만 줘도 진행되며, 모르는 항목은 기본값으로 자동 채운다.
+   - 먼저 "무엇을 만들지" 한 문장을 받고, 그 내용을 바탕으로 필요한 보완 질문만 맞춤 생성한다.
+   - 답하지 않은 항목은 안전 기본값으로 자동 채운다.
    - 스캐폴딩은 우선 `scripts/rw-bootstrap-scaffold.sh`를 사용한다.
    - `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap task 생성까지 한 번에 수행한다.
    - 실행 중 아래 타깃 포인터를 현재 워크스페이스 루트 기준으로 자동 갱신한다.
@@ -121,8 +122,8 @@ scripts/
   - 빈/템플릿 저장소에서 `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap task 생성을 한 번에 수행한다.
   - 기본값으로 bootstrap 산출물(`.ai/*`)을 1회 커밋한다 (`chore(rw): bootstrap workspace via rw-new-project`).
   - `projectIdea`에 `[NO_AUTO_COMMIT]`를 넣거나 `.ai/runtime/rw-no-autocommit.flag`가 있으면 auto-commit을 건너뛴다.
-  - discovery는 사용자 부담을 낮추기 위해 한 문장 아이디어 우선으로 진행한다.
-  - 추가 질문은 필요한 경우에만 최대 1개(총 2문항 이내)로 제한한다.
+  - discovery는 2단계다: (1) 의도 한 문장 수집 (2) 의도 기반 맞춤형 보완 질문(최대 3개).
+  - 고정 체크리스트를 강제하지 않고, 실제 리스크가 있는 항목만 질문한다.
   - `PLAN.md`의 `개요`를 구체화하고 `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md`를 생성한다.
   - bootstrap feature는 이 프롬프트에서 생성/소비할 수 있으며, 일반 기능 분해는 `rw-plan`의 책임이다.
 - `rw-feature.prompt.md`:
