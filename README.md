@@ -4,13 +4,13 @@ An AI-driven software development orchestration technique for **GitHub Copilot**
 
 This repository serves two purposes:
 
-1. **The RW orchestration template** — 10 reusable prompt files + structural docs that can be extracted and dropped into any project
+1. **The RW orchestration template** — 9 reusable prompt files + structural docs that can be extracted and dropped into any project
 2. **A working example** — A Todo CLI app built entirely by this technique (70+ commits, 20 tasks, zero manual coding)
 
 ## How It Works
 
 ```
-rw-new-project  →  rw-doctor  →  rw-run-*  →  rw-feature  →  rw-plan-*  →  rw-doctor  →  rw-run-*  →  rw-archive
+rw-new-project  →  rw-doctor  →  rw-run-*  →  rw-feature  →  rw-plan  →  rw-doctor  →  rw-run-*  →  rw-archive
 (신규/초기화+bootstrap) (사전점검)     (bootstrap 구현) (기능별)      (계획)        (사전점검)     (자동 루프)    (수동)
 ```
 
@@ -18,7 +18,7 @@ rw-new-project  →  rw-doctor  →  rw-run-*  →  rw-feature  →  rw-plan-*  
 2. **`rw-doctor`** — Validates top-level/runSubagent/git/.ai preflight before autonomous runs (supports target-root pointer file)
 3. **`rw-run-lite` / `rw-run-strict`** — Implements bootstrap tasks first
 4. **`rw-feature`** — Creates additional feature specification files
-5. **`rw-plan-lite` / `rw-plan-strict`** — Breaks additional features into atomic tasks
+5. **`rw-plan`** — Breaks additional features into atomic tasks
 6. **`rw-run-lite` / `rw-run-strict`** — Continues autonomous implementation loop
 7. **`rw-archive`** — Archives completed progress when it grows large
 
@@ -53,17 +53,16 @@ cd copilot-ralph-wiggum-example
 ./scripts/extract-template.sh ~/your-project
 ```
 
-This copies 14 files into your project:
+This copies 13 files into your project:
 
 ```
 your-project/
-├── .github/prompts/           # 10 orchestration prompts
+├── .github/prompts/           # 9 orchestration prompts
 │   ├── rw-init.prompt.md
 │   ├── rw-new-project.prompt.md
 │   ├── rw-doctor.prompt.md
 │   ├── rw-feature.prompt.md
-│   ├── rw-plan-lite.prompt.md
-│   ├── rw-plan-strict.prompt.md
+│   ├── rw-plan.prompt.md
 │   ├── rw-run-lite.prompt.md
 │   ├── rw-run-strict.prompt.md
 │   ├── rw-review.prompt.md
@@ -79,7 +78,7 @@ your-project/
 ### Option 2: Manual Copy
 
 Copy these paths from this repo into your project:
-- `.github/prompts/*.prompt.md` (all 10 orchestration files)
+- `.github/prompts/*.prompt.md` (all 9 orchestration files)
 - `.ai/CONTEXT.md`
 - `.ai/GUIDE.md`
 - `.ai/features/FEATURE-TEMPLATE.md`
@@ -98,7 +97,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 3. Run **`rw-doctor`** before autonomous execution
 4. Run **`rw-run-lite`** (or `rw-run-strict`) to implement bootstrap tasks
 5. Run **`rw-feature`** to define additional product features
-6. Run **`rw-plan-lite`** (or `rw-plan-strict`) to generate tasks for that feature
+6. Run **`rw-plan`** to generate tasks for that feature
 7. Run **`rw-doctor`** again before the next autonomous execution
 8. Run **`rw-run-lite`** (or `rw-run-strict`) to continue the autonomous loop
 9. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
@@ -128,7 +127,7 @@ For verification, run the core flow directly in Copilot Chat:
 1. `rw-new-project`
 2. `rw-run-lite` (or `rw-run-strict`)
 3. `rw-feature`
-4. `rw-plan-lite` (or `rw-plan-strict`)
+4. `rw-plan`
 5. `rw-run-lite` (or `rw-run-strict`)
 
 ## Orchestration File Reference
@@ -141,8 +140,7 @@ For verification, run the core flow directly in Copilot Chat:
 | [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
 | [`rw-doctor`](.github/prompts/rw-doctor.prompt.md) | Preflight check for top-level/runSubagent/git/.ai readiness before autonomous runs (target-root pointer file) |
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
-| [`rw-plan-lite`](.github/prompts/rw-plan-lite.prompt.md) | Generate task breakdown (Lite mode) |
-| [`rw-plan-strict`](.github/prompts/rw-plan-strict.prompt.md) | Generate task breakdown (Strict mode) |
+| [`rw-plan`](.github/prompts/rw-plan.prompt.md) | Generate task breakdown for one READY_FOR_PLAN feature |
 | [`rw-run-lite`](.github/prompts/rw-run-lite.prompt.md) | Orchestration loop (Lite mode, target-root pointer file) |
 | [`rw-run-strict`](.github/prompts/rw-run-strict.prompt.md) | Orchestration loop + reviewer dispatch (Strict mode, target-root pointer file) |
 | [`rw-review`](.github/prompts/rw-review.prompt.md) | Strict reviewer rules for validating one latest completed task |
@@ -154,9 +152,9 @@ For verification, run the core flow directly in Copilot Chat:
 |---|---|
 | [`CONTEXT.md`](.ai/CONTEXT.md) | Language policy & machine-parseable tokens (read by every orchestration prompt `rw-*` at Step 0) |
 | [`GUIDE.md`](.ai/GUIDE.md) | Operational guide for the RW workflow |
-| [`PLAN.md`](.ai/PLAN.md) | Workspace metadata + append-only Feature Notes (`rw-new-project` creates/updates overview, `rw-plan-*` appends feature notes) |
-| [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (`rw-new-project` or `rw-init` creates skeleton, `rw-plan-*`/`rw-run-*` update entries) |
-| `tasks/TASK-XX-*.md` | Individual task definitions (`rw-new-project` creates bootstrap `TASK-01+`; additional feature tasks are created by `rw-plan-*`) |
+| [`PLAN.md`](.ai/PLAN.md) | Workspace metadata + append-only Feature Notes (`rw-new-project` creates/updates overview, `rw-plan` appends feature notes) |
+| [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (`rw-new-project` or `rw-init` creates skeleton, `rw-plan`/`rw-run-*` update entries) |
+| `tasks/TASK-XX-*.md` | Individual task definitions (`rw-new-project` creates bootstrap `TASK-01+`; additional feature tasks are created by `rw-plan`) |
 | `features/*.md` | Feature specifications (bootstrap feature may be created by `rw-new-project`; additional ones are created by `rw-feature`) |
 
 ### Safety Mechanisms

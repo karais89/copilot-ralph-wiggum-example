@@ -60,7 +60,7 @@ Important:
 - The orchestrator must never edit product code directly.
 - Product code paths are repository-dependent (web/app/game/unity/etc.); do not assume `src/` as the only location.
 - The orchestrator may edit only: <PROGRESS> and <PLAN> (`Feature Notes` append-only runtime notes only).
-- Never create/modify `TARGET_ROOT/.ai/tasks/TASK-XX-*.md` during `rw-run-strict`; task decomposition belongs to `rw-plan-*`.
+- Never create/modify `TARGET_ROOT/.ai/tasks/TASK-XX-*.md` during `rw-run-strict`; task decomposition belongs to `rw-plan`.
 - The orchestrator may read `<ARCHIVE_DIR>/*` for reconciliation, but must not write archive files in Strict loop.
 - During Strict runs, the orchestrator never performs archive directly; archive is manual via `rw-archive.prompt.md`.
 - This prompt must run in a top-level Copilot Chat turn.
@@ -131,7 +131,7 @@ Repeat:
 - Never resurrect archived completed tasks to `pending`
 - Strict recovery rule: after manual intervention on an escalated task, append
   `REVIEW-ESCALATE-RESOLVED TASK-XX: <resolution>` to <PROGRESS> Log before rerun
-- If requirements are missing/changed, stop and ask for `rw-feature` -> `rw-plan-*` before continuing implementation
+- If requirements are missing/changed, stop and ask for `rw-feature` -> `rw-plan` before continuing implementation
 - Keep `PLAN.md` concise; place details in task files
 
 ## Manual PROGRESS archive rules (Strict)

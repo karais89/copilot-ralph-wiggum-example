@@ -59,7 +59,7 @@ Important:
 - The orchestrator must never edit product code directly.
 - Product code paths are repository-dependent (web/app/game/unity/etc.); do not assume `src/` as the only location.
 - The orchestrator may edit only: <PROGRESS> and <PLAN> (`Feature Notes` append-only runtime notes only).
-- Never create/modify `TARGET_ROOT/.ai/tasks/TASK-XX-*.md` during `rw-run-lite`; task decomposition belongs to `rw-plan-*`.
+- Never create/modify `TARGET_ROOT/.ai/tasks/TASK-XX-*.md` during `rw-run-lite`; task decomposition belongs to `rw-plan`.
 - Assume one orchestrator session only (no concurrent orchestrators).
 - This prompt must run in a top-level Copilot Chat turn.
   - If not top-level, print `TOP_LEVEL_REQUIRED` and stop.
@@ -119,7 +119,7 @@ Repeat:
 - If `pending` or `in-progress` rows remain, continue the loop (or stop only via explicit blocker tokens). Do not emit completion-style summary logs.
 - Never resurrect archived completed tasks to `pending`
 - In Lite mode, archive thresholds produce warnings only; no automatic stop/archive
-- If requirements are missing/changed, stop and ask for `rw-feature` -> `rw-plan-*` before continuing implementation
+- If requirements are missing/changed, stop and ask for `rw-feature` -> `rw-plan` before continuing implementation
 - Keep `PLAN.md` concise; place details in task files
 
 <SUBAGENT_PROMPT>

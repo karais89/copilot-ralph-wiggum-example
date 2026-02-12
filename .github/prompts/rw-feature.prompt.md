@@ -10,7 +10,7 @@ Language policy reference: `.ai/CONTEXT.md`
 Quick summary:
 - Prepare one feature input file for planning.
 - Write exactly one new `.ai/features/YYYYMMDD-HHMM-<slug>.md` file.
-- Set `Status: READY_FOR_PLAN` so `rw-plan-lite`/`rw-plan-strict` can consume it.
+- Set `Status: READY_FOR_PLAN` so `rw-plan` can consume it.
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
@@ -100,11 +100,11 @@ Workflow:
 11) In `Notes`, include:
    - source (`rw-feature`)
    - created timestamp
-   - recommended next step (`rw-plan-lite` or `rw-plan-strict`)
+   - recommended next step (`rw-plan`)
 
 Output format at end:
 - Created feature file path
 - Final status value
 - One-line summary used
 - Clarification questions asked count
-- Recommended next command (`rw-plan-lite` or `rw-plan-strict`)
+- Recommended next command (`rw-plan`)

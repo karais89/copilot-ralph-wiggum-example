@@ -1,6 +1,6 @@
 ---
-name: rw-plan-strict
-description: "Ralph Strict: add feature notes + create TASK-XX files with archive-safe PROGRESS sync"
+name: rw-plan
+description: "Ralph Plan: add feature notes + create TASK-XX files + sync PROGRESS"
 agent: agent
 argument-hint: "No inline input. Prepare .ai/features/YYYYMMDD-HHMM-<slug>.md with Status: READY_FOR_PLAN."
 ---
@@ -20,7 +20,7 @@ Step 0 (Mandatory):
 3) Validate language policy internally and proceed silently (no confirmation line).
 4) Do not modify any file before Step 0 completes.
 
-You are adding a new feature to an existing Ralph-style orchestration workspace.
+You are adding a new feature to an existing Ralph orchestration workspace.
 
 Target files:
 - .ai/PLAN.md

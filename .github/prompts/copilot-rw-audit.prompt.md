@@ -17,7 +17,7 @@
 
 ## 1) Static Audit
 - 단계 책임 경계 충돌 여부:
-  - `rw-new-project / rw-doctor / rw-feature / rw-plan-* / rw-run-* / rw-review / rw-archive`
+  - `rw-new-project / rw-doctor / rw-feature / rw-plan / rw-run-* / rw-review / rw-archive`
 - 입력/출력 토큰 일관성:
   - `LANG_POLICY_MISSING`, `RW_TARGET_ROOT_INVALID`, `RW_DOCTOR_PASS`, `RW_DOCTOR_BLOCKED`, `RW_ENV_UNSUPPORTED`, `Status`, `READY_FOR_PLAN`, `PLANNED`, `Task Status`, `Log`
 - idempotency 규칙 충돌 여부

@@ -21,11 +21,11 @@ Responsibility boundary:
 | `rw-new-project` | Integrated new-project bootstrap (`rw-init` scaffolding + discovery + bootstrap feature/task decomposition) |
 | `rw-doctor` | Preflight environment check before autonomous runs (`top-level`, `runSubagent`, `git`, `.ai` readiness) |
 | `rw-feature` | Feature definition (`.ai/features/*.md`) |
-| `rw-plan-*` | Feature-to-task decomposition (`TASK-XX`, `PLAN Feature Notes`, `PROGRESS` sync) |
+| `rw-plan` | Feature-to-task decomposition (`TASK-XX`, `PLAN Feature Notes`, `PROGRESS` sync) |
 | `rw-run-*` | Task implementation in product code |
 
 Critical constraints (never override):
-- Do not infer arbitrary feature scope. General feature definition/decomposition belongs to `rw-feature` and `rw-plan-*` (bootstrap foundation is handled in `rw-new-project`).
+- Do not infer arbitrary feature scope. General feature definition/decomposition belongs to `rw-feature` and `rw-plan` (bootstrap foundation is handled in `rw-new-project`).
 - If repository context is insufficient, skip purpose/stack/validation inference and write explicit placeholders instead.
 - Never create more than one task file during `rw-init`.
 - Never create `TASK-02` or higher during `rw-init`.
