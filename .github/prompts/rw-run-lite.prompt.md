@@ -64,7 +64,7 @@ Important:
 - This prompt must run in a top-level Copilot Chat turn.
   - If not top-level, print `TOP_LEVEL_REQUIRED` and stop.
 - For explicit preflight diagnostics, run `rw-doctor.prompt.md` before this prompt.
-- If `#tool:agent/runSubagent` is unavailable, switch to manual fallback mode (do not continue autonomous loop).
+- If `#tool:agent/runSubagent` is unavailable, fail fast with `RW_ENV_UNSUPPORTED` and stop (do not continue autonomous loop).
 
 ## Loop
 Initialize runtime counters before the first loop iteration:
@@ -101,15 +101,7 @@ Repeat:
   9) If `#tool:agent/runSubagent` is unavailable:
      - print `runSubagent unavailable`
      - print `RW_ENV_UNSUPPORTED`
-     - print `MANUAL_FALLBACK_REQUIRED`
-     - print "This environment does not support autonomous rw-run-lite."
-     - print optional manual checklist:
-       a) choose one dependency-satisfied `pending` task from <PROGRESS>
-       b) implement only that task in product code
-       c) run build/verification commands and fix issues
-       d) update <PROGRESS> status to `completed` and append one `TASK-XX completed` log line
-       e) commit with a conventional commit message
-       f) rerun this prompt after manual completion
+     - print "This environment does not support autonomous rw-run-lite. Run rw-doctor.prompt.md and rerun in a runSubagent-supported environment."
      - stop
   10) Call `#tool:agent/runSubagent` with SUBAGENT_PROMPT exactly as provided below
       - Immediately before call, print `RUNSUBAGENT_DISPATCH_BEGIN`

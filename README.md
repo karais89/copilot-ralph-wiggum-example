@@ -166,7 +166,6 @@ For verification, run the core flow directly in Copilot Chat:
 - **REVIEW-ESCALATE** — (Strict mode) 3 consecutive review failures trigger escalation and halt
 - **RW_ENV_UNSUPPORTED** — Explicit signal that autonomous mode is unavailable in the current environment
 - **RW_TARGET_ROOT_INVALID** — Target root pointer is invalid (empty/non-absolute/missing path)
-- **MANUAL_FALLBACK_REQUIRED** — Optional manual path when autonomous mode is unavailable
 
 ## Example: Todo CLI
 

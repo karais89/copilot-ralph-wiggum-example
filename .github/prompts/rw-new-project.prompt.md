@@ -93,7 +93,7 @@ Workflow:
        - `## Overview`
        - `- Project purpose is undecided (user input required).`
        - `- Technology stack is undecided.`
-       - `- Next step: generate bootstrap feature/tasks with this prompt, then run rw-run.`
+       - `- Next step: generate bootstrap feature/tasks with this prompt, then run rw-run-lite or rw-run-strict.`
        - `## Feature Notes (append-only)`
      - If exists, keep content and ensure `## Feature Notes (append-only)` section exists.
    - `TASK-01`:
