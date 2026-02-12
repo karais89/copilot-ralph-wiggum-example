@@ -108,8 +108,8 @@ Workflow:
    - do not change bootstrap feature status to `PLANNED` in this prompt
 
 7) Decide next command:
-   - if active `.ai/tasks/TASK-*.md` exists, set `NEXT_COMMAND=rw-run`
-   - else set `NEXT_COMMAND=rw-plan`
+   - always set `NEXT_COMMAND=rw-plan`
+   - rationale: this prompt seeds bootstrap feature only; task decomposition belongs to `rw-plan`
 
 Output format (machine-friendly, fixed keys):
 - `SCAFFOLD_RESULT=<created|updated|skipped>`
@@ -124,7 +124,7 @@ Output format (machine-friendly, fixed keys):
 - `UNRESOLVED_OPEN_QUESTIONS=<n>`
 - `BOOTSTRAP_COMMIT_RESULT=<created|skipped|failed>`
 - `BOOTSTRAP_COMMIT_SHA=<sha|none>`
-- `NEXT_COMMAND=<rw-plan|rw-run>`
+- `NEXT_COMMAND=rw-plan`
 
 Output defaults for removed responsibilities:
 - `BOOTSTRAP_TASKS=skipped`

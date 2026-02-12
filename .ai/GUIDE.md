@@ -170,7 +170,7 @@ scripts/
 - 사용자는 자유 텍스트 설명보다 `NEXT_COMMAND`를 우선 기준으로 다음 프롬프트를 실행한다.
 - 기본 기대값:
   - `rw-init` -> `NEXT_COMMAND=rw-new-project` 또는 `rw-feature`
-  - `rw-new-project` -> `NEXT_COMMAND=rw-plan` 또는 `rw-run`
+  - `rw-new-project` -> `NEXT_COMMAND=rw-plan`
   - `rw-feature` -> `NEXT_COMMAND=rw-plan`
   - `rw-plan` -> `NEXT_COMMAND=rw-run`
   - `rw-doctor` -> `NEXT_COMMAND=rw-run`
