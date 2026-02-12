@@ -58,8 +58,8 @@ Step 0 (Mandatory):
      - If any check fails:
        - print `RW_DOCTOR_BLOCKED`
        - print one token line per blocker (`TOP_LEVEL_REQUIRED`, `RW_ENV_UNSUPPORTED`, `GIT_REPO_MISSING`, `RW_WORKSPACE_MISSING`, `RW_CORE_FILE_UNREADABLE`)
-       - print `Run rw-doctor.prompt.md and fix blockers before rw-run.`
-       - print `NEXT_COMMAND=rw-doctor`
+       - print `Fix blockers, then rerun rw-run.`
+       - print `NEXT_COMMAND=rw-run`
        - stop
      - If all checks pass:
        - ensure `<RUNTIME_DIR>` exists
@@ -71,7 +71,7 @@ Step 0 (Mandatory):
        - if stamp write fails:
          - print `RW_DOCTOR_BLOCKED`
          - print `RW_DOCTOR_STAMP_WRITE_FAILED: <short reason>`
-         - print `NEXT_COMMAND=rw-doctor`
+         - print `NEXT_COMMAND=rw-run`
          - stop
        - print `RW_DOCTOR_AUTORUN_PASS`
 
@@ -85,7 +85,7 @@ Important:
 - `rw-run` auto-runs doctor-equivalent preflight when pass stamp is missing/stale.
 - If `#tool:agent/runSubagent` is unavailable, fail fast with `RW_ENV_UNSUPPORTED` and stop (do not continue autonomous loop).
 - On every controlled stop/exit path in this loop, print exactly one machine-readable next step line:
-  - `NEXT_COMMAND=<rw-doctor|rw-archive|rw-review|rw-run>`
+  - `NEXT_COMMAND=<rw-archive|rw-review|rw-run>`
 
 ## Loop
 Initialize runtime counters before the first loop iteration:
@@ -106,8 +106,8 @@ Repeat:
      - verify `<AI_ROOT>`, `<TASKS>`, and `<PLAN>` are readable
      - if any check fails:
        - print `RW_DOCTOR_BLOCKED`
-       - print `Run rw-doctor.prompt.md and fix blockers before rw-run.`
-       - print `NEXT_COMMAND=rw-doctor`
+       - print `Fix blockers, then rerun rw-run.`
+       - print `NEXT_COMMAND=rw-run`
        - stop
   4) If <PROGRESS> does not exist, create it by listing all `TASK-*.md` from <TASKS> as `pending`
   5) Scan `TASK-*.md` in <TASKS>; add as `pending` only task IDs that are missing from both:
@@ -134,7 +134,7 @@ Repeat:
      then:
        - If `UNFINISHED_TASK_SEEN=true` and `RUNSUBAGENT_DISPATCH_COUNT=0`:
          - print `RW_SUBAGENT_NOT_DISPATCHED`
-         - print `NEXT_COMMAND=rw-doctor`
+         - print `NEXT_COMMAND=rw-run`
          - stop
        - Append one log line to <PROGRESS>:
          - `- **YYYY-MM-DD** — RUNSUBAGENT_DISPATCH_COUNT: <RUNSUBAGENT_DISPATCH_COUNT>`
@@ -146,8 +146,8 @@ Repeat:
   10) If `#tool:agent/runSubagent` is unavailable:
      - print `runSubagent unavailable`
      - print `RW_ENV_UNSUPPORTED`
-     - print "This environment does not support autonomous rw-run. Run rw-doctor.prompt.md and rerun in a runSubagent-supported environment."
-     - print `NEXT_COMMAND=rw-doctor`
+     - print "This environment does not support autonomous rw-run. Switch to a runSubagent-supported environment and rerun rw-run."
+     - print `NEXT_COMMAND=rw-run`
      - stop
   11) Build one-task dispatch lock and completion baseline:
       - Select exactly one dispatchable task as `LOCKED_TASK_ID` from active `pending`/`in-progress` rows:

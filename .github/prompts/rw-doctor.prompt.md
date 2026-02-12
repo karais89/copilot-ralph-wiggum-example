@@ -70,8 +70,8 @@ Result rules:
   - Then print one line per failed token in this format:
     - `<TOKEN>: <short reason>`
   - Then print:
-    - `Run rw-init or rw-new-project to bootstrap, then rerun rw-doctor.`
-    - `NEXT_COMMAND=rw-doctor`
+    - `Run rw-init or rw-new-project to bootstrap, then rerun rw-run.`
+    - `NEXT_COMMAND=rw-run`
   - Stop.
 - If all checks pass:
   - Persist doctor pass stamp:
@@ -85,8 +85,8 @@ Result rules:
       - first line: `RW_DOCTOR_BLOCKED`
       - token line: `RW_DOCTOR_STAMP_WRITE_FAILED: <short reason>`
       - then:
-        - `Fix runtime directory permissions and rerun rw-doctor.`
-        - `NEXT_COMMAND=rw-doctor`
+        - `Fix runtime directory permissions and rerun rw-run.`
+        - `NEXT_COMMAND=rw-run`
       - stop
   - First line must be exactly: `RW_DOCTOR_PASS`
   - Then print:

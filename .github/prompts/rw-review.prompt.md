@@ -46,7 +46,7 @@ Rules:
 - Subagents must not modify repository files; orchestrator writes `<PROGRESS>` only after collecting results.
 - Each review candidate task must be dispatched exactly once in the current review run.
 - On every stop path, print exactly one machine-readable next step line:
-  - `NEXT_COMMAND=<rw-run|rw-doctor|rw-archive>`
+  - `NEXT_COMMAND=<rw-run|rw-archive>`
 - Parallel dispatch policy (deterministic):
   - Default mode is `SEQUENTIAL`.
   - Enable `PARALLEL` only when every review candidate task file contains exact line: `Review Parallel: SAFE`.
@@ -71,7 +71,7 @@ Procedure:
 5) If `#tool:agent/runSubagent` is unavailable:
    - print `runSubagent unavailable`
    - print `RW_ENV_UNSUPPORTED`
-   - print `NEXT_COMMAND=rw-doctor`
+   - print `NEXT_COMMAND=rw-run`
    - stop.
 6) Dispatch review subagents for each candidate task:
    - Determine mode using the deterministic policy above.

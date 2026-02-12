@@ -168,9 +168,9 @@ scripts/
   - `rw-new-project` -> `NEXT_COMMAND=rw-run` 또는 `rw-feature`
   - `rw-feature` -> `NEXT_COMMAND=rw-plan`
   - `rw-plan` -> `NEXT_COMMAND=rw-run`
-  - `rw-doctor` -> `NEXT_COMMAND=rw-run` (PASS), `NEXT_COMMAND=rw-doctor` (BLOCKED 후 재검증)
-  - `rw-run` -> `NEXT_COMMAND=rw-review` / `rw-archive` / `rw-doctor` / `rw-run`
-  - `rw-review` -> `NEXT_COMMAND=rw-archive` / `rw-run` / `rw-doctor`
+  - `rw-doctor` -> `NEXT_COMMAND=rw-run`
+  - `rw-run` -> `NEXT_COMMAND=rw-review` / `rw-archive` / `rw-run`
+  - `rw-review` -> `NEXT_COMMAND=rw-archive` / `rw-run`
   - `rw-archive` -> `NEXT_COMMAND=rw-run`
 
 ## rw-run 운영 규칙
