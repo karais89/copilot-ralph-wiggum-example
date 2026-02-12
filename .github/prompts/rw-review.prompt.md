@@ -9,7 +9,7 @@ Language policy reference: `<CONTEXT>`
 
 Quick summary:
 - Run this manually after `rw-run` to review completed tasks in batch.
-- Dispatch review subagents per task (parallel batches when safe/available).
+- Dispatch review subagents per task (default sequential; parallel only when explicitly marked safe).
 - Write review outcomes to `PROGRESS` using `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`.
 
 Path resolution (mandatory before Step 0):
@@ -53,6 +53,11 @@ Rules:
 - This prompt must dispatch `#tool:agent/runSubagent` for per-task validation.
 - Subagents must not modify repository files; orchestrator writes `<PROGRESS>` only after collecting results.
 - Each review candidate task must be dispatched exactly once in the current review run.
+- Parallel dispatch policy (deterministic):
+  - Default mode is `SEQUENTIAL`.
+  - Enable `PARALLEL` only when every review candidate task file contains exact line: `Review Parallel: SAFE`.
+  - If enabled, fixed batch size is 2.
+  - If any candidate is missing that exact line, use `SEQUENTIAL`.
 
 Procedure:
 1) Read `<PROGRESS>` and collect all `completed` tasks in active `Task Status`.
@@ -70,9 +75,10 @@ Procedure:
    - print `RW_ENV_UNSUPPORTED`
    - stop.
 6) Dispatch review subagents for each candidate task:
-   - Preferred execution: parallel batches (batch size up to 3) when concurrency is supported and verification commands are parallel-safe.
-   - If commands share mutable resources (fixed port, shared DB/file lock, global cache mutation), force sequential dispatch.
-   - Fallback: sequential dispatch per task.
+   - Determine mode using the deterministic policy above.
+   - `PARALLEL` mode: fixed batch size 2.
+   - `SEQUENTIAL` mode: dispatch one task at a time.
+   - Print `REVIEW_EXECUTION_MODE=<PARALLEL|SEQUENTIAL>` before the first dispatch.
    - Before each dispatch print `RUNSUBAGENT_REVIEW_DISPATCH_BEGIN TASK-XX`.
    - After success print `RUNSUBAGENT_REVIEW_DISPATCH_OK TASK-XX`.
    - Subagent output contract (exactly one final line per task):

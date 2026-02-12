@@ -139,7 +139,11 @@
 - `rw-review.prompt.md`:
   - 수동 리뷰 전용 프롬프트다(top-level 실행).
   - active `Task Status`의 completed 태스크를 배치로 검증한다.
-  - 태스크별 reviewer subagent를 디스패치하며, 안전할 때 병렬 배치(최대 3개)를 허용한다.
+  - 태스크별 reviewer subagent를 디스패치한다.
+  - 병렬은 결정형 정책으로만 허용한다:
+    - 모든 후보 task 파일에 `Review Parallel: SAFE`가 있을 때만 병렬
+    - 병렬 batch size는 고정 2
+    - 그 외에는 순차 실행
   - 리뷰 결과를 집계한 뒤 `REVIEW_OK`/`REVIEW_FAIL`/`REVIEW-ESCALATE`를 `PROGRESS`에 반영한다.
 - `rw-archive.prompt.md`:
   - `PROGRESS.md`가 커졌을 때 수동 실행한다.

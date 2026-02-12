@@ -17,7 +17,7 @@ rw-new-project  →  rw-doctor  →  rw-run  →  rw-review  →  rw-feature  �
 1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery + bootstrap feature/task decomposition in one run, with bounded discovery: fixed 4 questions / max 2 rounds)
 2. **`rw-doctor`** — Validates top-level/runSubagent/git/.ai preflight before autonomous runs (supports target-root pointer file)
 3. **`rw-run`** — Runs implementation subagent loop
-4. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch (parallel-safe batches) and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`
+4. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
 5. **`rw-feature`** — Creates additional feature specification files
 6. **`rw-plan`** — Breaks additional features into atomic tasks
 7. **`rw-archive`** — Archives completed progress when it grows large
@@ -27,7 +27,7 @@ rw-new-project  →  rw-doctor  →  rw-run  →  rw-review  →  rw-feature  �
 ### Runtime Policy
 
 - Single `rw-run` policy (no lite/strict split).
-- Review is manual and explicit via `rw-review` (subagent-backed batch review, parallel-safe when possible).
+- Review is manual and explicit via `rw-review` (subagent-backed batch review, deterministic parallel gate).
 - Archive threshold is hard-stop; run resumes after manual `rw-archive`.
 
 ### Key Benefits
