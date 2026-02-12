@@ -157,7 +157,7 @@ For verification, run the core flow directly in Copilot Chat:
 
 | Prompt | Purpose |
 |---|---|
-| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + bounded discovery + bootstrap feature/task decomposition) |
+| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + bounded discovery + bootstrap feature/task decomposition + optional bootstrap auto-commit) |
 | [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
 | [`rw-doctor`](.github/prompts/rw-doctor.prompt.md) | Preflight check for top-level/runSubagent/git/.ai readiness before autonomous runs (target-root pointer file) |
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
@@ -186,6 +186,13 @@ For verification, run the core flow directly in Copilot Chat:
 - **REVIEW-ESCALATE** — 3 consecutive review failures trigger escalation and require manual intervention
 - **RW_ENV_UNSUPPORTED** — Explicit signal that autonomous mode is unavailable in the current environment
 - **RW_TARGET_ROOT_INVALID** — Target root pointer is invalid (empty/non-absolute/missing path)
+- **rw-run Dispatch Guard** — One subagent dispatch must complete exactly one locked task (`LOCKED_TASK_ID`)
+
+### Next Command Contract
+
+- Every operational prompt (`rw-*`) should end with one machine-readable line:
+  - `NEXT_COMMAND=<prompt-name-or-action>`
+- Follow `NEXT_COMMAND` as the primary next step signal for the workflow.
 
 ## Example: Todo CLI
 

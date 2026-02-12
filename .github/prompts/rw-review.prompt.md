@@ -53,6 +53,8 @@ Rules:
 - This prompt must dispatch `#tool:agent/runSubagent` for per-task validation.
 - Subagents must not modify repository files; orchestrator writes `<PROGRESS>` only after collecting results.
 - Each review candidate task must be dispatched exactly once in the current review run.
+- On every stop path, print exactly one machine-readable next step line:
+  - `NEXT_COMMAND=<rw-run|rw-doctor|rw-archive>`
 - Parallel dispatch policy (deterministic):
   - Default mode is `SEQUENTIAL`.
   - Enable `PARALLEL` only when every review candidate task file contains exact line: `Review Parallel: SAFE`.
@@ -61,7 +63,10 @@ Rules:
 
 Procedure:
 1) Read `<PROGRESS>` and collect all `completed` tasks in active `Task Status`.
-2) If no completed task exists, print `REVIEW_TARGET_MISSING` and stop.
+2) If no completed task exists:
+   - print `REVIEW_TARGET_MISSING`
+   - print `NEXT_COMMAND=rw-run`
+   - stop.
 3) Build review candidates:
    - For each completed task (`TASK-XX`), locate its latest completion log (`TASK-XX completed`).
    - If there is already a later review log for the same task (`REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`), skip it as already reviewed.
@@ -69,10 +74,12 @@ Procedure:
 4) If candidate set is empty:
    - print `REVIEW_NOTHING_TO_DO`
    - print `REVIEW_SUMMARY total=0 ok=0 fail=0 escalate=0 skipped=<completed-count>`
+   - print `NEXT_COMMAND=rw-run`
    - stop.
 5) If `#tool:agent/runSubagent` is unavailable:
    - print `runSubagent unavailable`
    - print `RW_ENV_UNSUPPORTED`
+   - print `NEXT_COMMAND=rw-doctor`
    - stop.
 6) Dispatch review subagents for each candidate task:
    - Determine mode using the deterministic policy above.
@@ -103,10 +110,12 @@ Procedure:
    - `RUNSUBAGENT_REVIEW_DISPATCH_COUNT=<n>`
 9) If any fail/escalate occurred:
    - print `REVIEW_BATCH_FAIL`
+   - print `NEXT_COMMAND=rw-run`
    - stop.
 10) Otherwise:
    - print `REVIEW_BATCH_OK`
    - print `✅ Completed tasks verified`
+   - print `NEXT_COMMAND=rw-archive`
    - stop.
 
 <REVIEW_SUBAGENT_PROMPT>

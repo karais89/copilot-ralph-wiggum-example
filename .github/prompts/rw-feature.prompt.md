@@ -104,8 +104,8 @@ Workflow:
    - recommended next step (`rw-plan`)
 
 Output format at end:
-- Created feature file path
-- Final status value
-- One-line summary used
-- Clarification questions asked count
-- Recommended next command (`rw-plan`)
+- `FEATURE_FILE=<created-feature-file-path>`
+- `FEATURE_STATUS=<READY_FOR_PLAN>`
+- `SUMMARY_USED=<one-line-summary>`
+- `CLARIFICATION_QUESTION_COUNT=<n>`
+- `NEXT_COMMAND=rw-plan`

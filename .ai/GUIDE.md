@@ -122,6 +122,8 @@ scripts/
 - `rw-new-project.prompt.md`:
   - `rw-init + discovery + bootstrap feature/task 분해` 통합 프롬프트다.
   - 빈/템플릿 저장소에서 `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap task 생성을 한 번에 수행한다.
+  - 기본값으로 bootstrap 산출물(`.ai/*`)을 1회 커밋한다 (`chore(rw): bootstrap workspace via rw-new-project`).
+  - `projectIdea`에 `[NO_AUTO_COMMIT]`를 넣거나 `.ai/runtime/rw-no-autocommit.flag`가 있으면 auto-commit을 건너뛴다.
   - discovery는 질문형을 유지하되 고정 4개 항목(대상 사용자/핵심 가치/MVP 범위/제약+검증 기준)만 수집한다.
   - discovery 라운드는 최대 2회로 제한한다(1회 필수 + 1회 보완 선택).
   - `PLAN.md`의 `개요`를 구체화하고 `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md`를 생성한다.
@@ -158,6 +160,20 @@ scripts/
   - 반드시 run 루프가 멈춘 상태(`.ai/PAUSE.md` 존재)에서 실행한다.
   - archive 중에는 `.ai/ARCHIVE_LOCK`이 생성되며, lock이 있으면 다른 archive 실행을 중단한다.
 
+## Next-step output contract
+
+- 운영 프롬프트(`rw-*`) 종료 시, 다음 액션은 `NEXT_COMMAND=<...>` 한 줄로 안내한다.
+- 사용자는 자유 텍스트 설명보다 `NEXT_COMMAND`를 우선 기준으로 다음 프롬프트를 실행한다.
+- 기본 기대값:
+  - `rw-init` -> `NEXT_COMMAND=rw-new-project` 또는 `rw-feature`
+  - `rw-new-project` -> `NEXT_COMMAND=rw-run` 또는 `rw-feature`
+  - `rw-feature` -> `NEXT_COMMAND=rw-plan`
+  - `rw-plan` -> `NEXT_COMMAND=rw-run`
+  - `rw-doctor` -> `NEXT_COMMAND=rw-run` (PASS), `NEXT_COMMAND=rw-doctor` (BLOCKED 후 재검증)
+  - `rw-run` -> `NEXT_COMMAND=rw-review` / `rw-archive` / `rw-doctor` / `rw-run`
+  - `rw-review` -> `NEXT_COMMAND=rw-archive` / `rw-run` / `rw-doctor`
+  - `rw-archive` -> `NEXT_COMMAND=rw-run`
+
 ## rw-run 운영 규칙
 
 - `runSubagent`가 없으면 `RW_ENV_UNSUPPORTED`를 출력하고 자동 루프를 즉시 중단한다.
@@ -167,6 +183,8 @@ scripts/
 - 제품 코드 경로는 저장소 구조(웹/앱/게임/유니티 등)에 따라 다르므로 `src/` 고정 가정을 두지 않는다.
 - `PLAN.md`는 `Feature Notes`만 append 한다.
 - 태스크는 `TASK-XX` 번호를 유지한다.
+- 오케스트레이터는 루프마다 정확히 1개 태스크를 `LOCKED_TASK_ID`로 잠그고 subagent에 전달한다.
+- 한 번의 dispatch에서 새로 `completed`로 바뀌는 태스크는 정확히 1개여야 하며, 반드시 `LOCKED_TASK_ID`와 같아야 한다.
 - **동시에 여러 오케스트레이터를 실행하지 않는다**(충돌 방지).
 - archive 임계치(`completed > 20` 또는 `PROGRESS > 8000 chars` 또는 `log > 40`)를 넘기면 즉시 중단한다.
 - 중단 시 `.ai/PAUSE.md`를 유지한 상태로 `rw-archive.prompt.md`를 수동 실행한 후 `rw-run`을 재개한다.

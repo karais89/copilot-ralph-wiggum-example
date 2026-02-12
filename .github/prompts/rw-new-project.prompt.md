@@ -22,6 +22,7 @@ Step 0 (Mandatory):
 Inputs:
 - `projectIdea` (optional)
 - literal marker `[NON_INTERACTIVE]` in `projectIdea` (optional)
+- literal marker `[NO_AUTO_COMMIT]` in `projectIdea` (optional)
 
 Constants (do not change during one run):
 - `DISCOVERY_FIELDS=4`
@@ -30,6 +31,7 @@ Constants (do not change during one run):
 - `BOOTSTRAP_SMALL_SCOPE_TASK_COUNT=5`
 - `TASK_SIZE_MIN_MINUTES=30`
 - `TASK_SIZE_MAX_MINUTES=120`
+- `AUTO_COMMIT_BOOTSTRAP_DEFAULT=true`
 
 Rules:
 - Do not edit product code.
@@ -63,6 +65,10 @@ Workflow:
 2) Resolve `NON_INTERACTIVE_MODE`:
    - true if `projectIdea` contains `[NON_INTERACTIVE]` OR `.ai/runtime/rw-noninteractive.flag` exists.
    - remove marker token from `projectIdea` if present.
+   - resolve `AUTO_COMMIT_BOOTSTRAP`:
+     - default: `AUTO_COMMIT_BOOTSTRAP_DEFAULT` (`true`)
+     - set `false` if `projectIdea` contains `[NO_AUTO_COMMIT]` OR `.ai/runtime/rw-no-autocommit.flag` exists
+     - remove `[NO_AUTO_COMMIT]` marker token from `projectIdea` if present
 
 3) Resolve direction seed deterministically:
    - `projectIdea` (cleaned) if present
@@ -121,7 +127,35 @@ Workflow:
      - append short plan output note with task range/date
    - if `TASK-02+` already exists, skip decomposition
 
-9) Recommended next command:
+9) Bootstrap commit (default enabled):
+   - If `AUTO_COMMIT_BOOTSTRAP=false`, skip commit and set:
+     - `BOOTSTRAP_COMMIT_RESULT=skipped`
+     - `BOOTSTRAP_COMMIT_SHA=none`
+   - Else if workspace is not a git repository, skip commit and set:
+     - `BOOTSTRAP_COMMIT_RESULT=skipped`
+     - `BOOTSTRAP_COMMIT_SHA=none`
+   - Else stage only rw-new-project artifacts under `.ai`:
+     - `.ai/PLAN.md`
+     - `.ai/PROGRESS.md`
+     - `.ai/features/*.md`
+     - `.ai/tasks/TASK-*.md`
+     - `.ai/notes/PROJECT-CHARTER-*.md`
+     - `.ai/runtime/rw-active-target-id.txt`
+     - `.ai/runtime/rw-active-target-root.txt`
+     - `.ai/runtime/rw-targets/workspace-root.env`
+   - If there is nothing staged after this filter:
+     - `BOOTSTRAP_COMMIT_RESULT=skipped`
+     - `BOOTSTRAP_COMMIT_SHA=none`
+   - Otherwise create one commit:
+     - message: `chore(rw): bootstrap workspace via rw-new-project`
+     - on success:
+       - `BOOTSTRAP_COMMIT_RESULT=created`
+       - `BOOTSTRAP_COMMIT_SHA=<new-commit-sha>`
+     - on failure:
+       - `BOOTSTRAP_COMMIT_RESULT=failed`
+       - `BOOTSTRAP_COMMIT_SHA=none`
+
+10) Recommended next command:
    - `rw-run` when bootstrap tasks are created or pending
    - otherwise `rw-feature`
 
@@ -136,4 +170,6 @@ Output format (machine-friendly, fixed keys):
 - `TASK_COUNT=<n>`
 - `DISCOVERY_ROUNDS=<0|1|2>`
 - `UNRESOLVED_OPEN_QUESTIONS=<n>`
+- `BOOTSTRAP_COMMIT_RESULT=<created|skipped|failed>`
+- `BOOTSTRAP_COMMIT_SHA=<sha|none>`
 - `NEXT_COMMAND=<rw-run|rw-feature>`

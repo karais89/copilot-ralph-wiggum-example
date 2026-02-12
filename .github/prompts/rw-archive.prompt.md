@@ -28,6 +28,8 @@ You will ONLY edit these files:
 
 Rules:
 - Interactive fallback must follow `.github/prompts/RW-INTERACTIVE-POLICY.md`.
+- On every exit path, print one final machine-readable line:
+  - `NEXT_COMMAND=<rw-run|rw-archive>`
 - First, inspect active `.ai/PROGRESS.md` and compute:
   - total character count
   - completed Task Status row count
@@ -46,6 +48,7 @@ Rules:
     - do not create archive output files
     - if `.ai/PAUSE.md` contains exact line `created-by: rw-archive-preflight`, delete `.ai/PAUSE.md` before finishing
     - finish with a no-op summary
+    - print `NEXT_COMMAND=rw-run`
 - Do not use open-ended follow-up text like "if you want forced archive, tell me". Use the single-choice askQuestions flow above.
 - Before any archive operation, ensure `.ai/PAUSE.md` exists.
   - If `.ai/PAUSE.md` is missing, resolve once via `#tool:vscode/askQuestions` single choice (in resolved user-document language from `.ai/CONTEXT.md`):
@@ -58,8 +61,12 @@ Rules:
     and continue.
   - If user selects cancel or no valid selection is obtained after that single interaction, stop immediately with:
     "⛔ rw-run may still be active. Create .ai/PAUSE.md first, then retry rw-archive."
+    and print:
+    - `NEXT_COMMAND=rw-archive`
 - If `.ai/ARCHIVE_LOCK` already exists, stop immediately with:
   "⛔ Archive lock detected (.ai/ARCHIVE_LOCK). Another archive may be running."
+  and print:
+  - `NEXT_COMMAND=rw-archive`
 - Before mutating PROGRESS or archive files, create `.ai/ARCHIVE_LOCK` with a timestamp line.
 - On successful completion, delete `.ai/ARCHIVE_LOCK`.
 - On successful completion, if `.ai/PAUSE.md` contains exact line `created-by: rw-archive-preflight`, delete `.ai/PAUSE.md` automatically before finishing.
@@ -79,3 +86,9 @@ Rules:
 - Leave pointers in PROGRESS.md to the latest archive files.
 
 Now perform the archive if needed and save the files.
+
+Output format at end:
+- `ARCHIVE_RESULT=<applied|skipped|blocked>`
+- `STATUS_ARCHIVE_FILE=<path|none>`
+- `LOG_ARCHIVE_FILE=<path|none>`
+- `NEXT_COMMAND=rw-run`

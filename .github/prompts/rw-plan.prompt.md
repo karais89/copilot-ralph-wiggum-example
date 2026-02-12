@@ -171,3 +171,4 @@ Output format at end:
 - Created task files list
 - PROGRESS rows added count
 - Feature file status update result
+- `NEXT_COMMAND=rw-run`

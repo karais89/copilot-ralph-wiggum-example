@@ -75,8 +75,9 @@ Result rules:
   - First line must be exactly: `RW_DOCTOR_BLOCKED`
   - Then print one line per failed token in this format:
     - `<TOKEN>: <short reason>`
-  - Final line:
+  - Then print:
     - `Run rw-init or rw-new-project to bootstrap, then rerun rw-doctor.`
+    - `NEXT_COMMAND=rw-doctor`
   - Stop.
 - If all checks pass:
   - First line must be exactly: `RW_DOCTOR_PASS`
@@ -90,5 +91,6 @@ Result rules:
     - `Git repository: PASS`
     - `Workspace structure: PASS`
     - `Core files readability: PASS`
-  - Final line:
+  - Final lines:
     - `Safe to run rw-run.`
+    - `NEXT_COMMAND=rw-run`

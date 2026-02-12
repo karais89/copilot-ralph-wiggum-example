@@ -144,3 +144,9 @@ Steps:
    - Never renumber existing TASK files.
 
 Do not implement product code.
+
+Output format at end:
+- `INIT_RESULT=<created|updated|no-op>`
+- `CONTEXT_MODE=<CONTEXT_READY|CONTEXT_EMPTY>`
+- `TASK01_RESULT=<created|existing|not-created>`
+- `NEXT_COMMAND=<rw-new-project|rw-feature>`
