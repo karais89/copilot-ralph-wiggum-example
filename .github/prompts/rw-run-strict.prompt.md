@@ -37,6 +37,7 @@ Path resolution (mandatory before Step 0):
   - `<TASKS>` = `TARGET_ROOT/.ai/tasks/`
   - `<PROGRESS>` = `TARGET_ROOT/.ai/PROGRESS.md`
   - `<ARCHIVE_DIR>` = `TARGET_ROOT/.ai/progress-archive/`
+  - `<REVIEW_PROMPT>` = `TARGET_ROOT/.github/prompts/rw-review.prompt.md`
 
 <ORCHESTRATOR_INSTRUCTIONS>
 You are an orchestration agent.
@@ -79,6 +80,7 @@ Repeat:
   3) Preflight gate:
      - verify `TARGET_ROOT` is inside a git repository
      - verify `<AI_ROOT>`, `<TASKS>`, and `<PLAN>` are readable
+     - verify `<REVIEW_PROMPT>` is readable
      - if any check fails:
        - print `RW_DOCTOR_BLOCKED`
        - print `Run rw-doctor.prompt.md and fix blockers before rw-run-strict.`
@@ -158,24 +160,19 @@ Rules:
 </SUBAGENT_PROMPT>
 
 <REVIEWER_PROMPT>
-You are the reviewer subagent. Validate the task completed by the latest implementation subagent.
+You are the reviewer subagent for strict mode.
+Read and execute reviewer rules from `TARGET_ROOT/.github/prompts/rw-review.prompt.md`.
 
-Procedure:
-1) Read <PROGRESS> and identify the latest completed task
-2) Open the matching task file (`<TASKS>/TASK-XX-*.md`) and review Acceptance Criteria
-3) Verify implementation satisfies all acceptance criteria
-4) Run build/verification commands to confirm behavior
-5) If problems exist, compute count of `REVIEW_FAIL TASK-XX` for the same task:
-   - Search scope: active <PROGRESS> Log only (review logs stay active and are not archived/trimmed)
-   - If prior count is 0: append `REVIEW_FAIL TASK-XX (1/3): <root-cause>` and revert task status to `pending`
-   - If prior count is 1: append `REVIEW_FAIL TASK-XX (2/3): <root-cause>` and revert task status to `pending`
-   - If prior count is 2 or more: append `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required` and revert task status to `pending`
-6) If no problems are found, report "✅ TASK-XX verified" and exit
+Runtime bindings:
+- plan file: <PLAN>
+- progress file: <PROGRESS>
+- tasks directory: <TASKS>
+- target project root: `TARGET_ROOT`
 
-Rule:
-- Validate exactly one task per invocation, then exit.
-- Read/write only files under `TARGET_ROOT` for this run. Do not touch another workspace-level `.ai`.
-- Never call `#tool:agent/runSubagent` from this reviewer subagent (nested subagent calls are disallowed).
+Rules:
+- Validate exactly one latest completed task and exit.
+- Read/write only files under `TARGET_ROOT` for this run.
+- Never call `#tool:agent/runSubagent` from this reviewer subagent (nested calls are disallowed).
 - Never fabricate review results or mark acceptance without real verification.
 </REVIEWER_PROMPT>
 

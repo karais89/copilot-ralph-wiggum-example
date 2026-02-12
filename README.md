@@ -4,7 +4,7 @@ An AI-driven software development orchestration technique for **GitHub Copilot**
 
 This repository serves two purposes:
 
-1. **The RW orchestration template** — 9 reusable prompt files + structural docs that can be extracted and dropped into any project
+1. **The RW orchestration template** — 10 reusable prompt files + structural docs that can be extracted and dropped into any project
 2. **A working example** — A Todo CLI app built entirely by this technique (70+ commits, 20 tasks, zero manual coding)
 
 ## How It Works
@@ -28,7 +28,7 @@ rw-new-project  →  rw-doctor  →  rw-run-*  →  rw-feature  →  rw-plan-*  
 
 | | Lite | Strict |
 |---|---|---|
-| Reviewer subagent | No | Yes (validates each task) |
+| Reviewer subagent | No | Yes (via `rw-review`) |
 | Review failure tracking | N/A | `REVIEW_FAIL` (1/3, 2/3) → `REVIEW-ESCALATE` (3/3) |
 | Archive on threshold | Warning only (continues) | Hard stop (manual archive required) |
 | Best for | Small/fast features | Critical/complex features |
@@ -53,11 +53,11 @@ cd copilot-ralph-wiggum-example
 ./scripts/extract-template.sh ~/your-project
 ```
 
-This copies 13 files into your project:
+This copies 14 files into your project:
 
 ```
 your-project/
-├── .github/prompts/           # 9 orchestration prompts
+├── .github/prompts/           # 10 orchestration prompts
 │   ├── rw-init.prompt.md
 │   ├── rw-new-project.prompt.md
 │   ├── rw-doctor.prompt.md
@@ -66,6 +66,7 @@ your-project/
 │   ├── rw-plan-strict.prompt.md
 │   ├── rw-run-lite.prompt.md
 │   ├── rw-run-strict.prompt.md
+│   ├── rw-review.prompt.md
 │   └── rw-archive.prompt.md
 └── .ai/                       # Structural files
     ├── CONTEXT.md             # Language policy & parser tokens
@@ -78,7 +79,7 @@ your-project/
 ### Option 2: Manual Copy
 
 Copy these paths from this repo into your project:
-- `.github/prompts/*.prompt.md` (all 9 orchestration files)
+- `.github/prompts/*.prompt.md` (all 10 orchestration files)
 - `.ai/CONTEXT.md`
 - `.ai/GUIDE.md`
 - `.ai/features/FEATURE-TEMPLATE.md`
@@ -143,7 +144,8 @@ For verification, run the core flow directly in Copilot Chat:
 | [`rw-plan-lite`](.github/prompts/rw-plan-lite.prompt.md) | Generate task breakdown (Lite mode) |
 | [`rw-plan-strict`](.github/prompts/rw-plan-strict.prompt.md) | Generate task breakdown (Strict mode) |
 | [`rw-run-lite`](.github/prompts/rw-run-lite.prompt.md) | Orchestration loop (Lite mode, target-root pointer file) |
-| [`rw-run-strict`](.github/prompts/rw-run-strict.prompt.md) | Orchestration loop + reviewer (Strict mode, target-root pointer file) |
+| [`rw-run-strict`](.github/prompts/rw-run-strict.prompt.md) | Orchestration loop + reviewer dispatch (Strict mode, target-root pointer file) |
+| [`rw-review`](.github/prompts/rw-review.prompt.md) | Strict reviewer rules for validating one latest completed task |
 | [`rw-archive`](.github/prompts/rw-archive.prompt.md) | Archive completed progress |
 
 ### Workspace (`.ai/`)

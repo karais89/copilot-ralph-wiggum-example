@@ -20,6 +20,7 @@
 ├── rw-plan-lite.prompt.md
 ├── rw-run-lite.prompt.md
 ├── rw-plan-strict.prompt.md
+├── rw-review.prompt.md
 └── rw-run-strict.prompt.md
 ```
 
@@ -43,6 +44,7 @@
 - `Strict`:
   - 계획: `.github/prompts/rw-plan-strict.prompt.md`
   - 실행: `.github/prompts/rw-run-strict.prompt.md`
+  - 리뷰어 규칙: `.github/prompts/rw-review.prompt.md` (보통 `rw-run-strict`가 자동 디스패치)
   - 특징: reviewer 루프 + archive는 `rw-archive` 수동 실행
 
 ## 사용 방법
@@ -135,6 +137,10 @@
     3) `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
   - 포인터가 비어 있거나 유효하지 않은 경로를 가리키면 `RW_TARGET_ROOT_INVALID`로 즉시 중단한다.
   - 통과 시 `RW_DOCTOR_PASS`, 실패 시 `RW_DOCTOR_BLOCKED`를 출력한다.
+- `rw-review.prompt.md`:
+  - Strict reviewer 규칙을 별도 파일로 분리한 프롬프트다.
+  - 보통 사용자가 단독 실행하지 않고 `rw-run-strict`가 reviewer subagent로 호출한다.
+  - 최신 completed 태스크 1개만 검증하고 `REVIEW_FAIL`/`REVIEW-ESCALATE`를 갱신한다.
 - `rw-archive.prompt.md`:
   - `Lite`/`Strict` 모두에서 `PROGRESS.md`가 커졌을 때 수동 실행한다.
   - 기준: `PROGRESS.md > 8000 chars` 또는 `completed > 20` 또는 `log > 40`.

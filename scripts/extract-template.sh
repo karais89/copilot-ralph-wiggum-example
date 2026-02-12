@@ -58,6 +58,7 @@ cp "$REPO_ROOT/.github/prompts/rw-plan-lite.prompt.md"    "$TARGET/.github/promp
 cp "$REPO_ROOT/.github/prompts/rw-plan-strict.prompt.md"  "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-run-lite.prompt.md"     "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-run-strict.prompt.md"   "$TARGET/.github/prompts/"
+cp "$REPO_ROOT/.github/prompts/rw-review.prompt.md"       "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-archive.prompt.md"      "$TARGET/.github/prompts/"
 
 # --- Copy .ai structural files ---
@@ -89,6 +90,7 @@ echo "    rw-plan-lite.prompt.md"
 echo "    rw-plan-strict.prompt.md"
 echo "    rw-run-lite.prompt.md"
 echo "    rw-run-strict.prompt.md"
+echo "    rw-review.prompt.md"
 echo "    rw-archive.prompt.md"
 echo "  .ai/"
 echo "    CONTEXT.md"

@@ -10,7 +10,7 @@ Language policy reference: `.ai/CONTEXT.md`
 Quick summary:
 - Append one feature note to `PLAN.md`.
 - Create new atomic `TASK-XX-*.md` files without renumbering existing tasks.
-  - Default features: 3-8 tasks
+  - Default features: 3-7 tasks
   - Bootstrap foundation features: 10-20 tasks (5 allowed only when clearly very small/simple)
 - Ensure new `pending` rows are visible in active `PROGRESS.md` even when archives exist.
 
@@ -139,7 +139,7 @@ Workflow:
 6) Determine next available TASK number from existing task files (max + 1).
 7) Create new atomic task files for the feature under `.ai/tasks/` as `TASK-XX-<slug>.md`.
    - Task count policy:
-     - Default features: 3~8 tasks.
+     - Default features: 3~7 tasks.
      - Bootstrap foundation features (slug/name indicates bootstrap+foundation): 10~20 tasks.
      - If bootstrap scope is clearly very small/simple, 5 tasks are allowed.
    Each file must include:
