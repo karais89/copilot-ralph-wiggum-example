@@ -2,8 +2,9 @@
 
 ## 언어 정책
 
-- 프롬프트 본문 언어(`.github/prompts/*.prompt.md`): 영어(필수)
-- 프롬프트 사전 점검: 모든 프롬프트는 수정 전에 `Step 0 (Mandatory)`로 이 파일을 먼저 읽어야 함
+- 운영 프롬프트 본문 언어(`.github/prompts/rw-*.prompt.md`): 영어(필수)
+- 테스트/리뷰 프롬프트 본문 언어(`.github/prompts/copilot-rw-*.prompt.md`): 실행자 언어 허용(한국어/영어)
+- 프롬프트 사전 점검: 모든 운영 프롬프트(`rw-*`)는 수정 전에 `Step 0 (Mandatory)`로 이 파일을 먼저 읽어야 함
 - 사용자 문서 언어(`.ai/GUIDE.md`, `.ai/PLAN.md`, `.ai/PROGRESS.md`, `.ai/tasks/*.md`, `.ai/notes/*.md`, `.ai/features/*.md`): 한국어 기본
 - 기존(legacy) 문서가 영어인 경우 즉시 전면 번역을 강제하지 않음. 다만 신규 작성/수정 시에는 한국어 우선
 - 커밋 메시지 언어: 영어(Conventional Commits)
@@ -50,7 +51,7 @@
 ## 프롬프트 작성 규칙
 
 1. 프롬프트 본문은 주 언어 1개만 유지하고 라인 단위 혼용을 피한다.
-2. 모든 프롬프트에 `Step 0 (Mandatory)`를 두고 `.ai/CONTEXT.md`를 먼저 읽는다.
+2. 모든 운영 프롬프트(`rw-*`)에 `Step 0 (Mandatory)`를 두고 `.ai/CONTEXT.md`를 먼저 읽는다.
 3. `.ai/CONTEXT.md`를 읽을 수 없으면 `LANG_POLICY_MISSING`으로 즉시 중단한다.
 4. 출력/리포트는 섹션 단위로 언어를 통일한다.
 

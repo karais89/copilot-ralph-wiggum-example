@@ -10,8 +10,6 @@
 
 검증 대상(기본):
 - `.github/prompts/*.prompt.md`
-- `.github/prompts/copilot-rw-e2e-test.prompt.md`
-- `.github/prompts/copilot-rw-smoke-test.prompt.md` (있으면 포함)
 - `README.md`
 - `.ai/GUIDE.md`
 
@@ -19,9 +17,9 @@
 
 ## 1) Static Audit
 - 단계 책임 경계 충돌 여부:
-  - `rw-new-project / rw-feature / rw-plan-* / rw-run-* / rw-archive`
+  - `rw-new-project / rw-doctor / rw-feature / rw-plan-* / rw-run-* / rw-archive`
 - 입력/출력 토큰 일관성:
-  - `LANG_POLICY_MISSING`, `Status`, `READY_FOR_PLAN`, `PLANNED`, `Task Status`, `Log`
+  - `LANG_POLICY_MISSING`, `RW_TARGET_ROOT_INVALID`, `RW_DOCTOR_PASS`, `RW_DOCTOR_BLOCKED`, `MANUAL_FALLBACK_REQUIRED`, `Status`, `READY_FOR_PLAN`, `PLANNED`, `Task Status`, `Log`
 - idempotency 규칙 충돌 여부
 - 언어 정책 누락/충돌 여부:
   - 운영 프롬프트 본문 영어 유지 규칙
@@ -40,12 +38,18 @@
 - context-ready 프로젝트
 - rerun(idempotency) 시나리오
 - `rw-run`에서 nested `runSubagent` 위험 잔존 여부
-- Top-level 실행 강제 규칙과 테스트 프롬프트 실패 규칙 정합성
+- Top-level 실행 강제 규칙과 `rw-run-*` 진입/중단 규칙 정합성
+- `rw-doctor` preflight 결과(`RW_DOCTOR_PASS`/`RW_DOCTOR_BLOCKED`)와 `rw-run-*` 진입 규칙 정합성
+- target root invalid 처리(`RW_TARGET_ROOT_INVALID`)와 즉시 중단 규칙 정합성
+- target-root 포인터 세트(`.tmp/rw-active-target-id.txt`, `.tmp/rw-targets/<id>.env`, legacy `.tmp/rw-active-target-root.txt`) 규칙 누락/불일치 여부
+- `rw-init`/`rw-new-project`에서 포인터 세트 자동 생성·갱신 규칙이 실제 실행 흐름과 맞는지
+- 운영 프롬프트가 "계획 문구만 출력하고 실제 단계 실행 없음" 상태에 빠질 위험이 없는지
 
-## 3) E2E Plausibility Check
-`copilot-rw-e2e-test.prompt.md` 기준으로:
-- 테스트 시나리오가 현재 운영 규칙(`rw-*`, GUIDE, README)과 불일치하는 항목
-- 검증 명령 순서/스냅샷 타이밍/판정 조건 모순 여부
+## 3) 운영 Plausibility Check
+운영 프롬프트(`rw-*`) 기준으로:
+- 실행 시나리오가 현재 운영 규칙(`rw-*`, GUIDE, README)과 불일치하는 항목
+- 실행 순서/상태 전이/판정 조건 모순 여부
+- `rw-doctor`의 runSubagent 가용성 판정이 실제 프로브 기반인지(거짓 PASS 방지)
 
 심각도 기준:
 - `P0`: 테스트/운영이 즉시 깨지거나 잘못된 성공/실패를 강제

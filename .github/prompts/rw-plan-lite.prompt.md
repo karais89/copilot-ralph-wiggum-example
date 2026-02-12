@@ -41,10 +41,17 @@ Rules:
   - If likely >120 minutes, split; if <30 minutes and not independently valuable, merge.
 - Verification rule:
   - Each task must include at least one concrete verification command in `Verification`.
+- Non-interactive mode:
+  - Enable when either:
+    - `.tmp/rw-noninteractive.flag` exists.
+  - In this mode, never call `#tool:vscode/askQuestions` and never ask interactive follow-up questions.
+  - Resolve selection/clarification with deterministic defaults and continue.
 
 Feature input resolution (required):
-1) Read `.ai/features/`.
-2) If `.ai/features/` is missing or unreadable, stop immediately and print:
+1) Determine `NON_INTERACTIVE_MODE`:
+   - true if `.tmp/rw-noninteractive.flag` exists.
+2) Read `.ai/features/`.
+3) If `.ai/features/` is missing or unreadable, stop immediately and print:
    - first line exactly: `FEATURES_DIR_MISSING`
    - then a short fix guide:
      - run `.github/prompts/rw-feature.prompt.md` first (recommended)
@@ -52,35 +59,37 @@ Feature input resolution (required):
      - create one feature file from `.ai/features/FEATURE-TEMPLATE.md`
      - save as `YYYYMMDD-HHMM-<slug>.md`
      - set `Status: READY_FOR_PLAN`
-3) Build input-file candidates from `.ai/features/*.md`, excluding:
+4) Build input-file candidates from `.ai/features/*.md`, excluding:
    - `FEATURE-TEMPLATE.md`
    - `README.md`
-4) If no input-file candidates exist, stop immediately and print:
+5) If no input-file candidates exist, stop immediately and print:
    - first line exactly: `FEATURE_FILE_MISSING`
    - then a short fix guide:
      - run `.github/prompts/rw-feature.prompt.md` to create one READY file (recommended)
      - copy `.ai/features/FEATURE-TEMPLATE.md` to `.ai/features/YYYYMMDD-HHMM-<slug>.md`
      - set `Status: READY_FOR_PLAN`
-5) From input-file candidates, select files with exact line: `Status: READY_FOR_PLAN`.
-6) If no READY candidates exist, stop immediately and print:
+6) From input-file candidates, select files with exact line: `Status: READY_FOR_PLAN`.
+7) If no READY candidates exist, stop immediately and print:
    - first line exactly: `FEATURE_NOT_READY`
    - then a short fix guide:
      - open the latest `YYYYMMDD-HHMM-<slug>.md`
      - change `Status: DRAFT` (or current value) to `Status: READY_FOR_PLAN`
-7) If multiple READY candidates exist, resolve selection interactively (single choice):
-   - Use `#tool:vscode/askQuestions` once with one single-choice question:
-     - "Multiple READY_FOR_PLAN feature files were found. Which file should be planned now?"
-     - Choices: each READY filename + `CANCEL`
-   - If `#tool:vscode/askQuestions` is unavailable, ask the same single-choice selection in chat once.
-   - If one filename is selected, use that file as the input source.
-   - If user selects `CANCEL` or no valid selection is obtained after that single interaction, stop immediately and print:
-     - first line exactly: `FEATURE_MULTI_READY`
-     - then a short fix guide:
-       - keep exactly one file as `Status: READY_FOR_PLAN`
-       - set other READY files to `Status: DRAFT` (or `Status: PLANNED` if already consumed)
-8) If exactly one READY candidate exists, select that file.
-9) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
-10) In any unresolved error case above, stop immediately without additional clarification questions.
+8) If multiple READY candidates exist:
+   - If `NON_INTERACTIVE_MODE=true`, select the latest READY filename by lexical sort and continue.
+   - If `NON_INTERACTIVE_MODE=false`, resolve selection interactively (single choice):
+     - Use `#tool:vscode/askQuestions` once with one single-choice question:
+       - "Multiple READY_FOR_PLAN feature files were found. Which file should be planned now?"
+       - Choices: each READY filename + `CANCEL`
+     - If `#tool:vscode/askQuestions` is unavailable, ask the same single-choice selection in chat once.
+     - If one filename is selected, use that file as the input source.
+     - If user selects `CANCEL` or no valid selection is obtained after that single interaction, stop immediately and print:
+       - first line exactly: `FEATURE_MULTI_READY`
+       - then a short fix guide:
+         - keep exactly one file as `Status: READY_FOR_PLAN`
+         - set other READY files to `Status: DRAFT` (or `Status: PLANNED` if already consumed)
+9) If exactly one READY candidate exists, select that file.
+10) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
+11) In any unresolved error case above, stop immediately without additional clarification questions.
 
 Normalization rules:
 1) Backward compatibility: if resolved input already includes structured sections (`goal`, `constraints`, `acceptance`), preserve and use them.
@@ -100,11 +109,11 @@ Workflow:
 1) Ensure baseline workspace files exist before planning:
    - If `.ai/PLAN.md` is missing, create a minimal skeleton with:
      - `# Workspace Plan`
-     - `## 개요`
+     - `## Overview`
      - one short line: `rw-plan initialized PLAN.md because it was missing.`
      - `## Feature Notes (append-only)` (empty section)
    - If `.ai/PROGRESS.md` is missing, create:
-     - `# 진행 현황`
+     - `# Progress`
      - `## Task Status`
      - `| Task | Title | Status | Commit |`
      - `|------|-------|--------|--------|`
@@ -112,7 +121,8 @@ Workflow:
    - Then read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and list existing `.ai/tasks/TASK-*.md` filenames.
 2) Resolve feature input using the required precedence rules above.
 3) Clarification-first planning:
-   - After feature input is resolved, run 2~5 clarification rounds when ambiguity remains.
+   - If `NON_INTERACTIVE_MODE=true`, skip interactive rounds and apply defaults (`AI_DECIDE` equivalent).
+   - If `NON_INTERACTIVE_MODE=false`, after feature input is resolved, run 2~5 clarification rounds when ambiguity remains.
    - Ask 1~3 focused questions per round (single-choice preferred when practical).
    - Resolve at least before decomposition (unless user selects `AI_DECIDE`):
      - implementation/module boundaries
@@ -128,10 +138,10 @@ Workflow:
    - YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.
 6) Determine next available TASK number from existing task files (max + 1).
 7) Create new atomic task files for the feature under `.ai/tasks/` as `TASK-XX-<slug>.md`.
-   - Task count policy:
-     - Default features: 3~6 tasks.
-     - Bootstrap foundation features (slug/name indicates bootstrap+foundation): 10~20 tasks.
-     - If bootstrap scope is clearly very small/simple, 5 tasks are allowed.
+  - Task count policy:
+    - Default features: 3~6 tasks.
+    - Bootstrap foundation features (slug/name indicates bootstrap+foundation): 10~20 tasks.
+    - If bootstrap scope is clearly very small/simple, 5 tasks are allowed.
    Each file must include:
    - Title
    - Dependencies
