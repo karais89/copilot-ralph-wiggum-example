@@ -15,7 +15,7 @@ rw-new-project  →  rw-doctor  →  rw-run  →  rw-review  →  rw-feature  �
 ```
 
 1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery + bootstrap feature/task decomposition in one run, with bounded discovery: fixed 4 questions / max 2 rounds)
-2. **`rw-doctor`** — Validates top-level/runSubagent/git/.ai preflight before autonomous runs (supports target-root pointer file)
+2. **`rw-doctor`** — Validates top-level/runSubagent/git/.ai preflight before autonomous runs and writes a PASS stamp (`.ai/runtime/rw-doctor-last-pass.env`)
 3. **`rw-run`** — Runs implementation subagent loop
 4. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
 5. **`rw-feature`** — Creates additional feature specification files
@@ -148,11 +148,13 @@ This branch intentionally removes bundled Copilot test prompts (`copilot-rw-*`) 
 For verification, run the core flow directly in Copilot Chat:
 
 1. `rw-new-project`
-2. `rw-run`
-3. `rw-review` (batch review after run)
-4. `rw-feature`
-5. `rw-plan`
-6. `rw-run`
+2. `rw-doctor`
+3. `rw-run`
+4. `rw-review` (batch review after run)
+5. `rw-feature`
+6. `rw-plan`
+7. `rw-doctor`
+8. `rw-run`
 
 ## Orchestration File Reference
 
@@ -162,7 +164,7 @@ For verification, run the core flow directly in Copilot Chat:
 |---|---|
 | [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + bounded discovery + bootstrap feature/task decomposition + optional bootstrap auto-commit) |
 | [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
-| [`rw-doctor`](.github/prompts/rw-doctor.prompt.md) | Preflight check for top-level/runSubagent/git/.ai readiness before autonomous runs (target-root pointer file) |
+| [`rw-doctor`](.github/prompts/rw-doctor.prompt.md) | Preflight check for top-level/runSubagent/git/.ai readiness and PASS-stamp write before autonomous runs |
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
 | [`rw-plan`](.github/prompts/rw-plan.prompt.md) | Generate task breakdown for one READY_FOR_PLAN feature |
 | [`rw-run`](.github/prompts/rw-run.prompt.md) | Orchestration loop for implementation subagent dispatch (target-root pointer file) |
@@ -184,6 +186,7 @@ For verification, run the core flow directly in Copilot Chat:
 
 - **Step 0** — Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first; fails with `LANG_POLICY_MISSING` if missing
 - **rw-doctor** — Preflight gate for top-level turn, runSubagent availability, git readiness, and `.ai` structure
+- **RW_DOCTOR_REQUIRED** — `rw-run` hard-stop when doctor PASS stamp is missing/invalid/mismatched for the active target
 - **PAUSE.md** — Create `.ai/PAUSE.md` to halt the orchestration loop
 - **ARCHIVE_LOCK** — Prevents concurrent archive operations
 - **REVIEW-ESCALATE** — 3 consecutive review failures trigger escalation and require manual intervention

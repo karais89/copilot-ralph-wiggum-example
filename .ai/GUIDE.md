@@ -144,6 +144,8 @@ scripts/
     3) `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
   - 포인터가 비어 있거나 유효하지 않은 경로를 가리키면 `RW_TARGET_ROOT_INVALID`로 즉시 중단한다.
   - 통과 시 `RW_DOCTOR_PASS`, 실패 시 `RW_DOCTOR_BLOCKED`를 출력한다.
+  - 통과 시 `TARGET_ROOT/.ai/runtime/rw-doctor-last-pass.env`를 갱신한다.
+    - 필수 키: `RW_DOCTOR_PASS=1`, `TARGET_ID`, `TARGET_ROOT`, `CHECKED_AT`
 - `rw-review.prompt.md`:
   - 수동 리뷰 전용 프롬프트다(top-level 실행).
   - active `Task Status`의 completed 태스크를 배치로 검증한다.
@@ -177,7 +179,8 @@ scripts/
 ## rw-run 운영 규칙
 
 - `runSubagent`가 없으면 `RW_ENV_UNSUPPORTED`를 출력하고 자동 루프를 즉시 중단한다.
-- `rw-run` 실행 전 `rw-doctor`를 먼저 실행해 환경을 확인한다.
+- `rw-run`은 `rw-doctor`의 PASS 스탬프(`.ai/runtime/rw-doctor-last-pass.env`)가 없으면 `RW_DOCTOR_REQUIRED`로 즉시 중단한다.
+- `rw-run` 실행 전마다 `rw-doctor`를 먼저 실행해 PASS 스탬프를 갱신한다.
 - `rw-doctor`와 `rw-run`은 동일한 타깃 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/*.env`, legacy `.ai/runtime/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).
 - 오케스트레이터는 제품 코드를 직접 수정하지 않는다.
 - 제품 코드 경로는 저장소 구조(웹/앱/게임/유니티 등)에 따라 다르므로 `src/` 고정 가정을 두지 않는다.

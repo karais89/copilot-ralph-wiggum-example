@@ -18,6 +18,8 @@ Path resolution (mandatory before checks):
 - Resolve paths from `TARGET_ROOT`:
   - `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
   - `<AI_ROOT>` = `TARGET_ROOT/.ai/`
+  - `<RUNTIME_DIR>` = `TARGET_ROOT/.ai/runtime/`
+  - `<DOCTOR_STAMP>` = `TARGET_ROOT/.ai/runtime/rw-doctor-last-pass.env`
   - `<TASKS>` = `TARGET_ROOT/.ai/tasks/`
   - `<FEATURES>` = `TARGET_ROOT/.ai/features/`
   - `<PLAN>` = `TARGET_ROOT/.ai/PLAN.md`
@@ -38,7 +40,7 @@ Step 0 (Mandatory):
 3) Validate language policy internally and proceed silently (no confirmation line).
 4) Do not modify any file before Step 0 completes, except auto-repair of target-pointer files during path resolution (`TARGET_ACTIVE_ID_FILE`, `TARGET_REGISTRY_DIR/*`, `TARGET_POINTER_FILE`).
 
-You are an RW preflight checker. Do not implement code and do not edit repository files.
+You are an RW preflight checker. Do not implement code and do not edit repository files, except writing `<DOCTOR_STAMP>` on PASS.
 
 Checks (all required):
 1) Top-level turn check:
@@ -72,12 +74,27 @@ Result rules:
     - `NEXT_COMMAND=rw-doctor`
   - Stop.
 - If all checks pass:
+  - Persist doctor pass stamp:
+    - ensure `<RUNTIME_DIR>` exists (create if missing)
+    - overwrite `<DOCTOR_STAMP>` with:
+      - `RW_DOCTOR_PASS=1`
+      - `TARGET_ID=<TARGET_ID>`
+      - `TARGET_ROOT=<TARGET_ROOT>`
+      - `CHECKED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
+    - if write fails, treat as FAIL:
+      - first line: `RW_DOCTOR_BLOCKED`
+      - token line: `RW_DOCTOR_STAMP_WRITE_FAILED: <short reason>`
+      - then:
+        - `Fix runtime directory permissions and rerun rw-doctor.`
+        - `NEXT_COMMAND=rw-doctor`
+      - stop
   - First line must be exactly: `RW_DOCTOR_PASS`
   - Then print:
     - `Target root: <TARGET_ROOT>`
     - `Target id: <TARGET_ID>`
     - `Target active id file: <TARGET_ACTIVE_ID_FILE>`
     - `Target pointer file (fallback): <TARGET_POINTER_FILE>`
+    - `Doctor stamp file: <DOCTOR_STAMP>`
     - `Top-level turn: PASS`
     - `runSubagent: PASS`
     - `Git repository: PASS`
