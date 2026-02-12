@@ -50,7 +50,7 @@ cd copilot-ralph-wiggum-example
 ./scripts/extract-template.sh ~/your-project
 ```
 
-This copies 18 files into your project:
+This copies 20 files into your project:
 
 ```
 your-project/
@@ -63,10 +63,12 @@ your-project/
 │   ├── rw-run.prompt.md
 │   ├── rw-review.prompt.md
 │   ├── rw-archive.prompt.md
-│   └── RW-INTERACTIVE-POLICY.md
+│   ├── RW-INTERACTIVE-POLICY.md
+│   └── RW-TARGET-ROOT-RESOLUTION.md
 ├── scripts/
 │   ├── rw-resolve-target-root.sh
-│   └── rw-bootstrap-scaffold.sh
+│   ├── rw-bootstrap-scaffold.sh
+│   └── rw-target-registry.sh
 └── .ai/                       # Structural files
     ├── CONTEXT.md             # Language policy & parser tokens
     ├── GUIDE.md               # Operational guide
@@ -84,8 +86,10 @@ your-project/
 Copy these paths from this repo into your project:
 - `.github/prompts/*.prompt.md` (all 8 orchestration files)
 - `.github/prompts/RW-INTERACTIVE-POLICY.md`
+- `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md`
 - `scripts/rw-resolve-target-root.sh`
 - `scripts/rw-bootstrap-scaffold.sh`
+- `scripts/rw-target-registry.sh`
 - `.ai/CONTEXT.md`
 - `.ai/GUIDE.md`
 - `.ai/features/FEATURE-TEMPLATE.md`

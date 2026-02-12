@@ -54,7 +54,7 @@ if [ ! -f "$ai_root/PLAN.md" ]; then
 ## Overview
 - Project purpose is undecided (user input required).
 - Technology stack is undecided.
-- Next step: run rw-new-project, then run rw-run.
+- Next step: run rw-new-project, then run rw-plan and rw-run.
 
 ## Feature Notes (append-only)
 EOF

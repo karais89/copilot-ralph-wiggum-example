@@ -24,7 +24,8 @@
 
 scripts/
 ├── rw-resolve-target-root.sh
-└── rw-bootstrap-scaffold.sh
+├── rw-bootstrap-scaffold.sh
+└── rw-target-registry.sh
 ```
 
 ## 언어 정책
