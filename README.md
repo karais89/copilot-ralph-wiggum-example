@@ -119,7 +119,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 
 ### Target Root Resolution
 
-`rw-doctor` and `rw-run` resolve target root in this order:
+`rw-doctor`, `rw-run`, and `rw-review` resolve target root in this order:
 1. `workspace-root/.ai/runtime/rw-active-target-id.txt`
 2. `workspace-root/.ai/runtime/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
 3. `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
@@ -129,6 +129,9 @@ Shared resolver script:
 ```bash
 ./scripts/rw-resolve-target-root.sh "$(pwd)"
 ```
+
+Resolver contract reference:
+- `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md`
 
 Manual target switch from workspace root:
 

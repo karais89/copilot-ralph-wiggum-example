@@ -41,18 +41,14 @@ Rules:
   - If likely >120 minutes, split; if <30 minutes and not independently valuable, merge.
 - Verification rule:
   - Each task must include at least one concrete verification command in `Verification`.
-- Interactive fallback must follow `.github/prompts/RW-INTERACTIVE-POLICY.md`.
-- Non-interactive mode:
-  - Enable when either:
-    - `.ai/runtime/rw-noninteractive.flag` exists.
-  - In this mode, never call `#tool:vscode/askQuestions` and never ask interactive follow-up questions.
+- Deterministic planning mode:
+  - Never call `#tool:vscode/askQuestions` in `rw-plan`.
+  - Never ask interactive follow-up questions in `rw-plan`.
   - Resolve selection/clarification with deterministic defaults and continue.
 
 Feature input resolution (required):
-1) Determine `NON_INTERACTIVE_MODE`:
-   - true if `.ai/runtime/rw-noninteractive.flag` exists.
-2) Read `.ai/features/`.
-3) If `.ai/features/` is missing or unreadable, stop immediately and print:
+1) Read `.ai/features/`.
+2) If `.ai/features/` is missing or unreadable, stop immediately and print:
    - first line exactly: `FEATURES_DIR_MISSING`
    - then a short fix guide:
      - run `.github/prompts/rw-feature.prompt.md` first (recommended)
@@ -60,37 +56,27 @@ Feature input resolution (required):
      - create one feature file from `.ai/features/FEATURE-TEMPLATE.md`
      - save as `YYYYMMDD-HHMM-<slug>.md`
      - set `Status: READY_FOR_PLAN`
-4) Build input-file candidates from `.ai/features/*.md`, excluding:
+3) Build input-file candidates from `.ai/features/*.md`, excluding:
    - `FEATURE-TEMPLATE.md`
    - `README.md`
-5) If no input-file candidates exist, stop immediately and print:
+4) If no input-file candidates exist, stop immediately and print:
    - first line exactly: `FEATURE_FILE_MISSING`
    - then a short fix guide:
      - run `.github/prompts/rw-feature.prompt.md` to create one READY file (recommended)
      - copy `.ai/features/FEATURE-TEMPLATE.md` to `.ai/features/YYYYMMDD-HHMM-<slug>.md`
      - set `Status: READY_FOR_PLAN`
-6) From input-file candidates, select files with exact line: `Status: READY_FOR_PLAN`.
-7) If no READY candidates exist, stop immediately and print:
+5) From input-file candidates, select files with exact line: `Status: READY_FOR_PLAN`.
+6) If no READY candidates exist, stop immediately and print:
    - first line exactly: `FEATURE_NOT_READY`
    - then a short fix guide:
      - open the latest `YYYYMMDD-HHMM-<slug>.md`
      - change `Status: DRAFT` (or current value) to `Status: READY_FOR_PLAN`
-8) If multiple READY candidates exist:
-   - If `NON_INTERACTIVE_MODE=true`, select the latest READY filename by lexical sort and continue.
-   - If `NON_INTERACTIVE_MODE=false`, resolve selection interactively (single choice):
-     - Use `#tool:vscode/askQuestions` once with one single-choice question:
-       - "Multiple READY_FOR_PLAN feature files were found. Which file should be planned now?"
-       - Choices: each READY filename + `CANCEL`
-     - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
-     - If one filename is selected, use that file as the input source.
-     - If user selects `CANCEL` or no valid selection is obtained after that single interaction, stop immediately and print:
-       - first line exactly: `FEATURE_MULTI_READY`
-       - then a short fix guide:
-         - keep exactly one file as `Status: READY_FOR_PLAN`
-         - set other READY files to `Status: DRAFT` (or `Status: PLANNED` if already consumed)
-9) If exactly one READY candidate exists, select that file.
-10) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
-11) In any unresolved error case above, stop immediately without additional clarification questions.
+7) If multiple READY candidates exist:
+   - Select the latest READY filename by lexical sort and continue.
+   - Print `FEATURE_MULTI_READY_AUTOSELECTED=<selected-filename>`.
+8) If exactly one READY candidate exists, select that file.
+9) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
+10) In any unresolved error case above, stop immediately without additional clarification questions.
 
 Normalization rules:
 1) Backward compatibility: if resolved input already includes structured sections (`goal`, `constraints`, `acceptance`), preserve and use them.
@@ -121,20 +107,10 @@ Workflow:
      - `## Log`
    - Then read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and list existing `.ai/tasks/TASK-*.md` filenames. Open only the needed task files.
 2) Resolve feature input using the required precedence rules above.
-3) Clarification-first planning:
-   - If `NON_INTERACTIVE_MODE=true`, skip interactive rounds and apply defaults (`AI_DECIDE` equivalent).
-   - If `NON_INTERACTIVE_MODE=false`, after feature input is resolved, run 2~5 clarification rounds when ambiguity remains.
-   - Ask 1~3 focused questions per round (single-choice preferred when practical).
-   - Resolve at least before decomposition (unless user selects `AI_DECIDE`):
-     - implementation/module boundaries
-     - dependency/order constraints between tasks
-     - verification commands and pass criteria
-     - out-of-scope boundaries
-     - risk-sensitive constraints (compatibility, migration, rollback)
-   - Do not stop questioning early if high-impact ambiguity remains and round budget is available.
-   - If details are sufficient early, proceed immediately.
-4) Build a normalized feature spec (`Goal`, `Constraints`, `Acceptance`) using resolved input.
-   - Apply defaults only when user explicitly chooses `AI_DECIDE` or clarification budget is exhausted.
+3) Deterministic planning:
+   - Do not ask follow-up questions.
+   - Resolve ambiguity from repository context first, then apply safe defaults.
+4) Build a normalized feature spec (`Goal`, `Constraints`, `Acceptance`) using resolved input and defaults.
 5) Append one new Feature Notes line to PLAN.md in this format:
    - YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.
 6) Determine next available TASK number from existing task files (max + 1).
@@ -171,4 +147,5 @@ Output format at end:
 - Created task files list
 - PROGRESS rows added count
 - Feature file status update result
+- `FEATURE_MULTI_READY_AUTOSELECTED=<filename|none>`
 - `NEXT_COMMAND=rw-run`

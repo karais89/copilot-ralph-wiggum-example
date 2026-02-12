@@ -96,19 +96,18 @@ scripts/
 - 파일 선택 규칙:
   - 입력 후보는 `.ai/features/*.md` 중 `FEATURE-TEMPLATE.md`, `README.md`를 제외한 파일
   - `Status: READY_FOR_PLAN` 파일이 1개면 그 파일을 사용한다.
-  - READY 후보가 2개 이상이면 단일 선택 질문으로 대상 1개를 고른다.
-  - 질문에서 `CANCEL` 선택 또는 유효 선택 실패 시 `FEATURE_MULTI_READY`로 중단한다.
+  - READY 후보가 2개 이상이면 최신 파일명(lexical sort 마지막)을 자동 선택한다.
+  - 자동 선택 시 `FEATURE_MULTI_READY_AUTOSELECTED=<filename>`를 출력한다.
   - 권장 파일명: `YYYYMMDD-HHMM-<slug>.md`
 - 에러 처리(정확한 토큰):
   - `.ai/features` 폴더가 없거나 읽기 불가: `FEATURES_DIR_MISSING`
   - `.ai/features`에 `.md` 파일이 없음: `FEATURE_FILE_MISSING`
   - `.md` 파일은 있으나 `Status: READY_FOR_PLAN` 후보 없음: `FEATURE_NOT_READY`
-  - `Status: READY_FOR_PLAN` 후보가 2개 이상: `FEATURE_MULTI_READY`
 - 에러 발생 시 첫 줄은 에러 토큰을 출력하고, 다음 줄에 생성/수정 가이드를 출력한 뒤 즉시 중단한다.
-- 에러 시 보완 질문은 하지 않는다(단, 다중 READY 선택 질문 1회는 예외).
+- 에러 시 보완 질문은 하지 않는다.
 - plan 완료 시 선택된 feature 파일 상태를 `PLANNED`로 갱신한다.
 - 권장 상태값(단순화): `DRAFT` -> `READY_FOR_PLAN` -> `PLANNED`
-- 보완 질문은 feature 파일이 정상 선택된 이후에만 수행하며, 모호성이 남으면 2~5 라운드(라운드당 1~3 질문)까지 허용한다.
+- `rw-plan`은 결정형 모드로 동작하며 추가 질문을 하지 않는다.
 - 보완이 부족해도 안전 기본값으로 계획을 진행한다:
   - Constraints: 기존 동작 비파괴, 범위 최소화, 프로젝트 표준 검증 명령 통과
   - Acceptance: 사용자 기능 동작, 오류 메시지 명확성, 최소 1개 이상의 표준 검증 명령 exit code 0
@@ -163,6 +162,7 @@ scripts/
 ## Next-step output contract
 
 - 운영 프롬프트(`rw-*`) 종료 시, 다음 액션은 `NEXT_COMMAND=<...>` 한 줄로 안내한다.
+- 단, Step 0 이전의 즉시 중단 경로는 예외일 수 있다.
 - 사용자는 자유 텍스트 설명보다 `NEXT_COMMAND`를 우선 기준으로 다음 프롬프트를 실행한다.
 - 기본 기대값:
   - `rw-init` -> `NEXT_COMMAND=rw-new-project` 또는 `rw-feature`

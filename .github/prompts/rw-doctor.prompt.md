@@ -13,16 +13,8 @@ Quick summary:
 - Print machine-readable PASS/FAIL tokens and blocker list.
 
 Path resolution (mandatory before checks):
-- Use shared resolver contract from `scripts/rw-resolve-target-root.sh` (authoritative source).
-- Resolve by running the resolver against workspace root and loading its emitted key/value pairs:
-  - `TARGET_ACTIVE_ID_FILE`
-  - `TARGET_REGISTRY_DIR`
-  - `TARGET_POINTER_FILE`
-  - `TARGET_ID`
-  - `RAW_TARGET`
-  - `TARGET_ROOT`
-- Ignore any prompt argument for target-root resolution.
-- Resolver auto-repair behavior (default `workspace-root`) must be preserved exactly as implemented in the script.
+- Follow `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md` exactly.
+- Resolve target metadata via `scripts/rw-resolve-target-root.sh` against workspace root.
 - Resolve paths from `TARGET_ROOT`:
   - `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
   - `<AI_ROOT>` = `TARGET_ROOT/.ai/`
