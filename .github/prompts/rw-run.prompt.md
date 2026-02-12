@@ -18,6 +18,7 @@ Path resolution (mandatory before Step 0):
 - Resolve paths from `TARGET_ROOT`:
   - `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
   - `<AI_ROOT>` = `TARGET_ROOT/.ai/`
+  - `<RUNTIME_DIR>` = `TARGET_ROOT/.ai/runtime/`
   - `<DOCTOR_STAMP>` = `TARGET_ROOT/.ai/runtime/rw-doctor-last-pass.env`
   - `<PLAN>` = `TARGET_ROOT/.ai/PLAN.md`
   - `<TASKS>` = `TARGET_ROOT/.ai/tasks/`
@@ -40,16 +41,39 @@ Step 0 (Mandatory):
 4) If the file is missing or unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
 5) Validate language policy internally and proceed silently (no confirmation line).
 6) Do not modify any file before Step 0 completes, except auto-repair of target-pointer files during path resolution (`TARGET_ACTIVE_ID_FILE`, `TARGET_REGISTRY_DIR/*`, `TARGET_POINTER_FILE`).
-7) Mandatory doctor gate:
-   - `<DOCTOR_STAMP>` must exist and be readable
+7) Doctor gate with automatic preflight:
+   - Validate `<DOCTOR_STAMP>` first.
    - Required keys in `<DOCTOR_STAMP>`:
      - `RW_DOCTOR_PASS=1`
      - `TARGET_ID=<TARGET_ID>`
      - `TARGET_ROOT=<TARGET_ROOT>`
-   - If missing/unreadable/invalid/mismatched, stop immediately and print:
-     - `RW_DOCTOR_REQUIRED`
-     - `Run rw-doctor.prompt.md for this target root, then rerun rw-run.`
-     - `NEXT_COMMAND=rw-doctor`
+   - If `<DOCTOR_STAMP>` is missing/unreadable/invalid/mismatched:
+     - print `RW_DOCTOR_AUTORUN_BEGIN`
+     - run rw-doctor-equivalent preflight checks inline (same target):
+       - top-level turn
+       - `#tool:agent/runSubagent` probe (must return `RUNSUBAGENT_OK`)
+       - git repository readiness
+       - `<AI_ROOT>`, `<TASKS>`, `TARGET_ROOT/.ai/features/` readability
+       - `<PLAN>` and `<PROGRESS>` readability when they exist
+     - If any check fails:
+       - print `RW_DOCTOR_BLOCKED`
+       - print one token line per blocker (`TOP_LEVEL_REQUIRED`, `RW_ENV_UNSUPPORTED`, `GIT_REPO_MISSING`, `RW_WORKSPACE_MISSING`, `RW_CORE_FILE_UNREADABLE`)
+       - print `Run rw-doctor.prompt.md and fix blockers before rw-run.`
+       - print `NEXT_COMMAND=rw-doctor`
+       - stop
+     - If all checks pass:
+       - ensure `<RUNTIME_DIR>` exists
+       - overwrite `<DOCTOR_STAMP>` with:
+         - `RW_DOCTOR_PASS=1`
+         - `TARGET_ID=<TARGET_ID>`
+         - `TARGET_ROOT=<TARGET_ROOT>`
+         - `CHECKED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
+       - if stamp write fails:
+         - print `RW_DOCTOR_BLOCKED`
+         - print `RW_DOCTOR_STAMP_WRITE_FAILED: <short reason>`
+         - print `NEXT_COMMAND=rw-doctor`
+         - stop
+       - print `RW_DOCTOR_AUTORUN_PASS`
 
 Important:
 - The orchestrator must never edit product code directly.
@@ -58,7 +82,7 @@ Important:
 - Never create/modify `TARGET_ROOT/.ai/tasks/TASK-XX-*.md` during `rw-run`; task decomposition belongs to `rw-plan`.
 - This prompt must run in a top-level Copilot Chat turn.
   - If not top-level, print `TOP_LEVEL_REQUIRED` and stop.
-- `rw-doctor` pass stamp is mandatory before this prompt.
+- `rw-run` auto-runs doctor-equivalent preflight when pass stamp is missing/stale.
 - If `#tool:agent/runSubagent` is unavailable, fail fast with `RW_ENV_UNSUPPORTED` and stop (do not continue autonomous loop).
 - On every controlled stop/exit path in this loop, print exactly one machine-readable next step line:
   - `NEXT_COMMAND=<rw-doctor|rw-archive|rw-review|rw-run>`

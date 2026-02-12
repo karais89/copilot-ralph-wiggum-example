@@ -156,7 +156,7 @@ Workflow:
        - `BOOTSTRAP_COMMIT_SHA=none`
 
 10) Recommended next command:
-   - `rw-doctor` when bootstrap tasks are created or pending
+   - `rw-run` when bootstrap tasks are created or pending (`rw-run` auto-runs doctor preflight when needed)
    - otherwise `rw-feature`
 
 Output format (machine-friendly, fixed keys):
@@ -172,4 +172,4 @@ Output format (machine-friendly, fixed keys):
 - `UNRESOLVED_OPEN_QUESTIONS=<n>`
 - `BOOTSTRAP_COMMIT_RESULT=<created|skipped|failed>`
 - `BOOTSTRAP_COMMIT_SHA=<sha|none>`
-- `NEXT_COMMAND=<rw-doctor|rw-feature>`
+- `NEXT_COMMAND=<rw-run|rw-feature>`
