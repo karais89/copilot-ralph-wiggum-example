@@ -14,6 +14,7 @@
 .github/prompts/
 ├── rw-init.prompt.md
 ├── rw-new-project.prompt.md
+├── rw-doctor.prompt.md
 ├── rw-feature.prompt.md
 ├── rw-archive.prompt.md
 ├── rw-plan-lite.prompt.md
@@ -26,7 +27,7 @@
 
 - 기준 파일: `.ai/CONTEXT.md`
 - 운영 프롬프트(`.github/prompts/rw-*.prompt.md`)는 영어 본문으로 유지한다.
-- 테스트/검증 프롬프트(`copilot-rw-e2e-test.prompt.md`)는 한국어/영어 중 팀 합의 언어를 사용해도 된다.
+- 테스트/검증 프롬프트(`.github/prompts/copilot-rw-*.prompt.md`)는 한국어/영어 중 팀 합의 언어를 사용해도 된다.
 - 운영 프롬프트(`rw-*`)는 `Step 0 (Mandatory)`에서 `.ai/CONTEXT.md`를 먼저 읽고, 실패 시 `LANG_POLICY_MISSING`으로 중지한다.
 - `.ai/*` 운영 문서는 기본 한국어로 유지한다.
 - 기존(legacy) 영어 문서는 즉시 전면 번역을 강제하지 않으며, 신규 작성/수정 시 한국어를 우선한다.
@@ -50,21 +51,38 @@
 2. 신규/빈 저장소에서는 `rw-new-project.prompt.md`를 먼저 실행한다(초기 1회).
    - `rw-new-project`는 `rw-init + discovery + bootstrap feature/task 분해` 통합 프롬프트다.
    - `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap task 생성까지 한 번에 수행한다.
-3. 같은 모드의 `rw-run-*.prompt.md` 내용을 붙여넣고 실행해 bootstrap 태스크를 먼저 구현한다.
-4. 이후 추가 기능은 `rw-feature.prompt.md` -> `rw-plan-*.prompt.md` -> `rw-run-*.prompt.md` 순서로 진행한다.
-5. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
-6. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
-7. 스캐폴딩만 따로 필요하면 `rw-init.prompt.md`를 대안으로 사용한다.
+   - 실행 중 아래 타깃 포인터를 현재 워크스페이스 루트 기준으로 자동 갱신한다.
+     - `workspace-root/.tmp/rw-active-target-id.txt` -> `workspace-root`
+     - `workspace-root/.tmp/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
+     - `workspace-root/.tmp/rw-active-target-root.txt` (legacy fallback)
+3. `rw-run-*.prompt.md` 실행 전 `rw-doctor.prompt.md`를 먼저 실행해 preflight를 확인한다.
+   - VS Code 워크스페이스 루트와 실제 대상 프로젝트 루트가 다르면(`.tmp/.../case-*` 등), active target id + registry를 먼저 갱신한다.
+     - `workspace-root/.tmp/rw-active-target-id.txt`
+     - `workspace-root/.tmp/rw-targets/<target-id>.env` (`TARGET_ROOT=<absolute-path>`)
+   - legacy 호환을 위해 `workspace-root/.tmp/rw-active-target-root.txt`도 같은 경로로 동기화한다.
+   - 비대화형 실행에서도 같은 규칙으로 타깃 루트를 고정한다.
+   - 수동 전환이 필요하면 워크스페이스 루트에서:
+     - `./scripts/rw-target-registry.sh set-active "$(pwd)" <target-id> "<absolute-target-root>"`
+     - `./scripts/rw-target-registry.sh resolve-active "$(pwd)"`
+4. 같은 모드의 `rw-run-*.prompt.md` 내용을 붙여넣고 실행해 bootstrap 태스크를 먼저 구현한다.
+   - `rw-run-*`도 동일한 타깃 포인터 세트(`active-target-id`, `rw-targets/*.env`, legacy root pointer)를 읽어 동작한다(인자 전달 불필요).
+5. 이후 추가 기능은 `rw-feature.prompt.md` -> `rw-plan-*.prompt.md` -> `rw-doctor.prompt.md` -> `rw-run-*.prompt.md` 순서로 진행한다.
+6. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
+7. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
+8. 스캐폴딩만 따로 필요하면 `rw-init.prompt.md`를 대안으로 사용한다.
+   - `rw-init`도 동일한 타깃 포인터 3종(`active-target-id`, `rw-targets/*.env`, legacy root pointer)을 자동 갱신한다.
 
 ## 실행 순서
 
 1. 신규 프로젝트 초기화+방향 확정+bootstrap 분해: `rw-new-project.prompt.md`
-2. bootstrap 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
-3. 추가 기능 정의: `rw-feature.prompt.md`
-4. 추가 기능 계획: 선택한 모드의 `rw-plan-*.prompt.md`
-5. 추가 기능 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
-6. 상태 확인: `.ai/PROGRESS.md`
-7. 스캐폴딩만 필요할 때(대안): `rw-init.prompt.md`
+2. 실행 전 preflight: `rw-doctor.prompt.md`
+3. bootstrap 태스크 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
+4. 추가 기능 정의: `rw-feature.prompt.md`
+5. 추가 기능 계획: 선택한 모드의 `rw-plan-*.prompt.md`
+6. 추가 기능 구현 전 preflight: `rw-doctor.prompt.md`
+7. 추가 기능 구현 루프: 선택한 모드의 `rw-run-*.prompt.md`
+8. 상태 확인: `.ai/PROGRESS.md`
+9. 스캐폴딩만 필요할 때(대안): `rw-init.prompt.md`
 
 ## Feature 파일 입력 규칙
 
@@ -108,6 +126,15 @@
   - 입력이 비어 있고 보완 질문 이후에도 요약이 없으면 `FEATURE_SUMMARY_MISSING`으로 중단한다.
   - 생성 파일은 `Status: READY_FOR_PLAN`으로 저장된다.
   - feature 파일 본문은 한국어로 작성하고, 기계 파싱 토큰(`Status`, `READY_FOR_PLAN`, `PLANNED`)만 영어를 유지한다.
+- `rw-doctor.prompt.md`:
+  - `rw-run-lite`/`rw-run-strict` 실행 전 preflight 검사 프롬프트다.
+  - 검사 항목: top-level 실행 여부, `runSubagent` 가용성, git 저장소 상태, `.ai` 필수 경로/파일 접근성.
+  - 기본 타깃 루트는 아래 순서로 읽는다.
+    1) `workspace-root/.tmp/rw-active-target-id.txt`
+    2) `workspace-root/.tmp/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
+    3) `workspace-root/.tmp/rw-active-target-root.txt` (legacy fallback)
+  - 포인터가 비어 있거나 유효하지 않은 경로를 가리키면 `RW_TARGET_ROOT_INVALID`로 즉시 중단한다.
+  - 통과 시 `RW_DOCTOR_PASS`, 실패 시 `RW_DOCTOR_BLOCKED`를 출력한다.
 - `rw-archive.prompt.md`:
   - `Lite`/`Strict` 모두에서 `PROGRESS.md`가 커졌을 때 수동 실행한다.
   - 기준: `PROGRESS.md > 8000 chars` 또는 `completed > 20` 또는 `log > 40`.
@@ -117,6 +144,8 @@
 ## Lite 운영 규칙
 
 - `runSubagent`가 없으면 자동 루프를 중단하고 수동 fallback 절차를 출력한다.
+- `rw-run-*` 실행 전 `rw-doctor`를 먼저 실행해 환경을 확인한다.
+- `rw-doctor`와 `rw-run-*`는 동일한 타깃 포인터 세트(`.tmp/rw-active-target-id.txt`, `.tmp/rw-targets/*.env`, legacy `.tmp/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).
 - 오케스트레이터는 제품 코드를 직접 수정하지 않는다.
 - 제품 코드 경로는 저장소 구조(웹/앱/게임/유니티 등)에 따라 다르므로 `src/` 고정 가정을 두지 않는다.
 - `PLAN.md`는 `Feature Notes`만 append 한다.
@@ -131,7 +160,9 @@
 - 트리거: `runSubagent unavailable` 감지 시
 - 공통 동작:
   - 자동 오케스트레이션 루프를 즉시 중지한다.
-  - `MANUAL_FALLBACK_REQUIRED` 안내와 함께 수동 체크리스트를 출력한다.
+  - `RW_ENV_UNSUPPORTED`와 `MANUAL_FALLBACK_REQUIRED`를 함께 출력한다.
+  - 이 환경에서는 자율 루프가 지원되지 않음을 명시한다.
+  - 필요한 경우에만 수동 체크리스트를 참고한다.
   - 사용자는 단일 태스크를 수동 구현/검증/커밋하고 `PROGRESS`를 갱신한 뒤 프롬프트를 재실행한다.
 - Strict 추가 규칙:
   - 수동 리뷰 실패 시 `REVIEW_FAIL TASK-XX (n/3)`를 기록하고 상태를 `pending`으로 되돌린다.
@@ -162,15 +193,24 @@
 - **YYYY-MM-DD** — TASK-XX completed: ...
 ```
 
-## E2E 테스트 teardown 규칙
+## 검증 호출 정리 (사용자 관점)
 
-- 시나리오 재현을 위해 `PROGRESS`에 synthetic `TASK-XX`/`REVIEW_*` 로그를 수동 주입했다면, 테스트 종료 시 반드시 정리한다.
-- `Task Status`에 남아 있는 `pending`/`in-progress` 행은 모두 실제 `.ai/tasks/TASK-XX-*.md` 파일과 매칭되어야 한다.
-- synthetic 데이터 정리 후 `rw-run-*`를 재실행해 정상 루프 재개 여부를 확인한다.
+- 이 브랜치에서는 복잡한 `copilot-rw-*` 테스트 프롬프트를 사용하지 않는다.
+- 운영 검증은 코어 루프를 직접 실행한다:
+  1. `rw-new-project`
+  2. `rw-run-lite` (또는 `rw-run-strict`)
+  3. `rw-feature`
+  4. `rw-plan-lite` (또는 `rw-plan-strict`)
+  5. `rw-run-lite` (또는 `rw-run-strict`)
+
+규칙:
+- 한 턴에서 프롬프트는 하나만 실행한다.
+- 실패 시 토큰 1개만 기준으로 원인을 수정하고 재실행한다.
 
 ## 자주 있는 실패
 
 - `runSubagent unavailable`: 실행 환경/모델에서 도구 지원 여부 확인
+- `RW_TARGET_ROOT_INVALID`: `.tmp/rw-active-target-id.txt` + `.tmp/rw-targets/<target-id>.env` 또는 legacy `.tmp/rw-active-target-root.txt`를 절대 경로로 복구 후 재실행
 - TASK 번호 충돌: 최신 브랜치로 업데이트 후 선택 모드의 `rw-plan-*` 재실행
 - PROGRESS 누락: Task Status 행과 Log를 수동 보정 후 선택 모드의 `rw-run-*` 재개
 - `REVIEW-ESCALATE` 발생(Strict): 태스크/요구사항을 수동 수정 후 `REVIEW-ESCALATE-RESOLVED TASK-XX: <해결 요약>`를 `PROGRESS` Log에 append하고 `rw-run-strict`를 재실행

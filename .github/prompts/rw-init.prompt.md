@@ -19,6 +19,7 @@ Responsibility boundary:
 |---|---|
 | `rw-init` | Workspace scaffolding only (`CONTEXT`, minimal `PLAN`/`PROGRESS`, optional `TASK-01`) |
 | `rw-new-project` | Integrated new-project bootstrap (`rw-init` scaffolding + discovery + bootstrap feature/task decomposition) |
+| `rw-doctor` | Preflight environment check before autonomous runs (`top-level`, `runSubagent`, `git`, `.ai` readiness) |
 | `rw-feature` | Feature definition (`.ai/features/*.md`) |
 | `rw-plan-*` | Feature-to-task decomposition (`TASK-XX`, `PLAN Feature Notes`, `PROGRESS` sync) |
 | `rw-run-*` | Task implementation in product code |
@@ -41,16 +42,16 @@ Step 0 (Mandatory):
 5) Do not modify any file before Step 0 completes, except creating `.ai/CONTEXT.md` when missing.
 
 Bootstrap template for `.ai/CONTEXT.md` (when missing):
-- `# 워크스페이스 컨텍스트`
-- `## 언어 정책`
+- `# Workspace Context`
+- `## Language Policy`
   - Prompt body language (`.github/prompts/rw-*.prompt.md`): English (required)
   - User document language (`.ai/*` docs): Korean by default
   - Commit message language: English (Conventional Commits)
-- `## 기계 파싱 토큰 (번역 금지)`
+- `## Machine-Parsed Tokens (Do Not Translate)`
   - `Task Status`, `Log`
   - `pending`, `in-progress`, `completed`
   - `LANG_POLICY_MISSING`
-- `## 프롬프트 작성 규칙`
+- `## Prompt Authoring Rules`
   - Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first via Step 0
 
 Create (or update without overwriting blindly) this structure:
@@ -61,6 +62,11 @@ Create (or update without overwriting blindly) this structure:
 - PROGRESS.md (Task Status + Log skeleton)
 - tasks/ (task files)
 - GUIDE.md (optional quickstart)
+
+.tmp/
+- rw-active-target-id.txt (active target id pointer)
+- rw-targets/<target-id>.env (target registry entry; includes TARGET_ROOT)
+- rw-active-target-root.txt (target root pointer)
 
 Steps:
 1) Resolve repository context readiness non-interactively.
@@ -77,16 +83,23 @@ Steps:
    - Do not infer features, detailed product requirements, or functional scope.
 3) If `CONTEXT_EMPTY`, do not infer project metadata:
    - Project name: use repository directory name.
-   - PLAN overview lines (write exactly in Korean):
-     - `- 프로젝트 목적 미정 (사용자 입력 필요).`
-     - `- 기술 스택 미정.`
-     - `- 다음 단계: rw-new-project로 방향/부트스트랩 태스크를 확정한 뒤 rw-run을 실행하세요.`
+   - PLAN overview lines (localized to the resolved user-document language; Korean by default):
+     - `- Project purpose is undecided (user input required).`
+     - `- Technology stack is undecided.`
+     - `- Next step: run rw-new-project to finalize direction/bootstrap tasks, then run rw-run-lite or rw-run-strict.`
 4) Ensure scaffolding directories exist:
-   - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`
+   - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.tmp/`, `.tmp/rw-targets/`
+   - Set default target id to `workspace-root`.
+   - Write current workspace root absolute path to `.tmp/rw-active-target-root.txt` (legacy compatibility; overwrite if exists).
+   - Write `workspace-root` to `.tmp/rw-active-target-id.txt` (overwrite if exists).
+   - Write `.tmp/rw-targets/workspace-root.env` with:
+     - `TARGET_ID=workspace-root`
+     - `TARGET_ROOT=<current-workspace-root-absolute-path>`
+   - Always keep `.tmp/rw-active-target-root.txt` as a plain absolute path.
 5) Create or update `PLAN.md` with strict boundaries:
    - If `PLAN.md` is missing, create exactly:
      - `# <project-name>`
-     - `## 개요`
+     - `## Overview`
      - If `CONTEXT_READY`: 1-3 summary lines from Step 2 (purpose + stack + validation command)
      - If `CONTEXT_EMPTY`: 1-3 placeholder lines from Step 3
      - `## Feature Notes (append-only)` (empty section, no baseline note)
@@ -114,7 +127,7 @@ Steps:
 7) Initialize or update PROGRESS.md using this minimum structure:
    - If `PROGRESS.md` is missing:
      - Create it with:
-       - `# 진행 현황`
+       - `# Progress`
        - `## Task Status`
        - table header: `| Task | Title | Status | Commit |`
        - table separator: `|------|-------|--------|--------|`

@@ -4,22 +4,23 @@ An AI-driven software development orchestration technique for **GitHub Copilot**
 
 This repository serves two purposes:
 
-1. **The RW orchestration template** — 8 reusable prompt files + structural docs that can be extracted and dropped into any project
+1. **The RW orchestration template** — 9 reusable prompt files + structural docs that can be extracted and dropped into any project
 2. **A working example** — A Todo CLI app built entirely by this technique (70+ commits, 20 tasks, zero manual coding)
 
 ## How It Works
 
 ```
-rw-new-project  →  rw-run-*  →  rw-feature  →  rw-plan-*  →  rw-run-*  →  rw-archive
-(신규/초기화+bootstrap) (bootstrap 구현) (기능별)      (계획)        (자동 루프)    (수동)
+rw-new-project  →  rw-doctor  →  rw-run-*  →  rw-feature  →  rw-plan-*  →  rw-doctor  →  rw-run-*  →  rw-archive
+(신규/초기화+bootstrap) (사전점검)     (bootstrap 구현) (기능별)      (계획)        (사전점검)     (자동 루프)    (수동)
 ```
 
 1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery + bootstrap feature/task decomposition in one run)
-2. **`rw-run-lite` / `rw-run-strict`** — Implements bootstrap tasks first
-3. **`rw-feature`** — Creates additional feature specification files
-4. **`rw-plan-lite` / `rw-plan-strict`** — Breaks additional features into atomic tasks
-5. **`rw-run-lite` / `rw-run-strict`** — Continues autonomous implementation loop
-6. **`rw-archive`** — Archives completed progress when it grows large
+2. **`rw-doctor`** — Validates top-level/runSubagent/git/.ai preflight before autonomous runs (supports target-root pointer file)
+3. **`rw-run-lite` / `rw-run-strict`** — Implements bootstrap tasks first
+4. **`rw-feature`** — Creates additional feature specification files
+5. **`rw-plan-lite` / `rw-plan-strict`** — Breaks additional features into atomic tasks
+6. **`rw-run-lite` / `rw-run-strict`** — Continues autonomous implementation loop
+7. **`rw-archive`** — Archives completed progress when it grows large
 
 `rw-init` remains available as a scaffold-only fallback when you want non-interactive initialization.
 
@@ -52,13 +53,14 @@ cd copilot-ralph-wiggum-example
 ./scripts/extract-template.sh ~/your-project
 ```
 
-This copies 12 files into your project:
+This copies 13 files into your project:
 
 ```
 your-project/
-├── .github/prompts/           # 8 orchestration prompts
+├── .github/prompts/           # 9 orchestration prompts
 │   ├── rw-init.prompt.md
 │   ├── rw-new-project.prompt.md
+│   ├── rw-doctor.prompt.md
 │   ├── rw-feature.prompt.md
 │   ├── rw-plan-lite.prompt.md
 │   ├── rw-plan-strict.prompt.md
@@ -76,7 +78,7 @@ your-project/
 ### Option 2: Manual Copy
 
 Copy these paths from this repo into your project:
-- `.github/prompts/*.prompt.md` (all 8 files)
+- `.github/prompts/*.prompt.md` (all 9 orchestration files)
 - `.ai/CONTEXT.md`
 - `.ai/GUIDE.md`
 - `.ai/features/FEATURE-TEMPLATE.md`
@@ -88,11 +90,45 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 
 1. Open your project in VS Code with GitHub Copilot
 2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + project-direction discovery + bootstrap feature/task generation
-3. Run **`rw-run-lite`** (or `rw-run-strict`) to implement bootstrap tasks
-4. Run **`rw-feature`** to define additional product features
-5. Run **`rw-plan-lite`** (or `rw-plan-strict`) to generate tasks for that feature
-6. Run **`rw-run-lite`** (or `rw-run-strict`) to continue the autonomous loop
-7. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
+   - `rw-new-project` refreshes target pointers automatically:
+     - `workspace-root/.tmp/rw-active-target-id.txt` -> `workspace-root`
+     - `workspace-root/.tmp/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
+     - `workspace-root/.tmp/rw-active-target-root.txt` (legacy fallback)
+3. Run **`rw-doctor`** before autonomous execution
+4. Run **`rw-run-lite`** (or `rw-run-strict`) to implement bootstrap tasks
+5. Run **`rw-feature`** to define additional product features
+6. Run **`rw-plan-lite`** (or `rw-plan-strict`) to generate tasks for that feature
+7. Run **`rw-doctor`** again before the next autonomous execution
+8. Run **`rw-run-lite`** (or `rw-run-strict`) to continue the autonomous loop
+9. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
+   - `rw-init` refreshes the same target-pointer trio as `rw-new-project`
+
+### Target Root Resolution
+
+`rw-doctor` and `rw-run-*` resolve target root in this order:
+1. `workspace-root/.tmp/rw-active-target-id.txt`
+2. `workspace-root/.tmp/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
+3. `workspace-root/.tmp/rw-active-target-root.txt` (legacy fallback)
+
+Manual target switch from workspace root:
+
+```bash
+./scripts/rw-target-registry.sh set-active "$(pwd)" my-project "/absolute/path/to/project"
+./scripts/rw-target-registry.sh resolve-active "$(pwd)"
+```
+
+If VS Code workspace root and actual target project root are different, update active target id + registry first, then keep legacy pointer synchronized for compatibility.
+
+### Verification Guidance
+
+This branch intentionally removes bundled Copilot test prompts (`copilot-rw-*`) to keep operations minimal.
+For verification, run the core flow directly in Copilot Chat:
+
+1. `rw-new-project`
+2. `rw-run-lite` (or `rw-run-strict`)
+3. `rw-feature`
+4. `rw-plan-lite` (or `rw-plan-strict`)
+5. `rw-run-lite` (or `rw-run-strict`)
 
 ## Orchestration File Reference
 
@@ -102,18 +138,19 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 |---|---|
 | [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + discovery + bootstrap feature/task decomposition) |
 | [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
+| [`rw-doctor`](.github/prompts/rw-doctor.prompt.md) | Preflight check for top-level/runSubagent/git/.ai readiness before autonomous runs (target-root pointer file) |
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
 | [`rw-plan-lite`](.github/prompts/rw-plan-lite.prompt.md) | Generate task breakdown (Lite mode) |
 | [`rw-plan-strict`](.github/prompts/rw-plan-strict.prompt.md) | Generate task breakdown (Strict mode) |
-| [`rw-run-lite`](.github/prompts/rw-run-lite.prompt.md) | Orchestration loop (Lite mode) |
-| [`rw-run-strict`](.github/prompts/rw-run-strict.prompt.md) | Orchestration loop + reviewer (Strict mode) |
+| [`rw-run-lite`](.github/prompts/rw-run-lite.prompt.md) | Orchestration loop (Lite mode, target-root pointer file) |
+| [`rw-run-strict`](.github/prompts/rw-run-strict.prompt.md) | Orchestration loop + reviewer (Strict mode, target-root pointer file) |
 | [`rw-archive`](.github/prompts/rw-archive.prompt.md) | Archive completed progress |
 
 ### Workspace (`.ai/`)
 
 | File | Role |
 |---|---|
-| [`CONTEXT.md`](.ai/CONTEXT.md) | Language policy & machine-parseable tokens (read by every prompt at Step 0) |
+| [`CONTEXT.md`](.ai/CONTEXT.md) | Language policy & machine-parseable tokens (read by every orchestration prompt `rw-*` at Step 0) |
 | [`GUIDE.md`](.ai/GUIDE.md) | Operational guide for the RW workflow |
 | [`PLAN.md`](.ai/PLAN.md) | Workspace metadata + append-only Feature Notes (`rw-new-project` creates/updates overview, `rw-plan-*` appends feature notes) |
 | [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (`rw-new-project` or `rw-init` creates skeleton, `rw-plan-*`/`rw-run-*` update entries) |
@@ -123,10 +160,13 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 ### Safety Mechanisms
 
 - **Step 0** — Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first; fails with `LANG_POLICY_MISSING` if missing
+- **rw-doctor** — Preflight gate for top-level turn, runSubagent availability, git readiness, and `.ai` structure
 - **PAUSE.md** — Create `.ai/PAUSE.md` to halt the orchestration loop
 - **ARCHIVE_LOCK** — Prevents concurrent archive operations
 - **REVIEW-ESCALATE** — (Strict mode) 3 consecutive review failures trigger escalation and halt
-- **MANUAL_FALLBACK_REQUIRED** — Graceful degradation when `runSubagent` is unavailable
+- **RW_ENV_UNSUPPORTED** — Explicit signal that autonomous mode is unavailable in the current environment
+- **RW_TARGET_ROOT_INVALID** — Target root pointer is invalid (empty/non-absolute/missing path)
+- **MANUAL_FALLBACK_REQUIRED** — Optional manual path when autonomous mode is unavailable
 
 ## Example: Todo CLI
 

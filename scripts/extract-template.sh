@@ -33,7 +33,7 @@ if [ -d "$TARGET/.github/prompts" ] || [ -d "$TARGET/.ai" ]; then
   read -r -p "Overwrite? [y/N] " confirm
   if [[ ! "$confirm" =~ ^[yY]$ ]]; then
     echo "Aborted."
-    exit 0
+    exit 1
   fi
 fi
 
@@ -51,6 +51,7 @@ echo "📋 Copying orchestration prompts ..."
 
 cp "$REPO_ROOT/.github/prompts/rw-init.prompt.md"        "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-new-project.prompt.md" "$TARGET/.github/prompts/"
+cp "$REPO_ROOT/.github/prompts/rw-doctor.prompt.md"      "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-feature.prompt.md"      "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-plan-lite.prompt.md"    "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-plan-strict.prompt.md"  "$TARGET/.github/prompts/"
@@ -79,6 +80,7 @@ echo "Extracted files:"
 echo "  .github/prompts/"
 echo "    rw-init.prompt.md"
 echo "    rw-new-project.prompt.md"
+echo "    rw-doctor.prompt.md"
 echo "    rw-feature.prompt.md"
 echo "    rw-plan-lite.prompt.md"
 echo "    rw-plan-strict.prompt.md"
@@ -98,7 +100,9 @@ echo "Next steps:"
 echo "  1. cd $TARGET"
 echo "  2. Open VS Code with Copilot Chat"
 echo "  3. Run rw-new-project.prompt.md (integrated init + discovery)"
-echo "  4. Run rw-feature.prompt.md to create a feature spec"
-echo "  5. Run rw-plan-lite.prompt.md (or strict) to generate tasks"
-echo "  6. Run rw-run-lite.prompt.md (or strict) to start the orchestration loop"
-echo "  7. Optional: use rw-init.prompt.md only when scaffold-only setup is needed"
+echo "  4. Run rw-doctor.prompt.md before autonomous runs"
+echo "  5. Run rw-feature.prompt.md to create a feature spec"
+echo "  6. Run rw-plan-lite.prompt.md (or strict) to generate tasks"
+echo "  7. Run rw-doctor.prompt.md again before rw-run"
+echo "  8. Run rw-run-lite.prompt.md (or strict) to start the orchestration loop"
+echo "  9. Optional: use rw-init.prompt.md only when scaffold-only setup is needed"

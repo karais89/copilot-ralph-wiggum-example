@@ -21,19 +21,20 @@ Step 0 (Mandatory):
 5) Do not modify any file before Step 0 completes, except creating `.ai/CONTEXT.md` when missing.
 
 Bootstrap template for `.ai/CONTEXT.md` (when missing):
-- `# 워크스페이스 컨텍스트`
-- `## 언어 정책`
+- `# Workspace Context`
+- `## Language Policy`
   - Prompt body language (`.github/prompts/rw-*.prompt.md`): English (required)
   - User document language (`.ai/*` docs): Korean by default
   - Commit message language: English (Conventional Commits)
-- `## 기계 파싱 토큰 (번역 금지)`
+- `## Machine-Parsed Tokens (Do Not Translate)`
   - `Task Status`, `Log`
   - `pending`, `in-progress`, `completed`
   - `LANG_POLICY_MISSING`
-- `## 프롬프트 작성 규칙`
+- `## Prompt Authoring Rules`
   - Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first via Step 0
 
 Project idea input (optional): ${input:projectIdea:Optional one-line project idea. Example: shared travel itinerary planner.}
+Non-interactive marker (optional): include literal token `[NON_INTERACTIVE]` in `projectIdea` to force non-interactive bootstrap.
 
 You are initializing a new Ralph orchestration workspace and defining initial project direction.
 
@@ -41,6 +42,9 @@ Target files:
 - `.ai/CONTEXT.md` (create only if missing)
 - `.ai/PLAN.md` (required)
 - `.ai/PROGRESS.md` (required)
+- `.tmp/rw-active-target-id.txt` (required, active target id pointer)
+- `.tmp/rw-targets/<target-id>.env` (required, target registry entry)
+- `.tmp/rw-active-target-root.txt` (required, target root pointer; legacy compatibility)
 - `.ai/tasks/TASK-01-bootstrap-workspace.md` (optional, create only when no task files exist)
 - `.ai/tasks/TASK-02-*.md` ... (bootstrap foundation tasks, conditional)
 - `.ai/features/YYYYMMDD-HHMM-bootstrap-foundation.md` (bootstrap feature, conditional)
@@ -48,6 +52,7 @@ Target files:
 
 Rules:
 - Do not edit product code.
+- This prompt must run in a top-level Copilot Chat turn. If invoked in nested/subagent context, output `TOP_LEVEL_REQUIRED` and stop.
 - This prompt may create exactly one bootstrap feature file under `.ai/features/`.
 - This prompt may create `TASK-02+` only for bootstrap foundation decomposition.
 - Keep existing `PROGRESS` task rows/log entries unchanged on rerun; add only missing task rows.
@@ -55,7 +60,13 @@ Rules:
 - Keep machine tokens untouched where present (`Task Status`, `Log`, status enums).
 - Write user-facing content in language resolved from `.ai/CONTEXT.md` (default Korean if ambiguous).
 - Keep task section headers unchanged (`Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Verification`) and write section values/prose in the resolved user-document language.
-- Clarification-first: for ambiguous requirements, ask follow-up questions persistently before applying defaults.
+- Clarification-first: for ambiguous requirements, ask follow-up questions persistently before applying defaults, except in non-interactive mode.
+- Non-interactive mode:
+  - Enable when either:
+    - `projectIdea` contains literal token `[NON_INTERACTIVE]`, or
+    - `.tmp/rw-noninteractive.flag` exists.
+  - In this mode, never call `#tool:vscode/askQuestions` and never ask interactive follow-up questions.
+  - Resolve missing values with safe defaults (`AI_DECIDE` equivalent) and continue.
 - Bootstrap task sizing rule:
   - Each task should be independently deliverable in roughly 30~120 minutes.
   - If a task is likely >120 minutes, split it.
@@ -67,15 +78,22 @@ Rules:
 
 Workflow:
 1) Ensure scaffolding directories exist:
-   - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/features/`
+   - `.ai/`, `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/features/`, `.tmp/`, `.tmp/rw-targets/`
+   - Set default target id to `workspace-root`.
+   - Write current workspace root absolute path to `.tmp/rw-active-target-root.txt` (legacy compatibility; overwrite if exists).
+   - Write `workspace-root` to `.tmp/rw-active-target-id.txt` (overwrite if exists).
+   - Write `.tmp/rw-targets/workspace-root.env` with:
+     - `TARGET_ID=workspace-root`
+     - `TARGET_ROOT=<current-workspace-root-absolute-path>`
+   - Always keep `.tmp/rw-active-target-root.txt` as a plain absolute path.
 2) Bootstrap minimal workspace files:
    - `PLAN.md`:
      - If missing, create:
        - `# <repository-name>`
-       - `## 개요`
-       - `- 프로젝트 목적 미정 (사용자 입력 필요).`
-       - `- 기술 스택 미정.`
-       - `- 다음 단계: 이 프롬프트에서 bootstrap feature/task를 생성한 뒤 rw-run을 실행하세요.`
+       - `## Overview`
+       - `- Project purpose is undecided (user input required).`
+       - `- Technology stack is undecided.`
+       - `- Next step: generate bootstrap feature/tasks with this prompt, then run rw-run.`
        - `## Feature Notes (append-only)`
      - If exists, keep content and ensure `## Feature Notes (append-only)` section exists.
    - `TASK-01`:
@@ -89,7 +107,7 @@ Workflow:
        - Keep the section headers above exactly as written, but write all values/prose in the resolved user-document language.
    - `PROGRESS.md`:
      - If missing, create:
-       - `# 진행 현황`
+       - `# Progress`
        - `## Task Status`
        - `| Task | Title | Status | Commit |`
        - `|------|-------|--------|--------|`
@@ -99,17 +117,24 @@ Workflow:
      - If exists, keep existing rows/logs and add only missing task rows as `pending`.
      - For newly added rows, write the `Title` value in the same resolved user-document language.
 3) Resolve initial direction input:
+   - Determine `NON_INTERACTIVE_MODE` first:
+     - true if `projectIdea` contains `[NON_INTERACTIVE]` OR `.tmp/rw-noninteractive.flag` exists.
+     - if marker token is present in `projectIdea`, remove only that marker token and keep remaining text.
    - If `projectIdea` is present, use it as seed.
    - If `projectIdea` is missing, first try rerun-safe reuse:
      - If `.ai/PLAN.md` already contains meaningful overview lines (not placeholder-only), use the latest overview as seed.
      - Else if `.ai/notes/PROJECT-CHARTER-*.md` exists, use the latest charter summary as seed.
-   - If still missing after rerun-safe reuse, ask one open-ended question using `#tool:vscode/askQuestions`:
-     - intent: "What product/project do you want to build first?"
-   - If `#tool:vscode/askQuestions` is unavailable, ask once in chat.
-   - If still missing after one interaction, stop immediately and output exactly: `PROJECT_IDEA_MISSING`.
+   - If still missing after rerun-safe reuse:
+     - If `NON_INTERACTIVE_MODE=true`, use default seed:
+       - `A minimal CLI to capture and summarize meeting action items`
+     - Else ask one open-ended question using `#tool:vscode/askQuestions`:
+       - intent: "What product/project do you want to build first?"
+     - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, ask once in chat.
+     - If `NON_INTERACTIVE_MODE=false` and still missing after one interaction, stop immediately and output exactly: `PROJECT_IDEA_MISSING`.
 4) Clarification rounds (interactive, persistent):
-   - Run 3~6 short clarification rounds when ambiguity exists.
-   - In each round, ask 1~3 focused questions (single-choice preferred when practical).
+   - If `NON_INTERACTIVE_MODE=true`, skip interactive rounds and apply defaults (`AI_DECIDE` equivalent).
+   - If `NON_INTERACTIVE_MODE=false`, run 3~6 short clarification rounds when ambiguity exists.
+   - In each interactive round, ask 1~3 focused questions (single-choice preferred when practical).
    - Resolve all of the following before finalizing (unless user explicitly chooses `AI_DECIDE`):
      - target users
      - core user value/problem
