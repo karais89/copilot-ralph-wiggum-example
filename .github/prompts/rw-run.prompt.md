@@ -13,23 +13,16 @@ Quick summary:
 - Archive is always manual via `rw-archive.prompt.md`.
 
 Path resolution (mandatory before Step 0):
-- Define:
-  - `TARGET_ACTIVE_ID_FILE` as `workspace-root/.ai/runtime/rw-active-target-id.txt`
-  - `TARGET_REGISTRY_DIR` as `workspace-root/.ai/runtime/rw-targets/`
-  - `TARGET_POINTER_FILE` as `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
+- Use shared resolver contract from `scripts/rw-resolve-target-root.sh` (authoritative source).
+- Resolve by running the resolver against workspace root and loading its emitted key/value pairs:
+  - `TARGET_ACTIVE_ID_FILE`
+  - `TARGET_REGISTRY_DIR`
+  - `TARGET_POINTER_FILE`
+  - `TARGET_ID`
+  - `RAW_TARGET`
+  - `TARGET_ROOT`
 - Ignore any prompt argument for target-root resolution.
-- Ensure `workspace-root/.ai/runtime/` exists.
-- Resolve `RAW_TARGET` and `TARGET_ID` in this order:
-  1) If `TARGET_ACTIVE_ID_FILE` has a readable first non-empty line and `TARGET_REGISTRY_DIR/<TARGET_ID>.env` exists with `TARGET_ROOT=<absolute-path>`, use that `TARGET_ROOT` as `RAW_TARGET`.
-  2) Else if `TARGET_POINTER_FILE` exists and first non-empty line is readable, use that line as `RAW_TARGET` and set `TARGET_ID=legacy-root-pointer`.
-  3) Else auto-repair defaults:
-     - set `TARGET_ID=workspace-root`
-     - set `RAW_TARGET` to current workspace root absolute path
-     - write `TARGET_ID` to `TARGET_ACTIVE_ID_FILE`
-     - write `TARGET_ROOT=<RAW_TARGET>` to `TARGET_REGISTRY_DIR/workspace-root.env`
-     - write `RAW_TARGET` to `TARGET_POINTER_FILE`
-- Resolve `TARGET_ROOT` from `RAW_TARGET`:
-  - Use `RAW_TARGET` as `TARGET_ROOT`.
+- Resolver auto-repair behavior (default `workspace-root`) must be preserved exactly as implemented in the script.
 - Resolve paths from `TARGET_ROOT`:
   - `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
   - `<AI_ROOT>` = `TARGET_ROOT/.ai/`
@@ -88,9 +81,14 @@ Repeat:
      - If any `pending` or `in-progress` row exists, set `UNFINISHED_TASK_SEEN=true`
   7) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars OR Log entry count exceeds 40:
      print "📦 Manual archive required. Create TARGET_ROOT/.ai/PAUSE.md if missing, keep it present, run rw-archive.prompt.md, then resume." and stop
-  8) If <PROGRESS> Log contains unresolved `REVIEW-ESCALATE` for any task
-     (an entry `REVIEW-ESCALATE TASK-XX ...` with no later matching `REVIEW-ESCALATE-RESOLVED TASK-XX ...`),
-     print `REVIEW_BLOCKED TASK-XX` and stop
+  8) If <PROGRESS> Log contains unresolved `REVIEW-ESCALATE` for one or more tasks:
+     - Parse unresolved task IDs where `REVIEW-ESCALATE TASK-XX ...` has no later `REVIEW-ESCALATE-RESOLVED TASK-XX ...`.
+     - Let `FIRST_BLOCKED_TASK` be the lexically smallest unresolved task id.
+     - Print:
+       - `REVIEW_BLOCKED <FIRST_BLOCKED_TASK>`
+       - `REVIEW_BLOCKED_TASKS=<comma-separated-task-ids>`
+       - `REVIEW_BLOCKED_COUNT=<n>`
+     - stop
   9) If active Task Status has no `pending`/`in-progress` rows, and every TASK ID from <TASKS> exists in either:
      - active <PROGRESS> Task Status table, or
      - any `<ARCHIVE_DIR>/STATUS-*.md` file (glob),

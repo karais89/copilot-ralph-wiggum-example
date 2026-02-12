@@ -38,6 +38,8 @@
 - 실행 프롬프트는 단일 `rw-run.prompt.md`만 사용한다.
 - 리뷰는 별도 수동 단계 `rw-review.prompt.md`로 수행한다.
 - archive 임계치 도달 시 `rw-run`은 중단하고 `rw-archive`를 수동 실행한다.
+- 대화형 입력 fallback은 `.github/prompts/RW-INTERACTIVE-POLICY.md` 단일 정책을 따른다.
+- target root 해석은 `scripts/rw-resolve-target-root.sh`를 공통 기준으로 사용한다.
 
 ## 사용 방법
 

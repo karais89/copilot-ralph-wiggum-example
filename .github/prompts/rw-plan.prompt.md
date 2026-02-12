@@ -41,6 +41,7 @@ Rules:
   - If likely >120 minutes, split; if <30 minutes and not independently valuable, merge.
 - Verification rule:
   - Each task must include at least one concrete verification command in `Verification`.
+- Interactive fallback must follow `.github/prompts/RW-INTERACTIVE-POLICY.md`.
 - Non-interactive mode:
   - Enable when either:
     - `.ai/runtime/rw-noninteractive.flag` exists.
@@ -80,7 +81,7 @@ Feature input resolution (required):
      - Use `#tool:vscode/askQuestions` once with one single-choice question:
        - "Multiple READY_FOR_PLAN feature files were found. Which file should be planned now?"
        - Choices: each READY filename + `CANCEL`
-     - If `#tool:vscode/askQuestions` is unavailable, ask the same single-choice selection in chat once.
+     - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
      - If one filename is selected, use that file as the input source.
      - If user selects `CANCEL` or no valid selection is obtained after that single interaction, stop immediately and print:
        - first line exactly: `FEATURE_MULTI_READY`

@@ -27,6 +27,7 @@ You will ONLY edit these files:
 - .ai/progress-archive/README.md (optional)
 
 Rules:
+- Interactive fallback must follow `.github/prompts/RW-INTERACTIVE-POLICY.md`.
 - First, inspect active `.ai/PROGRESS.md` and compute:
   - total character count
   - completed Task Status row count
@@ -38,7 +39,7 @@ Rules:
 - If `archive_needed=false`, resolve force-run once via `#tool:vscode/askQuestions` single choice (in resolved user-document language from `.ai/CONTEXT.md`):
   - `Force archive now`
   - `Skip archive (recommended)`
-  - If `#tool:vscode/askQuestions` is unavailable, ask the same single-choice confirmation in chat once.
+  - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
   - If `Force archive now` is selected, set `force_archive=true` and continue.
   - If `Skip archive` is selected or no valid selection is obtained after that single interaction:
     - do not create `.ai/ARCHIVE_LOCK`
@@ -50,7 +51,7 @@ Rules:
   - If `.ai/PAUSE.md` is missing, resolve once via `#tool:vscode/askQuestions` single choice (in resolved user-document language from `.ai/CONTEXT.md`):
     - `Create .ai/PAUSE.md and continue rw-archive`
     - `Cancel`
-  - If `#tool:vscode/askQuestions` is unavailable, ask the same single-choice confirmation in chat once.
+  - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
   - If user selects create, create `.ai/PAUSE.md` with:
     - one timestamp line
     - one ownership marker line: `created-by: rw-archive-preflight`

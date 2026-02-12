@@ -41,6 +41,7 @@ fi
 echo "📁 Creating directory structure in $TARGET ..."
 
 mkdir -p "$TARGET/.github/prompts"
+mkdir -p "$TARGET/scripts"
 mkdir -p "$TARGET/.ai/features"
 mkdir -p "$TARGET/.ai/tasks"
 mkdir -p "$TARGET/.ai/notes"
@@ -58,6 +59,12 @@ cp "$REPO_ROOT/.github/prompts/rw-plan.prompt.md"    "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-run.prompt.md"     "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-review.prompt.md"       "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-archive.prompt.md"      "$TARGET/.github/prompts/"
+cp "$REPO_ROOT/.github/prompts/RW-INTERACTIVE-POLICY.md"  "$TARGET/.github/prompts/"
+
+# --- Copy shared utility scripts ---
+echo "🛠️  Copying shared utility scripts ..."
+cp "$REPO_ROOT/scripts/rw-resolve-target-root.sh" "$TARGET/scripts/"
+chmod +x "$TARGET/scripts/rw-resolve-target-root.sh"
 
 # --- Copy .ai structural files ---
 echo "📄 Copying .ai structural files ..."
@@ -88,6 +95,9 @@ echo "    rw-plan.prompt.md"
 echo "    rw-run.prompt.md"
 echo "    rw-review.prompt.md"
 echo "    rw-archive.prompt.md"
+echo "    RW-INTERACTIVE-POLICY.md"
+echo "  scripts/"
+echo "    rw-resolve-target-root.sh"
 echo "  .ai/"
 echo "    CONTEXT.md"
 echo "    GUIDE.md"

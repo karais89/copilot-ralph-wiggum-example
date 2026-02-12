@@ -61,6 +61,7 @@ Rules:
 - Keep machine tokens untouched where present (`Task Status`, `Log`, status enums).
 - Write user-facing content in language resolved from `.ai/CONTEXT.md` (default Korean if ambiguous).
 - Keep task section headers unchanged (`Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Verification`) and write section values/prose in the resolved user-document language.
+- Interactive fallback must follow `.github/prompts/RW-INTERACTIVE-POLICY.md`.
 - Structured discovery questions (interactive mode only):
   - Ask exactly these 4 domains in Round 1:
     - target users
@@ -144,7 +145,7 @@ Workflow:
        - MVP in-scope vs out-of-scope
        - constraints/preferences + verification baseline command
      - Preferred tool: `#tool:vscode/askQuestions` in one grouped interaction.
-     - If `#tool:vscode/askQuestions` is unavailable, ask the same 4 prompts in chat once.
+     - If unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
      - Round 2 (optional): only for unresolved high-impact ambiguity, max 2 focused questions.
    - After Round 2, fill unresolved fields with safe defaults and continue.
    - Record unresolved ambiguities in:

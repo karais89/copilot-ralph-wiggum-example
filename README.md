@@ -50,7 +50,7 @@ cd copilot-ralph-wiggum-example
 ./scripts/extract-template.sh ~/your-project
 ```
 
-This copies 12 files into your project:
+This copies 14 files into your project:
 
 ```
 your-project/
@@ -62,7 +62,10 @@ your-project/
 │   ├── rw-plan.prompt.md
 │   ├── rw-run.prompt.md
 │   ├── rw-review.prompt.md
-│   └── rw-archive.prompt.md
+│   ├── rw-archive.prompt.md
+│   └── RW-INTERACTIVE-POLICY.md
+├── scripts/
+│   └── rw-resolve-target-root.sh
 └── .ai/                       # Structural files
     ├── CONTEXT.md             # Language policy & parser tokens
     ├── GUIDE.md               # Operational guide
@@ -75,6 +78,8 @@ your-project/
 
 Copy these paths from this repo into your project:
 - `.github/prompts/*.prompt.md` (all 8 orchestration files)
+- `.github/prompts/RW-INTERACTIVE-POLICY.md`
+- `scripts/rw-resolve-target-root.sh`
 - `.ai/CONTEXT.md`
 - `.ai/GUIDE.md`
 - `.ai/features/FEATURE-TEMPLATE.md`
@@ -108,6 +113,12 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 1. `workspace-root/.ai/runtime/rw-active-target-id.txt`
 2. `workspace-root/.ai/runtime/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
 3. `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
+
+Shared resolver script:
+
+```bash
+./scripts/rw-resolve-target-root.sh "$(pwd)"
+```
 
 Manual target switch from workspace root:
 

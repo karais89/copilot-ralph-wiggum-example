@@ -35,6 +35,7 @@ Rules:
 - Keep machine tokens unchanged: `Status`, `READY_FOR_PLAN`.
 - Do not overuse multiple-choice questions; use them only when they reduce ambiguity quickly.
 - Clarification-first: if any high-impact ambiguity remains, ask follow-up questions persistently before using defaults, except in non-interactive mode.
+- Interactive fallback must follow `.github/prompts/RW-INTERACTIVE-POLICY.md`.
 - Non-interactive mode:
   - Enable when either:
     - `featureSummary` contains literal token `[NON_INTERACTIVE]`, or
@@ -60,7 +61,7 @@ Workflow:
      - `Add a command to export action-item lists as a markdown report.`
    - If missing and `NON_INTERACTIVE_MODE=false`, use `#tool:vscode/askQuestions` with one open-ended question written in the resolved user-document language from Step 4.
    - Question intent (do not hardcode this English string in output): "What feature should be added? (Example: add export command with date filter)"
-   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, ask the same localized question in chat once.
+   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
    - If `NON_INTERACTIVE_MODE=false` and still missing after that single interaction, stop immediately and output exactly: `FEATURE_SUMMARY_MISSING`.
 7) If high-impact ambiguity remains after reading summary + repository context, run clarification rounds:
    - If `NON_INTERACTIVE_MODE=true`, skip interactive rounds and apply defaults (`AI_DECIDE` equivalent).
@@ -75,7 +76,7 @@ Workflow:
      - key edge cases and failure behavior
      - verification baseline command/evidence
    - Clarification questions/options must be written in the resolved user-document language from Step 4.
-   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, ask the same localized clarifications in chat with the same round limits.
+   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
 8) If details are still insufficient after clarification rounds, apply safe defaults and explicitly record assumptions:
    - Constraints: backward compatible, minimal scope, project-defined canonical validation commands must pass.
    - Acceptance: user-visible behavior works, clear error messages, and at least one canonical verification command succeeds with exit code 0.

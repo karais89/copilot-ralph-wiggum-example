@@ -13,23 +13,16 @@ Quick summary:
 - Print machine-readable PASS/FAIL tokens and blocker list.
 
 Path resolution (mandatory before checks):
-- Define:
-  - `TARGET_ACTIVE_ID_FILE` as `workspace-root/.ai/runtime/rw-active-target-id.txt`
-  - `TARGET_REGISTRY_DIR` as `workspace-root/.ai/runtime/rw-targets/`
-  - `TARGET_POINTER_FILE` as `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
+- Use shared resolver contract from `scripts/rw-resolve-target-root.sh` (authoritative source).
+- Resolve by running the resolver against workspace root and loading its emitted key/value pairs:
+  - `TARGET_ACTIVE_ID_FILE`
+  - `TARGET_REGISTRY_DIR`
+  - `TARGET_POINTER_FILE`
+  - `TARGET_ID`
+  - `RAW_TARGET`
+  - `TARGET_ROOT`
 - Ignore any prompt argument for target-root resolution.
-- Ensure `workspace-root/.ai/runtime/` exists.
-- Resolve `RAW_TARGET` and `TARGET_ID` in this order:
-  1) If `TARGET_ACTIVE_ID_FILE` has a readable first non-empty line and `TARGET_REGISTRY_DIR/<TARGET_ID>.env` exists with `TARGET_ROOT=<absolute-path>`, use that `TARGET_ROOT` as `RAW_TARGET`.
-  2) Else if `TARGET_POINTER_FILE` exists and first non-empty line is readable, use that line as `RAW_TARGET` and set `TARGET_ID=legacy-root-pointer`.
-  3) Else auto-repair defaults:
-     - set `TARGET_ID=workspace-root`
-     - set `RAW_TARGET` to current workspace root absolute path
-     - write `TARGET_ID` to `TARGET_ACTIVE_ID_FILE`
-     - write `TARGET_ROOT=<RAW_TARGET>` to `TARGET_REGISTRY_DIR/workspace-root.env`
-     - write `RAW_TARGET` to `TARGET_POINTER_FILE`
-- Resolve `TARGET_ROOT` from `RAW_TARGET`:
-  - Use `RAW_TARGET` as `TARGET_ROOT`.
+- Resolver auto-repair behavior (default `workspace-root`) must be preserved exactly as implemented in the script.
 - Resolve paths from `TARGET_ROOT`:
   - `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
   - `<AI_ROOT>` = `TARGET_ROOT/.ai/`

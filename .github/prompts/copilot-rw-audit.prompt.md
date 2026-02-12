@@ -42,6 +42,8 @@
 - `rw-doctor` preflight 결과(`RW_DOCTOR_PASS`/`RW_DOCTOR_BLOCKED`)와 `rw-run` 진입 규칙 정합성
 - target root invalid 처리(`RW_TARGET_ROOT_INVALID`)와 즉시 중단 규칙 정합성
 - target-root 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/<id>.env`, legacy `.ai/runtime/rw-active-target-root.txt`) 규칙 누락/불일치 여부
+- shared resolver(`scripts/rw-resolve-target-root.sh`) 기준과 `rw-doctor/rw-run/rw-review` 규칙이 불일치하지 않는지
+- shared interactive fallback(`.github/prompts/RW-INTERACTIVE-POLICY.md`) 기준과 `rw-new-project/rw-feature/rw-plan/rw-archive`가 불일치하지 않는지
 - `rw-init`/`rw-new-project`에서 포인터 세트 자동 생성·갱신 규칙이 실제 실행 흐름과 맞는지
 - 운영 프롬프트가 "계획 문구만 출력하고 실제 단계 실행 없음" 상태에 빠질 위험이 없는지
 
