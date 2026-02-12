@@ -1,5 +1,6 @@
 # FEATURE: <slug>
 Status: DRAFT
+Planning Profile: STANDARD
 
 ## Summary
 한 줄 요약(사용자 관점)과 핵심 맥락을 적습니다.

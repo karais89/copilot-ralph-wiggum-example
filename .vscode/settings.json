@@ -1,4 +1,5 @@
 {
+    "chat.tools.terminal.blockDetectedFileWrites": "never",
     "chat.tools.terminal.autoApprove": {
         "return": true,
         "type": true,
@@ -19,14 +20,35 @@
         "find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > \"$SNAPSHOT_DIR/tasks.after.feature.txt\"": true,
         "find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > \"$SNAPSHOT_DIR/tasks.before.reinit.txt\"": true,
         "find .ai/tasks -maxdepth 1 -name 'TASK-*.md' | sort > \"$SNAPSHOT_DIR/tasks.after.reinit.txt\"": true,
+        "/^find (?:\\.ai\\/tasks|[^ ]+\\/\\.ai\\/tasks) -maxdepth 1 -name 'TASK-\\*\\.md' \\| sort > .*(?:\\$SNAPSHOT_DIR\\/)?tasks\\.(?:before|after\\.feature|before\\.reinit|after\\.reinit)\\.txt$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cp (?:\\.ai\\/(?:PLAN|PROGRESS)\\.md|[^ ]+\\/\\.ai\\/(?:PLAN|PROGRESS)\\.md) .*(?:\\$SNAPSHOT_DIR\\/)?(?:plan\\.before|progress\\.before|plan\\.before\\.reinit|progress\\.before\\.reinit)\\.md$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
         "test": true,
         "/^git(?: -c [^ ]+=[^ ]+| -C [^ ]+)* (?:(?:status|log|rev-parse)(?: .*)?|rev-list --count HEAD(?: > .+)?|init(?: -q)?|config user\\.(?:name|email) .+|add -A|commit -qm [\"']chore: bootstrap rw template[\"'])$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^rm -f (?:\"\\$TARGET_POINTER_BACKUP_FILE\"|\\$TARGET_POINTER_BACKUP_FILE|\"?[^\"]*\\/\\.tmp\\/rw-active-target-root\\.before-(?:smoke|e2e)\\.txt\"?)$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^.*\\| xargs(?: -0)?(?: -I\\{\\})? (?:rg|grep|wc|cat|basename|dirname)(?: [^><;&|]*)?$/": {
             "approve": true,
             "matchCommandLine": true
         },
         "npm install": true,
         "npx tsc": true,
         "npx ts-node": true,
-        "git rev-parse": true
+        "git rev-parse": true,
+        "printf": true,
+        "rw-new-project": true,
+        "command": true,
+        "cp": true,
+        "diff": true
     }
 }

@@ -3,3 +3,8 @@ dist/
 data/todos.json
 .DS_Store
 .tmp/
+.ai/runtime/*
+!.ai/runtime/.gitkeep
+!.ai/runtime/rw-targets/
+.ai/runtime/rw-targets/*
+!.ai/runtime/rw-targets/.gitkeep

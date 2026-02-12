@@ -1,6 +1,6 @@
 ---
-name: rw-plan-lite
-description: "Ralph Lite: add one feature by appending Feature Notes + creating TASK files + syncing PROGRESS"
+name: rw-plan
+description: "Ralph Plan: add feature notes + create TASK-XX files + sync PROGRESS"
 agent: agent
 argument-hint: "No inline input. Prepare .ai/features/YYYYMMDD-HHMM-<slug>.md with Status: READY_FOR_PLAN."
 ---
@@ -10,9 +10,11 @@ Language policy reference: `.ai/CONTEXT.md`
 Quick summary:
 - Append one feature note to `PLAN.md`.
 - Create new atomic `TASK-XX-*.md` files without renumbering existing tasks.
-  - Default features: 3-6 tasks
-  - Bootstrap foundation features: 10-20 tasks (5 allowed only when clearly very small/simple)
-- Add only new `pending` rows to `PROGRESS.md`.
+  - `Planning Profile: STANDARD` (default): existing policy
+    - Default features: 3-7 tasks
+    - Bootstrap foundation features: 10-20 tasks (5 allowed only when clearly very small/simple)
+  - `Planning Profile: FAST_TEST`: 2-3 tasks (all feature types, test-speed priority)
+- Ensure new `pending` rows are visible in active `PROGRESS.md` even when archives exist.
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
@@ -20,7 +22,7 @@ Step 0 (Mandatory):
 3) Validate language policy internally and proceed silently (no confirmation line).
 4) Do not modify any file before Step 0 completes.
 
-You are adding one feature to an existing Ralph Lite orchestration workspace.
+You are adding a new feature to an existing Ralph orchestration workspace.
 
 Target files:
 - .ai/PLAN.md
@@ -41,6 +43,10 @@ Rules:
   - If likely >120 minutes, split; if <30 minutes and not independently valuable, merge.
 - Verification rule:
   - Each task must include at least one concrete verification command in `Verification`.
+- Deterministic planning mode:
+  - Never call `#tool:vscode/askQuestions` in `rw-plan`.
+  - Never ask interactive follow-up questions in `rw-plan`.
+  - Resolve selection/clarification with deterministic defaults and continue.
 
 Feature input resolution (required):
 1) Read `.ai/features/`.
@@ -67,20 +73,16 @@ Feature input resolution (required):
    - then a short fix guide:
      - open the latest `YYYYMMDD-HHMM-<slug>.md`
      - change `Status: DRAFT` (or current value) to `Status: READY_FOR_PLAN`
-7) If multiple READY candidates exist, resolve selection interactively (single choice):
-   - Use `#tool:vscode/askQuestions` once with one single-choice question:
-     - "Multiple READY_FOR_PLAN feature files were found. Which file should be planned now?"
-     - Choices: each READY filename + `CANCEL`
-   - If `#tool:vscode/askQuestions` is unavailable, ask the same single-choice selection in chat once.
-   - If one filename is selected, use that file as the input source.
-   - If user selects `CANCEL` or no valid selection is obtained after that single interaction, stop immediately and print:
-     - first line exactly: `FEATURE_MULTI_READY`
-     - then a short fix guide:
-       - keep exactly one file as `Status: READY_FOR_PLAN`
-       - set other READY files to `Status: DRAFT` (or `Status: PLANNED` if already consumed)
+7) If multiple READY candidates exist:
+   - Select the latest READY filename by lexical sort and continue.
+   - Print `FEATURE_MULTI_READY_AUTOSELECTED=<selected-filename>`.
 8) If exactly one READY candidate exists, select that file.
-9) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
-10) In any unresolved error case above, stop immediately without additional clarification questions.
+9) Resolve planning profile from selected feature file:
+   - If exact line `Planning Profile: FAST_TEST` exists, set `PLANNING_PROFILE=FAST_TEST`.
+   - Else if exact line `Planning Profile: STANDARD` exists, set `PLANNING_PROFILE=STANDARD`.
+   - Else set `PLANNING_PROFILE=STANDARD` (default).
+10) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
+11) In any unresolved error case above, stop immediately without additional clarification questions.
 
 Normalization rules:
 1) Backward compatibility: if resolved input already includes structured sections (`goal`, `constraints`, `acceptance`), preserve and use them.
@@ -100,38 +102,31 @@ Workflow:
 1) Ensure baseline workspace files exist before planning:
    - If `.ai/PLAN.md` is missing, create a minimal skeleton with:
      - `# Workspace Plan`
-     - `## 개요`
+     - `## Overview`
      - one short line: `rw-plan initialized PLAN.md because it was missing.`
      - `## Feature Notes (append-only)` (empty section)
    - If `.ai/PROGRESS.md` is missing, create:
-     - `# 진행 현황`
+     - `# Progress`
      - `## Task Status`
      - `| Task | Title | Status | Commit |`
      - `|------|-------|--------|--------|`
      - `## Log`
-   - Then read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and list existing `.ai/tasks/TASK-*.md` filenames.
+   - Then read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and list existing `.ai/tasks/TASK-*.md` filenames. Open only the needed task files.
 2) Resolve feature input using the required precedence rules above.
-3) Clarification-first planning:
-   - After feature input is resolved, run 2~5 clarification rounds when ambiguity remains.
-   - Ask 1~3 focused questions per round (single-choice preferred when practical).
-   - Resolve at least before decomposition (unless user selects `AI_DECIDE`):
-     - implementation/module boundaries
-     - dependency/order constraints between tasks
-     - verification commands and pass criteria
-     - out-of-scope boundaries
-     - risk-sensitive constraints (compatibility, migration, rollback)
-   - Do not stop questioning early if high-impact ambiguity remains and round budget is available.
-   - If details are sufficient early, proceed immediately.
-4) Build a normalized feature spec (`Goal`, `Constraints`, `Acceptance`) using resolved input.
-   - Apply defaults only when user explicitly chooses `AI_DECIDE` or clarification budget is exhausted.
+3) Deterministic planning:
+   - Do not ask follow-up questions.
+   - Resolve ambiguity from repository context first, then apply safe defaults.
+4) Build a normalized feature spec (`Goal`, `Constraints`, `Acceptance`) using resolved input and defaults.
 5) Append one new Feature Notes line to PLAN.md in this format:
    - YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.
 6) Determine next available TASK number from existing task files (max + 1).
 7) Create new atomic task files for the feature under `.ai/tasks/` as `TASK-XX-<slug>.md`.
    - Task count policy:
-     - Default features: 3~6 tasks.
-     - Bootstrap foundation features (slug/name indicates bootstrap+foundation): 10~20 tasks.
-     - If bootstrap scope is clearly very small/simple, 5 tasks are allowed.
+     - If `PLANNING_PROFILE=FAST_TEST`: 2~3 tasks (including bootstrap foundation features).
+     - If `PLANNING_PROFILE=STANDARD`:
+       - Default features: 3~7 tasks.
+       - Bootstrap foundation features (slug/name indicates bootstrap+foundation): 10~20 tasks.
+       - If bootstrap scope is clearly very small/simple, 5 tasks are allowed.
    Each file must include:
    - Title
    - Dependencies
@@ -143,8 +138,9 @@ Workflow:
      - Require evidence format: `command`, `exit code`, `key output`.
      - Include at least one concrete command per task.
    - Keep the section headers above exactly as written, but write each section value/prose in the resolved user-document language.
-8) Update `.ai/PROGRESS.md` Task Status table by adding only new rows as `pending` with commit `-`.
-   Keep existing rows unchanged.
+8) Update `.ai/PROGRESS.md` Task Status table by adding new rows as `pending` with commit `-`.
+   - Keep existing rows unchanged.
+   - If PROGRESS table is archived/compact, still ensure new pending rows are present in the active Task Status section.
    - Use the same resolved user-document language for each new `Title` value.
 9) Add one new log entry in PROGRESS Log:
    - YYYY-MM-DD — Added feature planning tasks TASK-XX~TASK-YY for [feature-slug].
@@ -159,3 +155,6 @@ Output format at end:
 - Created task files list
 - PROGRESS rows added count
 - Feature file status update result
+- `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
+- `FEATURE_MULTI_READY_AUTOSELECTED=<filename|none>`
+- `NEXT_COMMAND=rw-run`

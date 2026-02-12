@@ -10,27 +10,25 @@ This repository serves two purposes:
 ## How It Works
 
 ```
-rw-new-project  →  rw-run-*  →  rw-feature  →  rw-plan-*  →  rw-run-*  →  rw-archive
-(신규/초기화+bootstrap) (bootstrap 구현) (기능별)      (계획)        (자동 루프)    (수동)
+rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  →  rw-plan  →  rw-run  →  rw-review  →  rw-archive
+(신규/초기화+feature-seed) (bootstrap 계획) (구현 루프)      (수동 리뷰)    (기능별)      (계획)        (구현 루프)    (수동 리뷰)    (수동)
 ```
 
-1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + discovery + bootstrap feature/task decomposition in one run)
-2. **`rw-run-lite` / `rw-run-strict`** — Implements bootstrap tasks first
-3. **`rw-feature`** — Creates additional feature specification files
-4. **`rw-plan-lite` / `rw-plan-strict`** — Breaks additional features into atomic tasks
-5. **`rw-run-lite` / `rw-run-strict`** — Continues autonomous implementation loop
-6. **`rw-archive`** — Archives completed progress when it grows large
+1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + low-friction discovery + bootstrap feature seed generation)
+2. **`rw-doctor`** — Optional standalone preflight diagnostic (rw-run always executes equivalent preflight once before loop)
+3. **`rw-run`** — Runs implementation subagent loop
+4. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
+5. **`rw-feature`** — Creates additional feature specification files
+6. **`rw-plan`** — Breaks additional features into atomic tasks
+7. **`rw-archive`** — Archives completed progress when it grows large
 
 `rw-init` remains available as a scaffold-only fallback when you want non-interactive initialization.
 
-### Two Modes
+### Runtime Policy
 
-| | Lite | Strict |
-|---|---|---|
-| Reviewer subagent | No | Yes (validates each task) |
-| Review failure tracking | N/A | `REVIEW_FAIL` (1/3, 2/3) → `REVIEW-ESCALATE` (3/3) |
-| Archive on threshold | Warning only (continues) | Hard stop (manual archive required) |
-| Best for | Small/fast features | Critical/complex features |
+- Single `rw-run` policy (no lite/strict split).
+- Review is manual and explicit via `rw-review` (subagent-backed batch review, deterministic parallel gate).
+- Archive threshold is hard-stop; run resumes after manual `rw-archive`.
 
 ### Key Benefits
 
@@ -52,47 +50,144 @@ cd copilot-ralph-wiggum-example
 ./scripts/extract-template.sh ~/your-project
 ```
 
-This copies 12 files into your project:
+This copies 20 files into your project:
 
 ```
 your-project/
 ├── .github/prompts/           # 8 orchestration prompts
 │   ├── rw-init.prompt.md
 │   ├── rw-new-project.prompt.md
+│   ├── rw-doctor.prompt.md
 │   ├── rw-feature.prompt.md
-│   ├── rw-plan-lite.prompt.md
-│   ├── rw-plan-strict.prompt.md
-│   ├── rw-run-lite.prompt.md
-│   ├── rw-run-strict.prompt.md
-│   └── rw-archive.prompt.md
+│   ├── rw-plan.prompt.md
+│   ├── rw-run.prompt.md
+│   ├── rw-review.prompt.md
+│   ├── rw-archive.prompt.md
+│   ├── RW-INTERACTIVE-POLICY.md
+│   └── RW-TARGET-ROOT-RESOLUTION.md
+├── scripts/
+│   ├── rw-resolve-target-root.sh
+│   ├── rw-bootstrap-scaffold.sh
+│   └── rw-target-registry.sh
 └── .ai/                       # Structural files
     ├── CONTEXT.md             # Language policy & parser tokens
     ├── GUIDE.md               # Operational guide
-    └── features/
-        ├── FEATURE-TEMPLATE.md
-        └── README.md
+    ├── features/
+    │   ├── FEATURE-TEMPLATE.md
+    │   └── README.md
+    └── templates/
+        ├── CONTEXT-BOOTSTRAP.md
+        ├── PROJECT-CHARTER-TEMPLATE.md
+        └── BOOTSTRAP-FEATURE-TEMPLATE.md
 ```
 
 ### Option 2: Manual Copy
 
 Copy these paths from this repo into your project:
-- `.github/prompts/*.prompt.md` (all 8 files)
+- `.github/prompts/*.prompt.md` (all 8 orchestration files)
+- `.github/prompts/RW-INTERACTIVE-POLICY.md`
+- `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md`
+- `scripts/rw-resolve-target-root.sh`
+- `scripts/rw-bootstrap-scaffold.sh`
+- `scripts/rw-target-registry.sh`
 - `.ai/CONTEXT.md`
 - `.ai/GUIDE.md`
 - `.ai/features/FEATURE-TEMPLATE.md`
 - `.ai/features/README.md`
+- `.ai/templates/CONTEXT-BOOTSTRAP.md`
+- `.ai/templates/PROJECT-CHARTER-TEMPLATE.md`
+- `.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md`
 
 Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`
 
 ### After Extraction
 
 1. Open your project in VS Code with GitHub Copilot
-2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + project-direction discovery + bootstrap feature/task generation
-3. Run **`rw-run-lite`** (or `rw-run-strict`) to implement bootstrap tasks
-4. Run **`rw-feature`** to define additional product features
-5. Run **`rw-plan-lite`** (or `rw-plan-strict`) to generate tasks for that feature
-6. Run **`rw-run-lite`** (or `rw-run-strict`) to continue the autonomous loop
-7. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
+2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + lightweight project-direction discovery + bootstrap feature seed generation
+   - `rw-new-project` uses `scripts/rw-bootstrap-scaffold.sh` as the default scaffold path.
+   - `rw-new-project` refreshes target pointers automatically:
+     - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
+     - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
+     - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
+   - discovery is adaptive: ask intent first, then generate only high-impact follow-up questions from that intent (safe defaults for unanswered items)
+3. Run **`rw-plan`** to generate bootstrap tasks from the seeded bootstrap feature
+   - For quick smoke tests, set `Planning Profile: FAST_TEST` in the target feature file before running `rw-plan` (generates 2-3 tasks).
+4. Run **`rw-run`** to implement tasks (auto preflight runs once before loop)
+5. Run **`rw-review`** to validate the completed batch
+6. If review leaves pending tasks, re-run **`rw-run`** and then run **`rw-review`** again
+7. Run **`rw-feature`** to define additional product features
+8. Run **`rw-plan`** to generate tasks for that feature
+9. Run **`rw-run`**, then run **`rw-review`**
+10. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
+   - `rw-init` refreshes the same target-pointer trio as `rw-new-project`
+
+### Target Root Resolution
+
+`rw-doctor`, `rw-run`, and `rw-review` resolve target root in this order:
+1. `workspace-root/.ai/runtime/rw-active-target-id.txt`
+2. `workspace-root/.ai/runtime/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
+3. `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
+
+Shared resolver script:
+
+```bash
+./scripts/rw-resolve-target-root.sh "$(pwd)"
+```
+
+Resolver contract reference:
+- `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md`
+
+Manual target switch from workspace root:
+
+```bash
+./scripts/rw-target-registry.sh set-active "$(pwd)" my-project "/absolute/path/to/project"
+./scripts/rw-target-registry.sh resolve-active "$(pwd)"
+```
+
+If VS Code workspace root and actual target project root are different, update active target id + registry first, then keep legacy pointer synchronized for compatibility.
+
+### Verification Guidance
+
+This branch intentionally removes bundled Copilot test prompts (`copilot-rw-*`) to keep operations minimal.
+For verification, run the core flow directly in Copilot Chat:
+
+1. `rw-new-project`
+2. `rw-plan`
+3. `rw-run`
+4. `rw-review` (batch review after run)
+5. `rw-feature`
+6. `rw-plan`
+7. `rw-run`
+8. `rw-review`
+
+### Default Operation Path (Single Path)
+
+- Default path (always start here):
+  - `rw-new-project -> rw-plan -> rw-run -> rw-review`
+- Continue feature work with:
+  - `rw-feature -> rw-plan -> rw-run -> rw-review`
+- Use exception prompts only when needed:
+  - `rw-doctor`: only when checking preflight blockers explicitly
+  - `rw-archive`: only when archive thresholds stop `rw-run`
+
+### Failure Triage (3 Groups)
+
+- `ENV` (environment/tooling/root resolution)
+  - Examples: `RW_ENV_UNSUPPORTED`, `TOP_LEVEL_REQUIRED`, `RW_TARGET_ROOT_INVALID`, `GIT_REPO_MISSING`
+  - Action: fix environment/root/tool availability first, then rerun same command.
+- `FLOW` (workflow order/state mismatch)
+  - Examples: `FEATURE_NOT_READY`, `FEATURE_FILE_MISSING`, `RW_TASK_DEPENDENCY_BLOCKED`, `REVIEW_BLOCKED`
+  - Action: follow `NEXT_COMMAND` and correct status/order before rerun.
+- `DATA` (workspace file readability/format)
+  - Examples: `LANG_POLICY_MISSING`, `RW_CORE_FILE_UNREADABLE`
+  - Action: restore required files/headers/tokens, then rerun.
+
+### Fast Test Default
+
+- For test runs, treat `Planning Profile: FAST_TEST` as the default.
+- Before `rw-plan`, set this line in the selected feature file:
+  - `Planning Profile: FAST_TEST`
+- This keeps planning output in the 2-3 task range for quick validation cycles.
 
 ## Orchestration File Reference
 
@@ -100,33 +195,43 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 
 | Prompt | Purpose |
 |---|---|
-| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + discovery + bootstrap feature/task decomposition) |
+| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + low-friction discovery + bootstrap feature seed generation) |
 | [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
+| [`rw-doctor`](.github/prompts/rw-doctor.prompt.md) | Standalone preflight check for top-level/runSubagent/git/.ai readiness and PASS-stamp write |
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
-| [`rw-plan-lite`](.github/prompts/rw-plan-lite.prompt.md) | Generate task breakdown (Lite mode) |
-| [`rw-plan-strict`](.github/prompts/rw-plan-strict.prompt.md) | Generate task breakdown (Strict mode) |
-| [`rw-run-lite`](.github/prompts/rw-run-lite.prompt.md) | Orchestration loop (Lite mode) |
-| [`rw-run-strict`](.github/prompts/rw-run-strict.prompt.md) | Orchestration loop + reviewer (Strict mode) |
+| [`rw-plan`](.github/prompts/rw-plan.prompt.md) | Generate task breakdown for one READY_FOR_PLAN feature |
+| [`rw-run`](.github/prompts/rw-run.prompt.md) | Orchestration loop for implementation subagent dispatch (target-root pointer file) |
+| [`rw-review`](.github/prompts/rw-review.prompt.md) | Manual reviewer rules for subagent-backed batch validation of completed tasks |
 | [`rw-archive`](.github/prompts/rw-archive.prompt.md) | Archive completed progress |
 
 ### Workspace (`.ai/`)
 
 | File | Role |
 |---|---|
-| [`CONTEXT.md`](.ai/CONTEXT.md) | Language policy & machine-parseable tokens (read by every prompt at Step 0) |
+| [`CONTEXT.md`](.ai/CONTEXT.md) | Language policy & machine-parseable tokens (read by every orchestration prompt `rw-*` at Step 0) |
 | [`GUIDE.md`](.ai/GUIDE.md) | Operational guide for the RW workflow |
-| [`PLAN.md`](.ai/PLAN.md) | Workspace metadata + append-only Feature Notes (`rw-new-project` creates/updates overview, `rw-plan-*` appends feature notes) |
-| [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (`rw-new-project` or `rw-init` creates skeleton, `rw-plan-*`/`rw-run-*` update entries) |
-| `tasks/TASK-XX-*.md` | Individual task definitions (`rw-new-project` creates bootstrap `TASK-01+`; additional feature tasks are created by `rw-plan-*`) |
+| [`PLAN.md`](.ai/PLAN.md) | Workspace metadata + append-only Feature Notes (`rw-new-project` creates/updates overview, `rw-plan` appends feature notes) |
+| [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (`rw-new-project` or `rw-init` creates skeleton, `rw-plan`/`rw-run` update entries) |
+| `tasks/TASK-XX-*.md` | Individual task definitions (bootstrap and additional feature tasks are created by `rw-plan`) |
 | `features/*.md` | Feature specifications (bootstrap feature may be created by `rw-new-project`; additional ones are created by `rw-feature`) |
 
 ### Safety Mechanisms
 
 - **Step 0** — Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first; fails with `LANG_POLICY_MISSING` if missing
+- **rw-doctor** — Standalone preflight diagnostic for top-level turn, runSubagent availability, git readiness, and `.ai` structure
+- **RW_DOCTOR_AUTORUN_BEGIN / RW_DOCTOR_AUTORUN_PASS** — `rw-run` auto-preflight path that runs once before each loop execution
 - **PAUSE.md** — Create `.ai/PAUSE.md` to halt the orchestration loop
 - **ARCHIVE_LOCK** — Prevents concurrent archive operations
-- **REVIEW-ESCALATE** — (Strict mode) 3 consecutive review failures trigger escalation and halt
-- **MANUAL_FALLBACK_REQUIRED** — Graceful degradation when `runSubagent` is unavailable
+- **REVIEW-ESCALATE** — 3 consecutive review failures trigger escalation and require manual intervention
+- **RW_ENV_UNSUPPORTED** — Explicit signal that autonomous mode is unavailable in the current environment
+- **RW_TARGET_ROOT_INVALID** — Target root pointer is invalid (empty/non-absolute/missing path)
+- **rw-run Dispatch Guard** — One subagent dispatch must complete exactly one locked task (`LOCKED_TASK_ID`)
+
+### Next Command Contract
+
+- Every operational prompt (`rw-*`) should end with one machine-readable line:
+  - `NEXT_COMMAND=<prompt-name-or-action>`
+- Follow `NEXT_COMMAND` as the primary next step signal for the workflow.
 
 ## Example: Todo CLI
 
