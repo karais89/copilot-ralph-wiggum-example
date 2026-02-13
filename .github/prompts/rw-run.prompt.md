@@ -45,7 +45,10 @@ Step 0 (Mandatory):
    - print `RW_DOCTOR_AUTORUN_BEGIN`
    - run rw-doctor-equivalent preflight checks inline (same target):
      - top-level turn
-     - `#tool:agent/runSubagent` probe (must return `RUNSUBAGENT_OK`)
+     - `#tool:agent/runSubagent` probe using this exact probe prompt:
+       - `Return exactly one line: RUNSUBAGENT_OK`
+       - `Do not call any tools.`
+       - pass only when final output is exactly one line: `RUNSUBAGENT_OK`
      - git repository readiness
      - `<AI_ROOT>`, `<TASKS>`, `TARGET_ROOT/.ai/features/` readability
      - `<PLAN>` and `<PROGRESS>` readability when they exist
@@ -197,6 +200,7 @@ Rules:
 - Read/write only files under `TARGET_ROOT` for this run. Do not touch another workspace-level `.ai`.
 - Never call `#tool:agent/runSubagent` from this subagent (nested subagent calls are disallowed).
 - Run build/verification commands; if issues are found, fix them all.
+- After implementation, run the task Verification command at least once; on failure, self-fix and re-run verification up to 2 times before reporting.
 - Never fabricate verification output, completion status, or commit evidence.
 - Update <PROGRESS> for `LOCKED_TASK_ID` only (status to `completed`, commit message, and a Log entry).
 - Do not change status rows for any other task.

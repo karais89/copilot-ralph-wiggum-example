@@ -36,12 +36,12 @@ Critical constraints (never override):
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
-2) If `.ai/CONTEXT.md` is missing, create it first with a minimal bootstrap language-policy template, then read it.
+2) If `.ai/CONTEXT.md` is missing, create it from `.ai/templates/CONTEXT-BOOTSTRAP.md` when available; otherwise create it with the fallback bootstrap language-policy template below, then read it.
 3) If `.ai/CONTEXT.md` exists but is unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
 4) Validate language policy internally and proceed silently (no confirmation line).
 5) Do not modify any file before Step 0 completes, except creating `.ai/CONTEXT.md` when missing.
 
-Bootstrap template for `.ai/CONTEXT.md` (when missing):
+Fallback bootstrap template for `.ai/CONTEXT.md` (use only when `.ai/templates/CONTEXT-BOOTSTRAP.md` is missing):
 - `# Workspace Context`
 - `## Language Policy`
   - Prompt body language (`.github/prompts/rw-*.prompt.md`): English (required)

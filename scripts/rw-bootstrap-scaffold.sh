@@ -100,7 +100,7 @@ if [ ! -f "$ai_root/PROGRESS.md" ]; then
     for task_file in "$tasks_dir"/TASK-*.md; do
       [ -f "$task_file" ] || continue
       task_id="$(basename "$task_file" | sed -E 's/^(TASK-[0-9]+).*/\1/')"
-      title="$(sed -n '1{s/^# TASK-[0-9]\+: *//;p;}' "$task_file")"
+      title="$(sed -En '1{s/^# TASK-[0-9]+: *//;p;}' "$task_file")"
       [ -n "$title" ] || title="$(basename "$task_file" .md)"
       printf '| %s | %s | pending | - |\n' "$task_id" "$title"
     done

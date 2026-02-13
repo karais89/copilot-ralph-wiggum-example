@@ -49,8 +49,10 @@ Checks (all required):
 2) runSubagent availability:
    - Verify `#tool:agent/runSubagent` is available in the current environment.
    - Require a concrete probe:
-     - Attempt one minimal call to `#tool:agent/runSubagent` with a no-op prompt that returns `RUNSUBAGENT_OK`.
-     - Accept PASS only when the probe call is actually invoked and returns `RUNSUBAGENT_OK`.
+     - Attempt one minimal call to `#tool:agent/runSubagent` using this exact probe prompt:
+       - `Return exactly one line: RUNSUBAGENT_OK`
+       - `Do not call any tools.`
+     - Accept PASS only when the probe call is actually invoked and its final output is exactly one line: `RUNSUBAGENT_OK`.
    - If probe cannot run or returns any other result, mark FAIL with token `RW_ENV_UNSUPPORTED`.
 3) Git repository readiness:
    - Verify `TARGET_ROOT` is inside a git repository.
