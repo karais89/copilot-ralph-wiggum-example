@@ -10,9 +10,11 @@ This repository serves two purposes:
 ## How It Works
 
 ```
-rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  →  rw-plan  →  rw-run  →  rw-review  →  rw-archive
-(신규/초기화+feature-seed) (bootstrap 계획) (구현 루프)      (수동 리뷰)    (기능별)      (계획)        (구현 루프)    (수동 리뷰)    (수동)
+rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  →  rw-plan  →  rw-run  →  rw-review
+(신규/초기화+feature-seed) (bootstrap 계획) (구현 프롬프트) (리뷰 프롬프트) (기능별)      (계획)        (구현 프롬프트) (리뷰 프롬프트)
 ```
+
+`rw-archive` is a manual exception step, only when archive thresholds stop `rw-run`.
 
 1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + low-friction discovery + bootstrap feature seed generation)
 2. **`rw-doctor`** — Optional standalone preflight diagnostic (rw-run always executes equivalent preflight once before loop)
