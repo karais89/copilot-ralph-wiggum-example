@@ -66,9 +66,9 @@ Steps:
    - Set overview to describe this project: SMOKE_PROJECT_IDEA
    - Technology stack: Node.js >= 18, TypeScript (strict mode), Commander.js
    - Ensure `## Feature Notes (append-only)` section exists.
-4) Create `.ai/notes/PROJECT-CHARTER-<YYYYMMDD>.md`:
+4) Create `<ACTUAL_TARGET_ROOT>/.ai/notes/PROJECT-CHARTER-<YYYYMMDD>.md`:
    - Project summary, MVP scope, constraints, verification baseline.
-5) Create one bootstrap feature file `.ai/features/<YYYYMMDD-HHMM>-bootstrap-foundation.md`:
+5) Create one bootstrap feature file `<ACTUAL_TARGET_ROOT>/.ai/features/<YYYYMMDD-HHMM>-bootstrap-foundation.md`:
    - `Status: READY_FOR_PLAN`
    - `Planning Profile: FAST_TEST`
    - Summary, need statement, goal, scope, acceptance criteria.
@@ -108,7 +108,7 @@ NON_INTERACTIVE_MODE=true — do not ask questions, do not call askQuestions, us
 Steps:
 1) Read `<ACTUAL_TARGET_ROOT>/.ai/CONTEXT.md`.
 2) Read the feature file at `<ACTUAL_FEATURE_FILE_PATH>`.
-3) Since `Planning Profile: FAST_TEST`, create exactly 2 task files:
+3) Deterministic baseline for this first cycle: create exactly 2 task files (`TASK-02`, `TASK-03`):
    - `TASK-02-init-project.md`: Initialize Node.js + TypeScript project (package.json, tsconfig.json, .gitignore).
      - Dependencies: TASK-01
      - Verification: `npm install && npx tsc --version`
@@ -118,7 +118,7 @@ Steps:
    - Each task file follows the standard template: `# TASK-XX: title`, `## Dependencies`, `## Description`, `## Acceptance Criteria`, `## Files to Create/Modify`, `## Verification`
 4) Append a Feature Notes entry to `<ACTUAL_TARGET_ROOT>/.ai/PLAN.md`:
    - `- <YYYY-MM-DD>: [<feature-slug>] <summary>. Related tasks: TASK-02~TASK-03.`
-5) Update `.ai/PROGRESS.md`:
+5) Update `<ACTUAL_TARGET_ROOT>/.ai/PROGRESS.md`:
    - Add `TASK-02` and `TASK-03` rows as `pending` to the Task Status table.
    - Append a Log entry for the plan action.
 6) Update the feature file: change `Status: READY_FOR_PLAN` to `Status: PLANNED`.
@@ -129,7 +129,7 @@ Output contract (last line):
 </SMOKE_PLAN_PROMPT>
 
 ### Gate 2: validate plan results
-Check all of the following:
+Check all of the following. If any fails, print `SMOKE_TEST_FAIL plan: <detail>` and stop.
 - `.ai/tasks/TASK-02-*.md` exists with `## Dependencies`, `## Verification`
 - `.ai/tasks/TASK-03-*.md` exists with `## Dependencies`, `## Verification`
 - `.ai/PROGRESS.md` contains `TASK-02` row with `pending` status
@@ -284,8 +284,8 @@ Steps:
      - Verification: `npm run build && node dist/index.js goodbye World`
    - Additional tasks optional (e.g. tests, docs). Total 2-3 per FAST_TEST policy.
 3) Append Feature Notes entry to `<ACTUAL_TARGET_ROOT>/.ai/PLAN.md`.
-4) Add new task rows as `pending` to PROGRESS Task Status.
-5) Append a Log entry.
+4) Add new task rows as `pending` to `<ACTUAL_TARGET_ROOT>/.ai/PROGRESS.md` Task Status.
+5) Append a Log entry to `<ACTUAL_TARGET_ROOT>/.ai/PROGRESS.md`.
 6) Change feature file status to `PLANNED`.
 7) Do NOT create git commits.
 
@@ -316,6 +316,7 @@ For each task ID in `PLAN2_TASK_IDS` (in dependency order):
 - If not, print `SMOKE_TEST_FAIL run-2: <task-id> not completed after dispatch` and stop.
 
 ### Gate 7: validate run-2 results
+Check the following. If any fails, print `SMOKE_TEST_FAIL run-2: <detail>` and stop.
 - All tasks in `PLAN2_TASK_IDS` show `completed` in PROGRESS.
 - `npm run build` succeeds.
 - `node dist/index.js goodbye World` outputs `Goodbye, World!`.
