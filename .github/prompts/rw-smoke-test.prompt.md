@@ -39,13 +39,15 @@ Execution rules:
    - Otherwise, create a temp directory: run `mktemp -d /tmp/rw-smoke-XXXXXX` and use the result.
 2) Determine `TEMPLATE_SOURCE`:
    - The current VS Code workspace root (where this prompt file lives).
-3) Run `"$TEMPLATE_SOURCE/scripts/extract-template.sh" "$WORKSPACE_ROOT"`.
+3) Set `PROMPT_ROOT`:
+   - Absolute path to the directory containing this file (`.github/prompts`).
+4) Run `"$TEMPLATE_SOURCE/scripts/extract-template.sh" "$WORKSPACE_ROOT"`.
    - If it fails, print `SMOKE_TEST_FAIL setup: extract-template.sh failed` and stop.
-4) Initialize git:
+5) Initialize git:
    - `cd "$WORKSPACE_ROOT" && git init && git add -A && git commit -m "chore: initial extract"`
    - If any git command fails, print `SMOKE_TEST_FAIL setup: git failed` and stop.
-5) Set `TARGET_ROOT` = resolved `WORKSPACE_ROOT` (absolute path).
-6) Print `SMOKE_SETUP_OK TARGET_ROOT=` followed by the resolved path.
+6) Set `TARGET_ROOT` = resolved `WORKSPACE_ROOT` (absolute path).
+7) Print `SMOKE_SETUP_OK TARGET_ROOT=` followed by the resolved path.
 
 ## Phase Execution
 

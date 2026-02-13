@@ -10,7 +10,7 @@ Steps:
    - Feature summary: add goodbye command that says farewell by name
    - Need statement: User wants to say goodbye. Desired outcome: `hello goodbye <name>` -> "Goodbye, <name>!"
    - Acceptance: `npm run build && node dist/index.js goodbye World`
-3) Do NOT modify PLAN, PROGRESS, or any task files.
+3) Do NOT modify `PLAN.md`, `PROGRESS.md`, or any task files.
 4) Do NOT create git commits.
 
 Output contract (last line):
