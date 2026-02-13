@@ -65,15 +65,19 @@
   - 빈/템플릿 저장소에서 스캐폴딩 + 프로젝트 방향 확정 + bootstrap feature/task 생성을 한 번에 수행
   - `PLAN` 개요 구체화 + `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md` 작성
   - bootstrap foundation 범위에서 `TASK-02+` 생성 허용
-  - 일반 기능 분해는 `rw-plan-*`에서 수행
+  - 일반 기능 분해는 `rw-plan`에서 수행
 - `rw-feature`
   - 기능 스펙 파일 작성(`.ai/features/*.md`, `Status: READY_FOR_PLAN`)
   - `PLAN`/`PROGRESS`/`tasks` 수정 금지
-- `rw-plan-lite` / `rw-plan-strict`
+- `rw-plan`
   - feature 입력을 `TASK-XX`로 분해
   - `PLAN`의 `Feature Notes` append + `PROGRESS` 상태 동기화
-- `rw-run-lite` / `rw-run-strict`
+- `rw-run`
   - 태스크 구현 루프 실행 및 검증
+- `rw-review`
+  - 배치 리뷰 수행(완료 태스크 검증, `REVIEW_OK`/`REVIEW_FAIL`/`REVIEW-ESCALATE` 반영)
+- `rw-archive`
+  - `PROGRESS` 아카이브 수행(`.ai/PAUSE.md` 존재 상태에서 수동 실행, `ARCHIVE_LOCK` 사용)
 
 ## 추가 가드레일
 
@@ -89,4 +93,4 @@
 5. `runSubagent` 미지원 환경에서는 즉시 종료하지 않고 수동 fallback 절차를 출력한 뒤 안전 중지한다.
 6. Strict 복구 규칙:
    - `REVIEW-ESCALATE TASK-XX ...`가 기록된 태스크를 수동 개입으로 해결했으면, `.ai/PROGRESS.md` Log에
-     `REVIEW-ESCALATE-RESOLVED TASK-XX: <해결 요약>`을 append한 뒤 `rw-run-strict`를 재실행한다.
+     `REVIEW-ESCALATE-RESOLVED TASK-XX: <해결 요약>`을 append한 뒤 `rw-run`을 재실행한다.

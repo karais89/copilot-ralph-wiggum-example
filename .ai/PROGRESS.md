@@ -52,3 +52,6 @@
 - **2026-02-08** — TASK-18 completed: `src/commands/clear.ts`를 추가해 완료된 todo 일괄 삭제와 삭제 개수 메시지(`✔ Cleared N completed todo(s)`)를 구현했습니다.
 - **2026-02-08** — TASK-19 completed: `src/index.ts`에 `todo clear` 명령을 등록하고 `clearCommand`를 연결했습니다.
 - **2026-02-08** — TASK-20 completed: `npm run build` 후 `todo clear` 4개 시나리오(빈 목록, 완료 없음, 일부 완료 삭제, 전체 완료 삭제)를 검증했습니다. 핵심 출력은 `No completed todos to clear.`, `✔ Cleared 2 completed todo(s)`, `✔ Cleared 1 completed todo(s)`, `No todos found` 입니다.
+- **2026-02-13** — REVIEW_OK TASK-18: verification passed
+- **2026-02-13** — REVIEW_OK TASK-19: verification passed
+- **2026-02-13** — REVIEW_OK TASK-20: verification passed
