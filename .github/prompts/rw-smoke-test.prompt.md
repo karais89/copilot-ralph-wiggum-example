@@ -28,6 +28,7 @@ Rules:
 Variable notation contract:
 - **Subagent templates** use `<ACTUAL_*>` angle-bracket placeholders (e.g. `<ACTUAL_TARGET_ROOT>`, `<ACTUAL_LOCKED_TASK_ID>`). The orchestrator MUST substitute these with concrete absolute paths / values before dispatching `runSubagent`. Subagents receive only literal strings.
 - **Orchestrator instructions** (Setup, Gates, Commits, Final Report) use shell variable syntax `$TARGET_ROOT`, `$TEMPLATE_SOURCE`, etc. These refer to the orchestrator's own resolved local variables. The orchestrator expands them to concrete values when executing shell commands.
+- All orchestrator-side file checks/globs must use `"$TARGET_ROOT/.ai/..."` paths (never relative `.ai/...`).
 
 Constants:
 - `SMOKE_PROJECT_IDEA=simple hello CLI that greets users by name`
@@ -79,11 +80,11 @@ Output contract (last line):
 </SMOKE_NEWPROJECT_PROMPT>
 
 ### Gate 1: validate new-project results
-Before dispatching Phase 1, record the file counts: `CHARTER_COUNT_BEFORE` = number of `PROJECT-CHARTER-*.md` files, `FEATURE_COUNT_BEFORE` = number of feature files with `Status: READY_FOR_PLAN`.
+Before dispatching Phase 1, record the file counts: `CHARTER_COUNT_BEFORE` = number of `"$TARGET_ROOT/.ai/notes/PROJECT-CHARTER-*.md"` files, `FEATURE_COUNT_BEFORE` = number of files in `"$TARGET_ROOT/.ai/features/"` with `Status: READY_FOR_PLAN`.
 
 After subagent returns, check all of the following. If any fails, print `SMOKE_TEST_FAIL new-project: <detail>` and stop.
-- `.ai/PLAN.md` exists and contains `## Feature Notes (append-only)`
-- `.ai/PLAN.md` contains technology stack info (Node.js or TypeScript)
+- `"$TARGET_ROOT/.ai/PLAN.md"` exists and contains `## Feature Notes (append-only)`
+- `"$TARGET_ROOT/.ai/PLAN.md"` contains technology stack info (Node.js or TypeScript)
 - Number of `PROJECT-CHARTER-*.md` files > `CHARTER_COUNT_BEFORE` (new charter was created)
 - Number of feature files with `Status: READY_FOR_PLAN` > `FEATURE_COUNT_BEFORE` (new feature was created)
 - The newly created feature file contains `Planning Profile: FAST_TEST`
@@ -96,7 +97,7 @@ Print `SMOKE_GATE_PASS phase=new-project`
 
 Print `SMOKE_PHASE_BEGIN phase=plan`
 
-Identify the `READY_FOR_PLAN` feature file from `.ai/features/`.
+Identify the `READY_FOR_PLAN` feature file from `"$TARGET_ROOT/.ai/features/"`.
 
 Dispatch `#tool:agent/runSubagent` with this prompt:
 
@@ -130,11 +131,11 @@ Output contract (last line):
 
 ### Gate 2: validate plan results
 Check all of the following. If any fails, print `SMOKE_TEST_FAIL plan: <detail>` and stop.
-- `.ai/tasks/TASK-02-*.md` exists with `## Dependencies`, `## Verification`
-- `.ai/tasks/TASK-03-*.md` exists with `## Dependencies`, `## Verification`
-- `.ai/PROGRESS.md` contains `TASK-02` row with `pending` status
-- `.ai/PROGRESS.md` contains `TASK-03` row with `pending` status
-- `.ai/PLAN.md` `Feature Notes` section contains the feature slug
+- `"$TARGET_ROOT/.ai/tasks/TASK-02-*.md"` exists with `## Dependencies`, `## Verification`
+- `"$TARGET_ROOT/.ai/tasks/TASK-03-*.md"` exists with `## Dependencies`, `## Verification`
+- `"$TARGET_ROOT/.ai/PROGRESS.md"` contains `TASK-02` row with `pending` status
+- `"$TARGET_ROOT/.ai/PROGRESS.md"` contains `TASK-03` row with `pending` status
+- `"$TARGET_ROOT/.ai/PLAN.md"` `Feature Notes` section contains the feature slug
 - Feature file now has `Status: PLANNED`
 
 Commit: `cd "$TARGET_ROOT" && git add -A && git commit -m "feat: rw-plan (smoke)"`
@@ -294,7 +295,7 @@ Output contract (last line):
 </SMOKE_PLAN2_PROMPT>
 
 ### Gate 6: validate plan-2 results
-Before dispatching Phase 6, record `TASK_COUNT_BEFORE` = number of `TASK-*.md` files in `.ai/tasks/`.
+Before dispatching Phase 6, record `TASK_COUNT_BEFORE` = number of `TASK-*.md` files in `"$TARGET_ROOT/.ai/tasks/"`.
 After subagent returns, check the following. If any fails, print `SMOKE_TEST_FAIL plan-2: <detail>` and stop.
 - `TASK_COUNT_AFTER - TASK_COUNT_BEFORE` is 2 or 3 (matching FAST_TEST policy)
 - PROGRESS has the new task row(s) with `pending`
