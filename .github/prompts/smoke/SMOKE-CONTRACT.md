@@ -19,6 +19,25 @@ Output contract once pipeline starts (Setup and beyond):
   - `SMOKE_TEST_PASS total_phases=<n> dispatches=<n>`
 - Intermediate output is allowed before the final line.
 
+Result artifact contract (applies after `TARGET_ROOT` is resolved):
+- Persist final smoke results in both files:
+  - `"$TARGET_ROOT/.ai/runtime/smoke/last-result.json"`
+  - `"$TARGET_ROOT/.ai/runtime/smoke/last-result.md"`
+- Before printing a terminal final line (`SMOKE_TEST_PASS...` or `SMOKE_TEST_FAIL...`), update both artifacts first.
+- Required JSON fields:
+  - `status` (`PASS` or `FAIL`)
+  - `timestamp` (UTC ISO-8601)
+  - `target_root`
+  - `git_head`
+  - `total_phases`
+  - `dispatches`
+  - `failed_phase` (`null` on PASS)
+  - `reason` (`null` on PASS)
+  - `checks.build.status`, `checks.greet.status`, `checks.goodbye.status`, `checks.test.status` (`PASS|FAIL|SKIPPED`)
+  - `checks.<name>.detail` (short command/output summary)
+- If failure occurs before final report, write fail artifacts with the best known values (unknown values may be set to `null`), then print `SMOKE_TEST_FAIL ...` and stop.
+- If no test command is available, set `checks.test.status` to `SKIPPED`.
+
 Variable notation contract:
 - Subagent templates use `<ACTUAL_*>` placeholders.
 - Orchestrator must substitute placeholders with literal concrete values before dispatch.

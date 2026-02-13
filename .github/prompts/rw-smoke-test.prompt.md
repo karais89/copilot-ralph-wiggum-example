@@ -31,6 +31,7 @@ Execution rules:
 3) If any referenced spec/template file is missing, print `SMOKE_TEST_FAIL setup: missing spec file <path>` and stop.
 4) Execute `Setup`, then execute phase files 01-08 in order.
 5) Follow all tokens, gate checks, and stop conditions from the contract/phase docs exactly.
+6) For any terminal failure after `TARGET_ROOT` is known, write `last-result.json` and `last-result.md` first, then print `SMOKE_TEST_FAIL ...` as the final line.
 
 ## Setup
 
@@ -47,7 +48,9 @@ Execution rules:
    - `cd "$WORKSPACE_ROOT" && git init && git add -A && git commit -m "chore: initial extract"`
    - If any git command fails, print `SMOKE_TEST_FAIL setup: git failed` and stop.
 6) Set `TARGET_ROOT` = resolved `WORKSPACE_ROOT` (absolute path).
-7) Print `SMOKE_SETUP_OK TARGET_ROOT=` followed by the resolved path.
+7) Ensure result artifact directory exists:
+   - `"$TARGET_ROOT/.ai/runtime/smoke"`
+8) Print `SMOKE_SETUP_OK TARGET_ROOT=` followed by the resolved path.
 
 ## Phase Execution
 
@@ -63,9 +66,26 @@ Execute these phase specs in order:
 
 ## Final Report
 
-Print git log summary: `cd "$TARGET_ROOT" && git log --oneline`
-Print: `TARGET_ROOT="$TARGET_ROOT"`
-Print: `✅ RW smoke test completed successfully. All phases passed.`
+1) Run final verification checks:
+   - Build: `cd "$TARGET_ROOT" && npm run build`
+   - Greet output: `cd "$TARGET_ROOT" && node dist/index.js greet World` (expected: `Hello, World!`)
+   - Goodbye output: `cd "$TARGET_ROOT" && node dist/index.js goodbye World` (expected: `Goodbye, World!`)
+   - Test:
+     - If `npm test` is available in `package.json`, run `cd "$TARGET_ROOT" && npm test`.
+     - Otherwise mark test status as `SKIPPED`.
+2) Collect summary values:
+   - `git_head` = `cd "$TARGET_ROOT" && git rev-parse --short HEAD`
+   - `total_phases=8`
+   - `dispatches=<total-subagent-dispatches>`
+3) Write JSON artifact:
+   - Path: `"$TARGET_ROOT/.ai/runtime/smoke/last-result.json"`
+   - Include all required fields from `SMOKE-CONTRACT.md` Result artifact contract.
+4) Write Markdown artifact:
+   - Path: `"$TARGET_ROOT/.ai/runtime/smoke/last-result.md"`
+   - Include: overall status, phase summary, dispatch count, check results, failed phase/reason if any, git head, target root.
+5) Print git log summary: `cd "$TARGET_ROOT" && git log --oneline`
+6) Print: `TARGET_ROOT="$TARGET_ROOT"`
+7) Print: `✅ RW smoke test completed successfully. All phases passed.`
 
 Final line (must be the very last line of output):
 `SMOKE_TEST_PASS total_phases=8 dispatches=<total-subagent-dispatches>`
