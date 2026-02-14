@@ -7,6 +7,31 @@ This repository serves two purposes:
 1. **The RW orchestration template** — 9 orchestration prompts + smoke-test prompt/modules + structural docs that can be extracted and dropped into any project
 2. **A working example** — A Todo CLI app built entirely by this technique (70+ commits, 20 tasks, zero manual coding)
 
+## Quick Start (Minimal Mode)
+
+If you are new to this project, use only this 4-step loop first:
+
+1. Choose an entry prompt:
+   - New/empty repository: `rw-new-project`
+   - Existing codebase: `rw-onboard-project` then `rw-feature`
+2. `rw-plan`
+3. `rw-run`
+4. `rw-review`
+
+For the next feature, repeat:
+
+`rw-feature -> rw-plan -> rw-run -> rw-review`
+
+Use advanced/exception prompts only when needed:
+- `rw-doctor`: preflight diagnostics only
+- `rw-archive`: only when `rw-run` stops for archive thresholds
+- `rw-init`: scaffold-only fallback
+- `rw-smoke-test`: template/runtime validation
+
+Optional helper commands:
+- `./scripts/rw next`
+- `./scripts/rw go`
+
 ## How It Works
 
 ```

@@ -2,6 +2,26 @@
 
 `runSubagent` 기반으로 **기능 계획 → 태스크 구현 → 배치 리뷰**를 간결하게 돌리는 운영 가이드입니다.
 
+## 초심자 최소 모드 (권장)
+
+처음에는 아래 4단계만 사용하세요.
+
+1. 진입 프롬프트 선택
+   - 신규/빈 저장소: `rw-new-project.prompt.md`
+   - 기존 코드베이스: `rw-onboard-project.prompt.md` 실행 후 `rw-feature.prompt.md`
+2. `rw-plan.prompt.md`
+3. `rw-run.prompt.md`
+4. `rw-review.prompt.md`
+
+다음 기능부터는 아래만 반복합니다.
+- `rw-feature.prompt.md` -> `rw-plan.prompt.md` -> `rw-run.prompt.md` -> `rw-review.prompt.md`
+
+예외/고급 프롬프트는 필요할 때만 사용합니다.
+- `rw-doctor.prompt.md`: preflight 진단이 필요할 때만
+- `rw-archive.prompt.md`: `rw-run`이 archive 임계치로 중단됐을 때만
+- `rw-init.prompt.md`: 스캐폴딩만 필요할 때만
+- `rw-smoke-test.prompt.md`: 템플릿/런타임 검증이 필요할 때만
+
 ## 최소 구조
 
 ```text
