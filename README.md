@@ -31,6 +31,7 @@ rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  → 
 - Single `rw-run` policy (no lite/strict split).
 - Review is manual and explicit via `rw-review` (subagent-backed batch review, deterministic parallel gate).
 - Archive threshold is hard-stop; run resumes after manual `rw-archive`.
+- `rw-run` preflight uses doctor-stamp cache first (same target + 10-minute TTL), then falls back to full preflight on cache miss.
 
 ### Branch Strategy (github-flow)
 
@@ -63,9 +64,12 @@ cd copilot-ralph-wiggum-example
 
 # Extract only the RW template files into your project
 ./scripts/extract-template.sh ~/your-project
+
+# Optional: scaffold default user-doc language as English
+# RW_DOC_LANG=en ./scripts/rw-bootstrap-scaffold.sh ~/your-project
 ```
 
-This copies 20 files into your project:
+This copies the full RW template bundle (prompts, smoke modules, scripts, and `.ai` structural files) into your project:
 
 ```
 your-project/
@@ -83,7 +87,9 @@ your-project/
 ├── scripts/
 │   ├── rw-resolve-target-root.sh
 │   ├── rw-bootstrap-scaffold.sh
-│   └── rw-target-registry.sh
+│   ├── rw-target-registry.sh
+│   ├── validate-smoke-result.sh
+│   └── check-prompts.mjs
 └── .ai/                       # Structural files
     ├── CONTEXT.md             # Language policy & parser tokens
     ├── GUIDE.md               # Operational guide
@@ -93,7 +99,8 @@ your-project/
     └── templates/
         ├── CONTEXT-BOOTSTRAP.md
         ├── PROJECT-CHARTER-TEMPLATE.md
-        └── BOOTSTRAP-FEATURE-TEMPLATE.md
+        ├── BOOTSTRAP-FEATURE-TEMPLATE.md
+        └── SMOKE-RESULT-SCHEMA.json
 ```
 
 ### Option 2: Manual Copy
@@ -105,6 +112,8 @@ Copy these paths from this repo into your project:
 - `scripts/rw-resolve-target-root.sh`
 - `scripts/rw-bootstrap-scaffold.sh`
 - `scripts/rw-target-registry.sh`
+- `scripts/validate-smoke-result.sh`
+- `scripts/check-prompts.mjs`
 - `.ai/CONTEXT.md`
 - `.ai/GUIDE.md`
 - `.ai/features/FEATURE-TEMPLATE.md`
@@ -112,6 +121,7 @@ Copy these paths from this repo into your project:
 - `.ai/templates/CONTEXT-BOOTSTRAP.md`
 - `.ai/templates/PROJECT-CHARTER-TEMPLATE.md`
 - `.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md`
+- `.ai/templates/SMOKE-RESULT-SCHEMA.json`
 
 Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`
 

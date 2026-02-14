@@ -22,6 +22,22 @@ Repository-specific instructions for Codex agents working in this project.
 - Commit on the working branch, open PR, squash merge, then delete branch.
 - If the current branch is `main`, create/switch to a `codex/*` branch before editing.
 
+## Branch Lifecycle Policy (Required)
+
+- Keep active working branches limited: default max 1 local `codex/*` branch (temporary max 2 only for urgent parallel fixes).
+- Before starting a new branch, inspect existing `codex/*` branches and clean already-merged ones first.
+- After first push, open a Draft PR immediately so branch ownership/state is explicit.
+- After validation passes and push is done, explicitly ask whether to:
+  - merge now,
+  - keep Draft PR open, or
+  - close and delete the branch.
+- If merge is completed (by agent action or user confirmation), finish with:
+  - `git switch main`
+  - `git pull --ff-only origin main`
+  - `scripts/cleanup-branches.sh --apply` (and `--delete-remote` when requested)
+- For stale branches (no updates for 3+ days), ask to close/rebase before starting new work.
+- Use `scripts/cleanup-branches.sh` for deterministic branch cleanup.
+
 ## Change Rules
 
 - Keep parser-safe tokens in English exactly as defined (`Task Status`, `Log`, `pending`, `in-progress`, `completed`, error tokens).
@@ -46,10 +62,12 @@ Repository-specific instructions for Codex agents working in this project.
 ## Completion Handshake (Required)
 
 - For any non-readonly task that changed files, after commit you must explicitly ask merge intent before ending.
+- This is required for both `commit only` and `commit + push` flows.
 - Default closing question:
   - `작업 완료했습니다. main으로 머지(또는 PR 생성)할까요?`
-- Do not assume merge automatically, unless user explicitly requested merge/push in the same turn.
-- If user requested merge/push explicitly, execute it and then report the result.
+- Even if user explicitly requested push, do not treat push as final closure; ask merge/PR intent after reporting push result.
+- Do not assume merge automatically unless user explicitly requested merge.
+- You may skip the merge/PR question only when user explicitly says to end without further actions.
 
 ## Safety Notes
 

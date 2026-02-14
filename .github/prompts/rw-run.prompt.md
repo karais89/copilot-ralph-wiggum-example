@@ -42,35 +42,46 @@ Step 0 (Mandatory):
 5) Validate language policy internally and proceed silently (no confirmation line).
 6) Do not modify any file before Step 0 completes, except auto-repair of target-pointer files during path resolution (`TARGET_ACTIVE_ID_FILE`, `TARGET_REGISTRY_DIR/*`, `TARGET_POINTER_FILE`).
 7) Mandatory one-time preflight before loop:
-   - print `RW_DOCTOR_AUTORUN_BEGIN`
-   - run rw-doctor-equivalent preflight checks inline (same target):
-     - top-level turn
-     - `#tool:agent/runSubagent` probe using this exact probe prompt:
-       - `Return exactly one line: RUNSUBAGENT_OK`
-       - `Do not call any tools.`
-       - pass only when final output is exactly one line: `RUNSUBAGENT_OK`
-     - git repository readiness
-     - `<AI_ROOT>`, `<TASKS>`, `TARGET_ROOT/.ai/features/` readability
-     - `<PLAN>` and `<PROGRESS>` readability when they exist
-   - If any check fails:
-     - print `RW_DOCTOR_BLOCKED`
-     - print one token line per blocker (`TOP_LEVEL_REQUIRED`, `RW_ENV_UNSUPPORTED`, `GIT_REPO_MISSING`, `RW_WORKSPACE_MISSING`, `RW_CORE_FILE_UNREADABLE`)
-     - print `Fix blockers, then rerun rw-run.`
-     - print `NEXT_COMMAND=rw-run`
-     - stop
-   - If all checks pass:
-     - ensure `<RUNTIME_DIR>` exists
-     - overwrite `<DOCTOR_STAMP>` with:
+   - Cache policy:
+     - If `<DOCTOR_STAMP>` exists and all conditions below are true, skip heavy preflight:
        - `RW_DOCTOR_PASS=1`
-       - `TARGET_ID=<TARGET_ID>`
-       - `TARGET_ROOT=<TARGET_ROOT>`
-       - `CHECKED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
-     - if stamp write fails:
-       - print `RW_DOCTOR_BLOCKED`
-       - print `RW_DOCTOR_STAMP_WRITE_FAILED: <short reason>`
-       - print `NEXT_COMMAND=rw-run`
-       - stop
-     - print `RW_DOCTOR_AUTORUN_PASS`
+       - `TARGET_ID` in stamp equals current `<TARGET_ID>`
+       - `TARGET_ROOT` in stamp equals current `TARGET_ROOT`
+       - `CHECKED_AT` is parseable UTC timestamp and age is <= 600 seconds (10 minutes)
+     - On cache hit:
+       - print `RW_DOCTOR_AUTORUN_CACHE_HIT`
+       - skip inline doctor-equivalent checks and continue to loop
+     - On cache miss/stale/invalid stamp:
+       - print `RW_DOCTOR_AUTORUN_CACHE_MISS`
+       - print `RW_DOCTOR_AUTORUN_BEGIN`
+       - run rw-doctor-equivalent preflight checks inline (same target):
+         - top-level turn
+         - `#tool:agent/runSubagent` probe using this exact probe prompt:
+           - `Return exactly one line: RUNSUBAGENT_OK`
+           - `Do not call any tools.`
+           - pass only when final output is exactly one line: `RUNSUBAGENT_OK`
+         - git repository readiness
+         - `<AI_ROOT>`, `<TASKS>`, `TARGET_ROOT/.ai/features/` readability
+         - `<PLAN>` and `<PROGRESS>` readability when they exist
+       - If any check fails:
+         - print `RW_DOCTOR_BLOCKED`
+         - print one token line per blocker (`TOP_LEVEL_REQUIRED`, `RW_ENV_UNSUPPORTED`, `GIT_REPO_MISSING`, `RW_WORKSPACE_MISSING`, `RW_CORE_FILE_UNREADABLE`)
+         - print `Fix blockers, then rerun rw-run.`
+         - print `NEXT_COMMAND=rw-run`
+         - stop
+       - If all checks pass:
+         - ensure `<RUNTIME_DIR>` exists
+         - overwrite `<DOCTOR_STAMP>` with:
+           - `RW_DOCTOR_PASS=1`
+           - `TARGET_ID=<TARGET_ID>`
+           - `TARGET_ROOT=<TARGET_ROOT>`
+           - `CHECKED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
+         - if stamp write fails:
+           - print `RW_DOCTOR_BLOCKED`
+           - print `RW_DOCTOR_STAMP_WRITE_FAILED: <short reason>`
+           - print `NEXT_COMMAND=rw-run`
+           - stop
+         - print `RW_DOCTOR_AUTORUN_PASS`
 
 Important:
 - The orchestrator must never edit product code directly.
@@ -79,7 +90,7 @@ Important:
 - Never create/modify `TARGET_ROOT/.ai/tasks/TASK-XX-*.md` during `rw-run`; task decomposition belongs to `rw-plan`.
 - This prompt must run in a top-level Copilot Chat turn.
   - If not top-level, print `TOP_LEVEL_REQUIRED` and stop.
-- `rw-run` always runs doctor-equivalent preflight once before entering the loop.
+- `rw-run` uses doctor stamp cache first (TTL 10 minutes), and runs full doctor-equivalent preflight on cache miss only.
 - If `#tool:agent/runSubagent` is unavailable, fail fast with `RW_ENV_UNSUPPORTED` and stop (do not continue autonomous loop).
 - On every controlled stop/exit path in this loop, print exactly one machine-readable next step line:
   - `NEXT_COMMAND=<rw-archive|rw-review|rw-run>`

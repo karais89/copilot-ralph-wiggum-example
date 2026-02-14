@@ -7,9 +7,26 @@ on:
       - main
 
 jobs:
+  prompt-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check prompt integrity
+        run: node scripts/check-prompts.mjs
+
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    needs:
+      - prompt-integrity
     steps:
       - name: Checkout
         uses: actions/checkout@v4

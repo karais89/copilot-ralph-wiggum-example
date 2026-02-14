@@ -258,6 +258,7 @@ assert_file_exists "$S1/scripts/rw-resolve-target-root.sh" "rw-resolve-target-ro
 assert_file_exists "$S1/scripts/rw-bootstrap-scaffold.sh" "rw-bootstrap-scaffold.sh extracted"
 assert_file_exists "$S1/scripts/rw-target-registry.sh" "rw-target-registry.sh extracted"
 assert_file_exists "$S1/scripts/validate-smoke-result.sh" "validate-smoke-result.sh extracted"
+assert_file_exists "$S1/scripts/check-prompts.mjs" "check-prompts.mjs extracted"
 assert_file_exists "$S1/.ai/CONTEXT.md" "CONTEXT.md extracted"
 assert_file_exists "$S1/.ai/GUIDE.md" "GUIDE.md extracted"
 assert_file_exists "$S1/.ai/features/FEATURE-TEMPLATE.md" "FEATURE-TEMPLATE.md extracted"
@@ -266,6 +267,7 @@ assert_file_exists "$S1/.ai/templates/CONTEXT-BOOTSTRAP.md" "CONTEXT-BOOTSTRAP.m
 assert_file_exists "$S1/.ai/templates/PROJECT-CHARTER-TEMPLATE.md" "PROJECT-CHARTER-TEMPLATE.md extracted"
 assert_file_exists "$S1/.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md" "BOOTSTRAP-FEATURE-TEMPLATE.md extracted"
 assert_file_exists "$S1/.ai/templates/SMOKE-RESULT-SCHEMA.json" "SMOKE-RESULT-SCHEMA.json extracted"
+assert_command_succeeds "prompt integrity check passes" bash -c "cd '$S1' && node scripts/check-prompts.mjs >/dev/null 2>&1"
 
 # --- Step 2: Scaffold ---
 set_stage "scaffold"

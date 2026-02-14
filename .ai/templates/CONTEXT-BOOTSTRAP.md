@@ -2,7 +2,7 @@
 
 ## Language Policy
 - Prompt body language (`.github/prompts/rw-*.prompt.md`): English (required)
-- User document language (`.ai/*` docs): Korean by default
+- User document language (`.ai/*` docs): Korean by default (`RW_DOC_LANG=en` at scaffold time to default English)
 - Commit message language: English (Conventional Commits)
 
 ## Machine-Parsed Tokens (Do Not Translate)

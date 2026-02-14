@@ -25,7 +25,9 @@
 scripts/
 ├── rw-resolve-target-root.sh
 ├── rw-bootstrap-scaffold.sh
-└── rw-target-registry.sh
+├── rw-target-registry.sh
+├── validate-smoke-result.sh
+└── check-prompts.mjs
 ```
 
 ## 언어 정책
@@ -47,6 +49,8 @@ scripts/
 - 대화형 입력 fallback은 `.github/prompts/RW-INTERACTIVE-POLICY.md` 단일 정책을 따른다.
 - target root 해석은 `scripts/rw-resolve-target-root.sh`를 공통 기준으로 사용한다.
 - 신규 스캐폴딩은 `scripts/rw-bootstrap-scaffold.sh`를 공통 기준으로 사용한다.
+- 문서 기본 언어는 `RW_DOC_LANG` 환경변수로 제어할 수 있다(`ko` 기본, `en` 지원).
+- 프롬프트 변경 시 `node scripts/check-prompts.mjs`로 무결성을 먼저 검증한다.
 
 ## Git 브랜치 정책 (github-flow)
 
@@ -71,6 +75,7 @@ scripts/
    - 먼저 "무엇을 만들지" 한 문장을 받고, 그 내용을 바탕으로 필요한 보완 질문만 맞춤 생성한다.
    - 답하지 않은 항목은 안전 기본값으로 자동 채운다.
    - 스캐폴딩은 우선 `scripts/rw-bootstrap-scaffold.sh`를 사용한다.
+   - 필요 시 실행 전에 `RW_DOC_LANG=en`을 설정해 `.ai/*` 문서 기본 언어를 영어로 시작할 수 있다.
    - `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap feature 생성까지 한 번에 수행한다.
    - 실행 중 아래 타깃 포인터를 현재 워크스페이스 루트 기준으로 자동 갱신한다.
      - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
@@ -225,6 +230,7 @@ scripts/
 
 - `runSubagent`가 없으면 `RW_ENV_UNSUPPORTED`를 출력하고 자동 루프를 즉시 중단한다.
 - `rw-run`은 같은 턴에서 doctor-equivalent preflight를 항상 1회 실행하고, 통과 시 루프로 진입한다.
+- 단, `rw-doctor-last-pass.env` 캐시가 유효하면(동일 타깃 + 10분 이내) 무거운 preflight를 건너뛴다.
 - preflight를 먼저 눈으로 확인하고 싶을 때만 `rw-doctor`를 수동 실행한다.
 - `rw-doctor`와 `rw-run`은 동일한 타깃 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/*.env`, legacy `.ai/runtime/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).
 - 오케스트레이터는 제품 코드를 직접 수정하지 않는다.

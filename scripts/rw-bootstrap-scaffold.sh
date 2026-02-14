@@ -3,6 +3,7 @@ set -euo pipefail
 
 workspace_root="${1:-$(pwd)}"
 workspace_root="$(cd "$workspace_root" && pwd -P)"
+doc_lang="${RW_DOC_LANG:-ko}"
 
 ai_root="$workspace_root/.ai"
 tasks_dir="$ai_root/tasks"
@@ -14,6 +15,21 @@ features_dir="$ai_root/features"
 templates_dir="$ai_root/templates"
 
 mkdir -p "$tasks_dir" "$notes_dir" "$archive_dir" "$runtime_dir" "$targets_dir" "$features_dir" "$templates_dir"
+
+case "$doc_lang" in
+  ko|en)
+    ;;
+  *)
+    echo "RW_DOC_LANG must be one of: ko, en"
+    exit 1
+    ;;
+esac
+
+if [ "$doc_lang" = "en" ]; then
+  doc_lang_line='- User document language (`.ai/*` docs): English by default'
+else
+  doc_lang_line='- User document language (`.ai/*` docs): Korean by default'
+fi
 
 target_id="workspace-root"
 active_id_file="$runtime_dir/rw-active-target-id.txt"
@@ -28,12 +44,12 @@ if [ ! -f "$ai_root/CONTEXT.md" ]; then
   if [ -f "$templates_dir/CONTEXT-BOOTSTRAP.md" ]; then
     cp "$templates_dir/CONTEXT-BOOTSTRAP.md" "$ai_root/CONTEXT.md"
   else
-    cat > "$ai_root/CONTEXT.md" <<'EOF'
+    cat > "$ai_root/CONTEXT.md" <<EOF
 # Workspace Context
 
 ## Language Policy
 - Prompt body language (`.github/prompts/rw-*.prompt.md`): English (required)
-- User document language (`.ai/*` docs): Korean by default
+$doc_lang_line
 - Commit message language: English (Conventional Commits)
 
 ## Machine-Parsed Tokens (Do Not Translate)
@@ -46,6 +62,24 @@ if [ ! -f "$ai_root/CONTEXT.md" ]; then
 EOF
   fi
 fi
+
+# Keep language policy line aligned with RW_DOC_LANG even when template was copied.
+context_tmp_file="$(mktemp "${TMPDIR:-/tmp}/rw-context-XXXXXX")"
+awk -v desired="$doc_lang_line" '
+  BEGIN { replaced = 0 }
+  /^- User document language/ {
+    print desired
+    replaced = 1
+    next
+  }
+  { print }
+  END {
+    if (!replaced) {
+      print desired
+    }
+  }
+' "$ai_root/CONTEXT.md" > "$context_tmp_file"
+mv "$context_tmp_file" "$ai_root/CONTEXT.md"
 
 if [ ! -f "$ai_root/PLAN.md" ]; then
   cat > "$ai_root/PLAN.md" <<'EOF'
@@ -116,3 +150,4 @@ echo "SCAFFOLD_TASK01=$tasks_dir/TASK-01-bootstrap-workspace.md"
 echo "SCAFFOLD_TARGET_ID_FILE=$active_id_file"
 echo "SCAFFOLD_TARGET_ENV_FILE=$target_env_file"
 echo "SCAFFOLD_TARGET_POINTER_FILE=$pointer_file"
+echo "SCAFFOLD_DOC_LANG=$doc_lang"
