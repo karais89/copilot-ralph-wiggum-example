@@ -241,6 +241,7 @@ set_stage "extract"
 
 assert_file_exists "$S1/.github/prompts/rw-init.prompt.md" "rw-init.prompt.md extracted"
 assert_file_exists "$S1/.github/prompts/rw-new-project.prompt.md" "rw-new-project.prompt.md extracted"
+assert_file_exists "$S1/.github/prompts/rw-onboard-project.prompt.md" "rw-onboard-project.prompt.md extracted"
 assert_file_exists "$S1/.github/prompts/rw-doctor.prompt.md" "rw-doctor.prompt.md extracted"
 assert_file_exists "$S1/.github/prompts/rw-feature.prompt.md" "rw-feature.prompt.md extracted"
 assert_file_exists "$S1/.github/prompts/rw-plan.prompt.md" "rw-plan.prompt.md extracted"

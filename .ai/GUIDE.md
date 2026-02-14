@@ -15,6 +15,7 @@
 .github/prompts/
 ├── rw-init.prompt.md
 ├── rw-new-project.prompt.md
+├── rw-onboard-project.prompt.md
 ├── rw-doctor.prompt.md
 ├── rw-feature.prompt.md
 ├── rw-plan.prompt.md
@@ -70,7 +71,9 @@ scripts/
 ## 사용 방법
 
 1. VS Code Copilot Chat에서 새 대화를 연다.
-2. 신규/빈 저장소에서는 `rw-new-project.prompt.md`를 먼저 실행한다(초기 1회).
+2. 진입 프롬프트를 저장소 상태에 맞게 선택한다(초기 1회).
+   - 신규/빈 저장소: `rw-new-project.prompt.md`
+   - 기존 코드베이스: `rw-onboard-project.prompt.md`
    - `rw-new-project`는 `rw-init + low-friction discovery + bootstrap feature seed` 통합 프롬프트다.
    - 먼저 "무엇을 만들지" 한 문장을 받고, 그 내용을 바탕으로 필요한 보완 질문만 맞춤 생성한다.
    - 답하지 않은 항목은 안전 기본값으로 자동 채운다.
@@ -81,7 +84,7 @@ scripts/
      - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
      - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
      - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
-3. `rw-plan.prompt.md`를 실행해 bootstrap feature를 태스크로 분해한다.
+3. 신규/빈 저장소 경로에서는 `rw-plan.prompt.md`를 실행해 bootstrap feature를 태스크로 분해한다.
 4. `rw-run.prompt.md`를 실행한다.
    - `rw-run`은 루프 진입 전에 같은 턴에서 doctor-equivalent preflight를 항상 1회 수행한다.
    - VS Code 워크스페이스 루트와 실제 대상 프로젝트 루트가 다르면, active target id + registry를 먼저 갱신한다.
@@ -92,30 +95,31 @@ scripts/
      - `./scripts/rw-target-registry.sh set-active "$(pwd)" <target-id> "<absolute-target-root>"`
      - `./scripts/rw-target-registry.sh resolve-active "$(pwd)"`
 5. `rw-run` 완료 후 `rw-review.prompt.md`를 실행한다(배치 리뷰).
-6. 이후 추가 기능은 `rw-feature.prompt.md` -> `rw-plan.prompt.md` -> `rw-run.prompt.md` 순서로 진행한다.
-7. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
-8. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
-9. preflight를 별도로 보고 싶을 때만 `rw-doctor.prompt.md`를 수동 실행한다.
-10. 스캐폴딩만 따로 필요하면 `rw-init.prompt.md`를 대안으로 사용한다.
+6. 기존 코드베이스 경로는 `rw-onboard-project -> rw-feature -> rw-plan -> rw-run -> rw-review`로 시작한다.
+7. 이후 추가 기능은 `rw-feature.prompt.md` -> `rw-plan.prompt.md` -> `rw-run.prompt.md` 순서로 진행한다.
+8. 진행 상태는 `.ai/PROGRESS.md`에서 확인한다.
+9. 중단하려면 `.ai/PAUSE.md`를 생성하고, 재개하려면 삭제한다.
+10. preflight를 별도로 보고 싶을 때만 `rw-doctor.prompt.md`를 수동 실행한다.
+11. 스캐폴딩만 따로 필요하면 `rw-init.prompt.md`를 대안으로 사용한다.
    - `rw-init`도 동일한 타깃 포인터 3종(`active-target-id`, `rw-targets/*.env`, legacy root pointer)을 자동 갱신한다.
 
 ## 실행 순서
 
-1. 신규 프로젝트 초기화+방향 확정+bootstrap feature seed: `rw-new-project.prompt.md`
-2. bootstrap feature 계획: `rw-plan.prompt.md`
-3. bootstrap 태스크 구현 루프: `rw-run.prompt.md` (루프 진입 전 doctor preflight 자동 1회 실행)
-4. bootstrap 배치 리뷰: `rw-review.prompt.md`
-5. 추가 기능 정의: `rw-feature.prompt.md`
-6. 추가 기능 계획: `rw-plan.prompt.md`
-7. 추가 기능 구현 루프: `rw-run.prompt.md`
-8. 추가 기능 배치 리뷰: `rw-review.prompt.md`
-9. 상태 확인: `.ai/PROGRESS.md`
-10. 스캐폴딩만 필요할 때(대안): `rw-init.prompt.md`
+1. 신규/빈 저장소 시작: `rw-new-project.prompt.md`
+2. 기존 코드베이스 시작: `rw-onboard-project.prompt.md` -> `rw-feature.prompt.md`
+3. 계획: `rw-plan.prompt.md`
+4. 구현 루프: `rw-run.prompt.md` (루프 진입 전 doctor preflight 자동 1회 실행)
+5. 배치 리뷰: `rw-review.prompt.md`
+6. 추가 기능 반복: `rw-feature.prompt.md` -> `rw-plan.prompt.md` -> `rw-run.prompt.md` -> `rw-review.prompt.md`
+7. 상태 확인: `.ai/PROGRESS.md`
+8. 스캐폴딩만 필요할 때(대안): `rw-init.prompt.md`
 
 ## 운영 단순화 규칙 (고정)
 
-- 기본 실행 경로는 하나로 고정한다:
+- 신규/빈 저장소 기본 실행 경로:
   - `rw-new-project -> rw-plan -> rw-run -> rw-review`
+- 기존 코드베이스 기본 시작 경로:
+  - `rw-onboard-project -> rw-feature -> rw-plan -> rw-run -> rw-review`
 - 추가 기능도 동일 패턴만 사용한다:
   - `rw-feature -> rw-plan -> rw-run -> rw-review`
 - 예외 프롬프트는 조건부로만 사용한다:
@@ -164,6 +168,11 @@ scripts/
   - 고정 체크리스트를 강제하지 않고, 실제 리스크가 있는 항목만 질문한다.
   - `PLAN.md`의 `개요`를 구체화하고 `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md`를 생성한다.
   - bootstrap feature는 `Status: READY_FOR_PLAN` 상태로 남겨두며, 분해 책임은 `rw-plan`에 있다.
+- `rw-onboard-project.prompt.md`:
+  - 기존 코드베이스를 RW 워크플로우에 편입할 때 사용한다.
+  - 언어 비의존 신호(파일 존재/구조/확장자/실행 가능한 설정)로 기존 프로젝트 여부를 판단한다.
+  - `.ai` 스캐폴딩 후 `PLAN.md`에 현재 코드베이스 스냅샷을 기록한다.
+  - 신규 bootstrap feature를 만들지 않고 `NEXT_COMMAND=rw-feature`로 넘긴다.
 - `rw-feature.prompt.md`:
   - `rw-plan` 실행 전에 feature 입력 파일을 만들 때 사용한다.
   - 한 줄 입력(`featureSummary`)을 받아 feature 파일을 상세 스펙 형태로 생성한다.
@@ -207,6 +216,7 @@ scripts/
 - 기본 기대값:
   - `rw-init` -> `NEXT_COMMAND=rw-new-project` 또는 `rw-feature`
   - `rw-new-project` -> `NEXT_COMMAND=rw-plan`
+  - `rw-onboard-project` -> `NEXT_COMMAND=rw-feature` 또는 `rw-new-project`
   - `rw-feature` -> `NEXT_COMMAND=rw-plan`
   - `rw-plan` -> `NEXT_COMMAND=rw-run`
   - `rw-doctor` -> `NEXT_COMMAND=rw-run`
@@ -280,7 +290,7 @@ scripts/
 
 - 이 브랜치에서는 복잡한 `copilot-rw-*` 테스트 프롬프트를 사용하지 않는다.
 - 운영 검증은 코어 루프를 직접 실행한다:
-  1. `rw-new-project`
+  1. 신규/빈: `rw-new-project` 또는 기존: `rw-onboard-project -> rw-feature`
   2. `rw-plan`
   3. `rw-run`
   4. `rw-review` (batch review after run)

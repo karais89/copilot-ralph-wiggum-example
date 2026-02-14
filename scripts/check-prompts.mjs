@@ -71,6 +71,7 @@ async function main() {
     ["rw-feature.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-plan"]],
     ["rw-init.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND="]],
     ["rw-new-project.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-plan"]],
+    ["rw-onboard-project.prompt.md", ["Step 0 (Mandatory):", "CODEBASE_SIGNAL_COUNT", "NEXT_COMMAND=rw-feature"]],
     ["rw-plan.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-run"]],
     ["rw-review.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND="]],
     ["rw-run.prompt.md", ["Step 0 (Mandatory):", "RW_DOCTOR_AUTORUN_BEGIN", "NEXT_COMMAND=", "RW_SUBAGENT_COMPLETION_DELTA_INVALID"]],

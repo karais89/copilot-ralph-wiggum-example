@@ -4,7 +4,7 @@ An AI-driven software development orchestration technique for **GitHub Copilot**
 
 This repository serves two purposes:
 
-1. **The RW orchestration template** — 8 reusable prompt files + structural docs that can be extracted and dropped into any project
+1. **The RW orchestration template** — 9 orchestration prompts + smoke-test prompt/modules + structural docs that can be extracted and dropped into any project
 2. **A working example** — A Todo CLI app built entirely by this technique (70+ commits, 20 tasks, zero manual coding)
 
 ## How It Works
@@ -16,13 +16,14 @@ rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  → 
 
 `rw-archive` is a manual exception step, only when archive thresholds stop `rw-run`.
 
-1. **`rw-new-project`** — Integrated bootstrap for new repos (`rw-init` + low-friction discovery + bootstrap feature seed generation)
-2. **`rw-doctor`** — Optional standalone preflight diagnostic (rw-run always executes equivalent preflight once before loop)
-3. **`rw-run`** — Runs implementation subagent loop
-4. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
-5. **`rw-feature`** — Creates additional feature specification files
-6. **`rw-plan`** — Breaks additional features into atomic tasks
-7. **`rw-archive`** — Archives completed progress when it grows large
+1. **`rw-new-project`** — Integrated bootstrap for new/empty repos (`rw-init` + low-friction discovery + bootstrap feature seed generation)
+2. **`rw-onboard-project`** — Existing-codebase onboarding (language-agnostic codebase signal detection + snapshot + handoff to `rw-feature`)
+3. **`rw-doctor`** — Optional standalone preflight diagnostic (rw-run always executes equivalent preflight once before loop)
+4. **`rw-run`** — Runs implementation subagent loop
+5. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
+6. **`rw-feature`** — Creates additional feature specification files
+7. **`rw-plan`** — Breaks additional features into atomic tasks
+8. **`rw-archive`** — Archives completed progress when it grows large
 
 `rw-init` remains available as a scaffold-only fallback when you want non-interactive initialization.
 
@@ -73,15 +74,17 @@ This copies the full RW template bundle (prompts, smoke modules, scripts, and `.
 
 ```
 your-project/
-├── .github/prompts/           # 8 orchestration prompts
+├── .github/prompts/           # 9 orchestration prompts + rw-smoke-test
 │   ├── rw-init.prompt.md
 │   ├── rw-new-project.prompt.md
+│   ├── rw-onboard-project.prompt.md
 │   ├── rw-doctor.prompt.md
 │   ├── rw-feature.prompt.md
 │   ├── rw-plan.prompt.md
 │   ├── rw-run.prompt.md
 │   ├── rw-review.prompt.md
 │   ├── rw-archive.prompt.md
+│   ├── rw-smoke-test.prompt.md
 │   ├── RW-INTERACTIVE-POLICY.md
 │   └── RW-TARGET-ROOT-RESOLUTION.md
 ├── scripts/
@@ -106,7 +109,7 @@ your-project/
 ### Option 2: Manual Copy
 
 Copy these paths from this repo into your project:
-- `.github/prompts/*.prompt.md` (all 8 orchestration files)
+- `.github/prompts/*.prompt.md` (all `rw-*.prompt.md` files, including `rw-smoke-test.prompt.md`)
 - `.github/prompts/RW-INTERACTIVE-POLICY.md`
 - `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md`
 - `scripts/rw-resolve-target-root.sh`
@@ -128,19 +131,21 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 ### After Extraction
 
 1. Open your project in VS Code with GitHub Copilot
-2. Open Copilot Chat and run **`rw-new-project`** — this performs scaffolding + lightweight project-direction discovery + bootstrap feature seed generation
+2. Open Copilot Chat and choose one entry prompt:
+   - **`rw-new-project`** for new/empty repos (scaffolding + lightweight project-direction discovery + bootstrap feature seed generation)
+   - **`rw-onboard-project`** for existing codebases (language-agnostic codebase detection + `PLAN` snapshot + handoff to `rw-feature`)
    - `rw-new-project` uses `scripts/rw-bootstrap-scaffold.sh` as the default scaffold path.
-   - `rw-new-project` refreshes target pointers automatically:
+   - Entry prompts refresh target pointers automatically:
      - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
      - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
      - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
-   - discovery is adaptive: ask intent first, then generate only high-impact follow-up questions from that intent (safe defaults for unanswered items)
-3. Run **`rw-plan`** to generate bootstrap tasks from the seeded bootstrap feature
+   - `rw-new-project` discovery is adaptive: ask intent first, then generate only high-impact follow-up questions from that intent (safe defaults for unanswered items)
+3. New/empty path only: run **`rw-plan`** to generate bootstrap tasks from the seeded bootstrap feature
    - For quick smoke tests, set `Planning Profile: FAST_TEST` in the target feature file before running `rw-plan` (generates 2-3 tasks).
 4. Run **`rw-run`** to implement tasks (auto preflight runs once before loop)
 5. Run **`rw-review`** to validate the completed batch
 6. If review leaves pending tasks, re-run **`rw-run`** and then run **`rw-review`** again
-7. Run **`rw-feature`** to define additional product features
+7. Run **`rw-feature`** to define additional product features (or first feature after `rw-onboard-project`)
 8. Run **`rw-plan`** to generate tasks for that feature
 9. Run **`rw-run`**, then run **`rw-review`**
 10. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
@@ -176,7 +181,7 @@ If VS Code workspace root and actual target project root are different, update a
 This branch intentionally removes bundled Copilot test prompts (`copilot-rw-*`) to keep operations minimal.
 For verification, run the core flow directly in Copilot Chat:
 
-1. `rw-new-project`
+1. `rw-new-project` (new/empty) or `rw-onboard-project -> rw-feature` (existing)
 2. `rw-plan`
 3. `rw-run`
 4. `rw-review` (batch review after run)
@@ -189,6 +194,8 @@ For verification, run the core flow directly in Copilot Chat:
 
 - Default path (always start here):
   - `rw-new-project -> rw-plan -> rw-run -> rw-review`
+- Existing codebase start path:
+  - `rw-onboard-project -> rw-feature -> rw-plan -> rw-run -> rw-review`
 - Continue feature work with:
   - `rw-feature -> rw-plan -> rw-run -> rw-review`
 - Use exception prompts only when needed:
@@ -221,6 +228,7 @@ For verification, run the core flow directly in Copilot Chat:
 | Prompt | Purpose |
 |---|---|
 | [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + low-friction discovery + bootstrap feature seed generation) |
+| [`rw-onboard-project`](.github/prompts/rw-onboard-project.prompt.md) | Existing-codebase onboarding (language-agnostic codebase detection + `PLAN` snapshot + handoff to `rw-feature`) |
 | [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
 | [`rw-doctor`](.github/prompts/rw-doctor.prompt.md) | Standalone preflight check for top-level/runSubagent/git/.ai readiness and PASS-stamp write |
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
