@@ -258,6 +258,7 @@ assert_file_exists "$S1/.github/prompts/smoke/templates/run-task.subagent.md" "s
 assert_file_exists "$S1/scripts/rw-resolve-target-root.sh" "rw-resolve-target-root.sh extracted"
 assert_file_exists "$S1/scripts/rw-bootstrap-scaffold.sh" "rw-bootstrap-scaffold.sh extracted"
 assert_file_exists "$S1/scripts/rw-target-registry.sh" "rw-target-registry.sh extracted"
+assert_file_exists "$S1/scripts/rw" "rw helper script extracted"
 assert_file_exists "$S1/scripts/validate-smoke-result.sh" "validate-smoke-result.sh extracted"
 assert_file_exists "$S1/scripts/check-prompts.mjs" "check-prompts.mjs extracted"
 assert_file_exists "$S1/.ai/CONTEXT.md" "CONTEXT.md extracted"
