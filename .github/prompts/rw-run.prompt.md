@@ -26,6 +26,9 @@ Path resolution (mandatory before Step 0):
   - `<PROGRESS>` = `TARGET_ROOT/.ai/PROGRESS.md`
   - `<NOTES>` = `TARGET_ROOT/.ai/notes/`
   - `<ARCHIVE_DIR>` = `TARGET_ROOT/.ai/progress-archive/`
+  - `<PLAN_APPROVAL_GATE_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-required.flag`
+  - `<PLAN_APPROVAL_PENDING>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-pending.env`
+  - `<PLAN_APPROVAL_STAMP>` = `TARGET_ROOT/.ai/runtime/rw-plan-approved.env`
 
 <ORCHESTRATOR_INSTRUCTIONS>
 You are an orchestration agent.
@@ -43,7 +46,16 @@ Step 0 (Mandatory):
 4) If the file is missing or unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
 5) Validate language policy internally and proceed silently (no confirmation line).
 6) Do not modify any file before Step 0 completes, except auto-repair of target-pointer files during path resolution (`TARGET_ACTIVE_ID_FILE`, `TARGET_REGISTRY_DIR/*`, `TARGET_POINTER_FILE`).
-7) Mandatory one-time preflight before loop:
+7) Optional plan-approval gate (default OFF):
+   - Gate is ON only when `<PLAN_APPROVAL_GATE_FLAG>` exists.
+   - If gate is ON, require `<PLAN_APPROVAL_STAMP>` to exist and contain `PLAN_APPROVED=1`.
+   - If gate is ON and approval is missing/invalid:
+     - print `PLAN_APPROVAL_REQUIRED`
+     - print `Plan approval gate is ON. Approve latest plan before rw-run.`
+     - print `Hint: ./scripts/rw approve-plan`
+     - print `NEXT_COMMAND=rw-run`
+     - stop
+8) Mandatory one-time preflight before loop:
    - Cache policy:
      - If `<DOCTOR_STAMP>` exists and all conditions below are true, skip heavy preflight:
        - `RW_DOCTOR_PASS=1`

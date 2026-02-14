@@ -8,6 +8,7 @@
 #   ./scripts/rw status [workspace-root]
 #   ./scripts/rw next [workspace-root]
 #   ./scripts/rw go [workspace-root]
+#   ./scripts/rw approve-plan [workspace-root]
 #   ./scripts/rw <new|onboard|init|doctor|feature|plan|run|review|archive|smoke> [workspace-root]
 #
 set -euo pipefail
@@ -21,12 +22,14 @@ Usage:
   ./scripts/rw status [workspace-root]
   ./scripts/rw next [workspace-root]
   ./scripts/rw go [workspace-root]
+  ./scripts/rw approve-plan [workspace-root]
   ./scripts/rw <new|onboard|init|doctor|feature|plan|run|review|archive|smoke> [workspace-root]
 
 Commands:
   status   Print workflow state summary for the active target.
   next     Print suggested NEXT_COMMAND and reason tokens.
   go       Resolve suggested NEXT_COMMAND and print mapped prompt info.
+  approve-plan  Approve latest planned task set when optional plan-approval gate is enabled.
   new      Map to rw-new-project prompt.
   onboard  Map to rw-onboard-project prompt.
   init     Map to rw-init prompt.
@@ -279,6 +282,7 @@ resolve_prompt_name() {
     review|rw-review) echo "rw-review" ;;
     archive|rw-archive) echo "rw-archive" ;;
     smoke|rw-smoke-test) echo "rw-smoke-test" ;;
+    approve|approve-plan|rw-approve-plan) echo "" ;;
     *) echo "" ;;
   esac
 }
@@ -298,6 +302,51 @@ print_prompt_dispatch() {
   echo "PROMPT_FILE_EXISTS=$prompt_file_exists"
   echo "NEXT_REASON=$dispatch_reason"
   echo "RUN_HINT=Open Copilot Chat and run: $prompt_name"
+}
+
+approve_latest_plan() {
+  local runtime_dir="$1"
+  local gate_flag="$2"
+  local pending_file="$3"
+  local stamp_file="$4"
+  local approved_at=""
+  local planned_at="unknown"
+  local feature_file="unknown"
+  local task_range="unknown"
+
+  if [ ! -f "$gate_flag" ]; then
+    echo "PLAN_APPROVAL_GATE=OFF"
+    echo "PLAN_APPROVAL_RESULT=SKIPPED"
+    echo "PLAN_APPROVAL_REASON=GATE_DISABLED"
+    return 0
+  fi
+
+  if [ -f "$pending_file" ]; then
+    planned_at="$(grep -E '^PLANNED_AT=' "$pending_file" | head -n 1 | cut -d= -f2- || true)"
+    feature_file="$(grep -E '^FEATURE_FILE=' "$pending_file" | head -n 1 | cut -d= -f2- || true)"
+    task_range="$(grep -E '^TASK_RANGE=' "$pending_file" | head -n 1 | cut -d= -f2- || true)"
+    [ -n "$planned_at" ] || planned_at="unknown"
+    [ -n "$feature_file" ] || feature_file="unknown"
+    [ -n "$task_range" ] || task_range="unknown"
+  fi
+
+  mkdir -p "$runtime_dir"
+  approved_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  cat > "$stamp_file" <<EOF
+PLAN_APPROVED=1
+APPROVED_AT=$approved_at
+PLANNED_AT=$planned_at
+FEATURE_FILE=$feature_file
+TASK_RANGE=$task_range
+EOF
+  rm -f "$pending_file"
+
+  echo "PLAN_APPROVAL_GATE=ON"
+  echo "PLAN_APPROVAL_RESULT=APPLIED"
+  echo "PLAN_APPROVAL_STAMP_FILE=$stamp_file"
+  echo "PLAN_APPROVED_AT=$approved_at"
+  echo "PLAN_APPROVAL_SOURCE_FEATURE=$feature_file"
+  echo "PLAN_APPROVAL_TASK_RANGE=$task_range"
 }
 
 select_next_command() {
@@ -324,6 +373,9 @@ select_next_command() {
   elif [ "$archive_required" -eq 1 ]; then
     next_command="rw-archive"
     next_reason="ARCHIVE_THRESHOLD_EXCEEDED"
+  elif [ "$plan_approval_required" -eq 1 ]; then
+    next_command="rw-run"
+    next_reason="PLAN_APPROVAL_REQUIRED"
   elif [ "$pending_count" -gt 0 ] || [ "$in_progress_count" -gt 0 ]; then
     next_command="rw-run"
     next_reason="UNFINISHED_TASKS_PRESENT"
@@ -343,8 +395,8 @@ command="${1:-}"
 workspace_root="${2:-$WORKSPACE_ROOT_DEFAULT}"
 
 case "$command" in
-  status|next|go|new|onboard|init|doctor|feature|plan|run|review|archive|smoke|\
-  rw-new-project|rw-onboard-project|rw-init|rw-doctor|rw-feature|rw-plan|rw-run|rw-review|rw-archive|rw-smoke-test) ;;
+  status|next|go|approve|approve-plan|new|onboard|init|doctor|feature|plan|run|review|archive|smoke|\
+  rw-approve-plan|rw-new-project|rw-onboard-project|rw-init|rw-doctor|rw-feature|rw-plan|rw-run|rw-review|rw-archive|rw-smoke-test) ;;
   -h|--help|"")
     usage
     exit 0
@@ -383,6 +435,10 @@ PROGRESS_FILE="$AI_ROOT/PROGRESS.md"
 FEATURES_DIR="$AI_ROOT/features"
 PAUSE_FILE="$AI_ROOT/PAUSE.md"
 ARCHIVE_LOCK_FILE="$AI_ROOT/ARCHIVE_LOCK"
+RUNTIME_DIR="$AI_ROOT/runtime"
+PLAN_APPROVAL_GATE_FLAG="$RUNTIME_DIR/rw-plan-approval-required.flag"
+PLAN_APPROVAL_PENDING_FILE="$RUNTIME_DIR/rw-plan-approval-pending.env"
+PLAN_APPROVAL_STAMP_FILE="$RUNTIME_DIR/rw-plan-approved.env"
 
 core_ready=1
 if [ ! -f "$PLAN_FILE" ] || [ ! -f "$PROGRESS_FILE" ]; then
@@ -414,12 +470,41 @@ if [ "$progress_size_chars" -gt 8000 ] || [ "$completed_count" -gt 20 ] || [ "$l
   archive_required=1
 fi
 
+plan_approval_gate=0
+if [ -f "$PLAN_APPROVAL_GATE_FLAG" ]; then
+  plan_approval_gate=1
+fi
+
+plan_approved=0
+if [ -f "$PLAN_APPROVAL_STAMP_FILE" ] && rg -q '^PLAN_APPROVED=1$' "$PLAN_APPROVAL_STAMP_FILE"; then
+  plan_approved=1
+fi
+
+plan_approval_required=0
+if [ "$plan_approval_gate" -eq 1 ] && [ "$plan_approved" -eq 0 ]; then
+  if [ "$pending_count" -gt 0 ] || [ "$in_progress_count" -gt 0 ] || [ -f "$PLAN_APPROVAL_PENDING_FILE" ]; then
+    plan_approval_required=1
+  fi
+fi
+
+if [ "$command" = "approve" ] || [ "$command" = "approve-plan" ] || [ "$command" = "rw-approve-plan" ]; then
+  approve_latest_plan "$RUNTIME_DIR" "$PLAN_APPROVAL_GATE_FLAG" "$PLAN_APPROVAL_PENDING_FILE" "$PLAN_APPROVAL_STAMP_FILE"
+  exit 0
+fi
+
 next_command=""
 next_reason=""
 select_next_command
 
 if [ "$command" = "next" ]; then
   echo "TARGET_ROOT=$TARGET_ROOT"
+  if [ "$plan_approval_gate" -eq 1 ]; then
+    echo "PLAN_APPROVAL_GATE=ON"
+  else
+    echo "PLAN_APPROVAL_GATE=OFF"
+  fi
+  echo "PLAN_APPROVAL_REQUIRED=$plan_approval_required"
+  echo "PLAN_APPROVED=$plan_approved"
   echo "NEXT_COMMAND=$next_command"
   echo "NEXT_REASON=$next_reason"
   exit 0
@@ -452,5 +537,14 @@ echo "FEATURE_READY_FOR_PLAN_FILES=$(basename_csv_or_none "$ready_feature_files"
 echo "PROGRESS_SIZE_CHARS=$progress_size_chars"
 echo "PROGRESS_LOG_ENTRIES=$log_entries_count"
 echo "ARCHIVE_REQUIRED=$archive_required"
+if [ "$plan_approval_gate" -eq 1 ]; then
+  echo "PLAN_APPROVAL_GATE=ON"
+else
+  echo "PLAN_APPROVAL_GATE=OFF"
+fi
+echo "PLAN_APPROVAL_REQUIRED=$plan_approval_required"
+echo "PLAN_APPROVED=$plan_approved"
+echo "PLAN_APPROVAL_PENDING_FILE_EXISTS=$([ -f "$PLAN_APPROVAL_PENDING_FILE" ] && echo 1 || echo 0)"
+echo "PLAN_APPROVAL_STAMP_FILE_EXISTS=$([ -f "$PLAN_APPROVAL_STAMP_FILE" ] && echo 1 || echo 0)"
 echo "NEXT_COMMAND=$next_command"
 echo "NEXT_REASON=$next_reason"

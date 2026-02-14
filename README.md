@@ -45,7 +45,7 @@ rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  → 
 2. **`rw-onboard-project`** — Existing-codebase onboarding (language-agnostic codebase signal detection + snapshot + handoff to `rw-feature`)
 3. **`rw-doctor`** — Optional standalone preflight diagnostic (rw-run always executes equivalent preflight once before loop)
 4. **`rw-run`** — Runs implementation subagent loop
-5. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch, writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`, emits `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`, and creates one review phase note in `.ai/notes/` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
+5. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch, writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`, emits `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`, emits structured findings (`REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<line>|<rule>|<fix>`), and creates one review phase note in `.ai/notes/` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
 6. **`rw-feature`** — Creates additional feature specification files
 7. **`rw-plan`** — Breaks additional features into atomic tasks
 8. **`rw-archive`** — Archives completed progress when it grows large
@@ -211,6 +211,7 @@ Use the lightweight helper script to check current state and next action:
 ./scripts/rw status
 ./scripts/rw next
 ./scripts/rw go
+./scripts/rw approve-plan
 ```
 
 Optional workspace-root override:
@@ -234,6 +235,7 @@ Single-command prompt aliases:
 ./scripts/rw review
 ./scripts/rw archive
 ./scripts/rw smoke
+./scripts/rw approve-plan
 ```
 
 `rw next` prints machine-readable recommendation tokens:
@@ -326,6 +328,7 @@ For verification, run the core flow directly in Copilot Chat:
 - **REVIEW-ESCALATE** — 3 consecutive review failures trigger escalation and require manual intervention
 - **RW_ENV_UNSUPPORTED** — Explicit signal that autonomous mode is unavailable in the current environment
 - **RW_TARGET_ROOT_INVALID** — Target root pointer is invalid (empty/non-absolute/missing path)
+- **PLAN_APPROVAL_REQUIRED** — Optional plan-approval gate is ON and no valid approval stamp is present (`./scripts/rw approve-plan`)
 - **rw-run Dispatch Guard** — One subagent dispatch must complete exactly one locked task (`LOCKED_TASK_ID`)
 
 ### Next Command Contract
@@ -386,4 +389,3 @@ MIT
 ## Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
-테스트 문장입니다.

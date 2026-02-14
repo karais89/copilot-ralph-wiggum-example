@@ -15,6 +15,7 @@ Quick summary:
     - Bootstrap foundation features: 10-20 tasks (5 allowed only when clearly very small/simple)
   - `Planning Profile: FAST_TEST`: 2-3 tasks (all feature types, test-speed priority)
 - Ensure new `pending` rows are visible in active `PROGRESS.md` even when archives exist.
+- Optional plan-approval gate support (default OFF unless runtime flag is present).
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
@@ -29,6 +30,8 @@ Target files:
 - .ai/tasks/TASK-XX-*.md
 - .ai/PROGRESS.md
 - .ai/features/*.md (selected READY_FOR_PLAN file, status update to PLANNED)
+- .ai/runtime/rw-plan-approval-pending.env (optional, when approval gate is ON)
+- .ai/runtime/rw-plan-approved.env (optional cleanup, when approval gate is ON)
 
 Rules:
 - Do not rewrite the whole PLAN.md.
@@ -43,6 +46,9 @@ Rules:
   - If likely >120 minutes, split; if <30 minutes and not independently valuable, merge.
 - Verification rule:
   - Each task must include at least one concrete verification command in `Verification`.
+- Optional plan-approval gate rule (default OFF):
+  - Gate is ON only when `.ai/runtime/rw-plan-approval-required.flag` exists.
+  - When gate is ON, `rw-plan` must prepare a pending approval marker and clear stale approval stamps.
 - Deterministic planning mode:
   - Never call `#tool:vscode/askQuestions` in `rw-plan`.
   - Never ask interactive follow-up questions in `rw-plan`.
@@ -147,6 +153,18 @@ Workflow:
 10) Update selected `.ai/features/<filename>` file:
    - `Status: READY_FOR_PLAN` -> `Status: PLANNED`
    - Append a short plan output note including task range (`TASK-XX~TASK-YY`) and date.
+11) Resolve plan-approval gate mode:
+   - If `.ai/runtime/rw-plan-approval-required.flag` exists, set `PLAN_APPROVAL_GATE=ON`.
+   - Otherwise set `PLAN_APPROVAL_GATE=OFF`.
+12) If `PLAN_APPROVAL_GATE=ON`:
+   - Ensure `.ai/runtime/` exists.
+   - Write `.ai/runtime/rw-plan-approval-pending.env` with:
+     - `PLAN_APPROVAL_REQUIRED=1`
+     - `PLANNED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
+     - `FEATURE_FILE=<selected feature filename>`
+     - `TASK_RANGE=<TASK-XX~TASK-YY>`
+   - Delete `.ai/runtime/rw-plan-approved.env` if it exists (stale approval invalidation).
+   - Do not ask interactive questions in this step.
 
 Output format at end:
 - Feature input source (`.ai/features/<filename>`)
@@ -157,4 +175,5 @@ Output format at end:
 - Feature file status update result
 - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
 - `FEATURE_MULTI_READY_AUTOSELECTED=<filename|none>`
+- `PLAN_APPROVAL_GATE=<ON|OFF>`
 - `NEXT_COMMAND=rw-run`

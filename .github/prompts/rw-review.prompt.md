@@ -13,6 +13,7 @@ Quick summary:
 - Write review outcomes to `PROGRESS` using `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`.
 - Emit one normalized review status token: `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`.
 - Emit structured issue counters: `REVIEW_ISSUE_COUNT`, `REVIEW_P0_COUNT`, `REVIEW_P1_COUNT`.
+- Emit structured findings with severity/file/line fields.
 - Write one phase completion note to `.ai/notes/` with standardized cycle-result fields.
 
 Path resolution (mandatory before Step 0):
@@ -102,8 +103,9 @@ Procedure:
    - After success print `RUNSUBAGENT_REVIEW_DISPATCH_OK TASK-XX`.
    - Subagent output contract (exactly one final line per task):
      - Optional structured finding lines before the final line:
-       - `REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<rule>|<fix>`
+       - `REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<line>|<rule>|<fix>`
        - Use repository-relative `<file>` when possible; otherwise use `unknown`.
+       - `<line>` must be a 1-based integer or `unknown`.
        - `<rule>` and `<fix>` must be concise single-line strings without `|`.
      - `REVIEW_RESULT TASK-XX OK`
      - or `REVIEW_RESULT TASK-XX FAIL: <root-cause>`
@@ -113,7 +115,7 @@ Procedure:
      - `REVIEW_P0_COUNT = findings with severity P0`
      - `REVIEW_P1_COUNT = findings with severity P1`
    - If a task result is `FAIL` and no structured finding exists for that task, synthesize one:
-     - `P1|unknown|verification|<root-cause>`
+     - `P1|unknown|unknown|verification|<root-cause>`
    - If result is OK:
      - append `REVIEW_OK TASK-XX: verification passed`
    - If result is FAIL:
@@ -155,7 +157,7 @@ Procedure:
    - `REVIEW_P0_COUNT=<n>`
    - `REVIEW_P1_COUNT=<n>`
    - Print one line per aggregated finding:
-     - `REVIEW_ISSUE <P0|P1|P2>|<file>|<rule>|<fix>`
+     - `REVIEW_ISSUE <P0|P1|P2>|<file>|<line>|<rule>|<fix>`
    - `RUNSUBAGENT_REVIEW_DISPATCH_COUNT=<n>`
    - `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`
    - `REVIEW_PHASE_NOTE_FILE=<path>`
@@ -189,7 +191,7 @@ Rules:
 
 Output contract:
 - Optional structured finding lines (zero or more):
-  - `REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<rule>|<fix>`
+  - `REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<line>|<rule>|<fix>`
 - End with exactly one line:
   - `REVIEW_RESULT TASK-XX OK`
   - or `REVIEW_RESULT TASK-XX FAIL: <root-cause>`
