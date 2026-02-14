@@ -11,6 +11,8 @@ Quick summary:
 - Run this manually after `rw-run` to review completed tasks in batch.
 - Dispatch review subagents per task (default sequential; parallel only when explicitly marked safe).
 - Write review outcomes to `PROGRESS` using `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`.
+- Emit one normalized review status token: `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`.
+- Write one phase completion note to `.ai/notes/`.
 
 Path resolution (mandatory before Step 0):
 - Follow `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md` exactly.
@@ -20,6 +22,7 @@ Path resolution (mandatory before Step 0):
   - `<PLAN>` = `TARGET_ROOT/.ai/PLAN.md`
   - `<TASKS>` = `TARGET_ROOT/.ai/tasks/`
   - `<PROGRESS>` = `TARGET_ROOT/.ai/PROGRESS.md`
+  - `<NOTES>` = `TARGET_ROOT/.ai/notes/`
 
 Step 0 (Mandatory):
 1) Validate `TARGET_ROOT`:
@@ -35,11 +38,12 @@ Rules:
 - This prompt must run in a top-level Copilot Chat turn.
   - If not top-level, print `TOP_LEVEL_REQUIRED` and stop.
 - Do not modify product code.
-- Only update review-related state in `<PROGRESS>`:
+- Only update review-related state in `<PROGRESS>` and one review completion note in `<NOTES>`:
   - `REVIEW_OK TASK-XX: verification passed`
   - `REVIEW_FAIL TASK-XX (n/3): <root-cause>`
   - `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`
   - `REVIEW-ESCALATE-RESOLVED TASK-XX: <resolution>` (manual recovery path, user-driven)
+  - `REVIEW-PHASE-COMPLETE-YYYYMMDD-HHMM.md` (or `-v2`, `-v3`, ...)
 - Never fabricate review results.
 - Review all currently `completed` tasks in active Task Status.
 - This prompt must dispatch `#tool:agent/runSubagent` for per-task validation.
@@ -57,6 +61,8 @@ Procedure:
 1) Read `<PROGRESS>` and collect all `completed` tasks in active `Task Status`.
 2) If no completed task exists:
    - print `REVIEW_TARGET_MISSING`
+   - print `REVIEW_STATUS=FAILED`
+   - print `REVIEW_PHASE_NOTE_FILE=none`
    - print `NEXT_COMMAND=rw-run`
    - stop.
 3) Build review candidates:
@@ -66,11 +72,15 @@ Procedure:
 4) If candidate set is empty:
    - print `REVIEW_NOTHING_TO_DO`
    - print `REVIEW_SUMMARY total=0 ok=0 fail=0 escalate=0 skipped=<completed-count>`
+   - print `REVIEW_STATUS=APPROVED`
+   - print `REVIEW_PHASE_NOTE_FILE=none`
    - print `NEXT_COMMAND=rw-run`
    - stop.
 5) If `#tool:agent/runSubagent` is unavailable:
    - print `runSubagent unavailable`
    - print `RW_ENV_UNSUPPORTED`
+   - print `REVIEW_STATUS=FAILED`
+   - print `REVIEW_PHASE_NOTE_FILE=none`
    - print `NEXT_COMMAND=rw-run`
    - stop.
 6) Dispatch review subagents for each candidate task:
@@ -97,14 +107,30 @@ Procedure:
      - If prior count is 2 or more:
        - append `REVIEW-ESCALATE TASK-XX (3/3): manual intervention required`
        - revert task status to `pending`
-8) Print summary:
+8) Determine normalized review status from aggregated counts:
+   - If `escalate > 0`: `REVIEW_STATUS=FAILED`
+   - Else if `fail > 0`: `REVIEW_STATUS=NEEDS_REVISION`
+   - Else: `REVIEW_STATUS=APPROVED`
+9) Write one review phase completion note under `<NOTES>`:
+   - Ensure `<NOTES>` exists.
+   - Create file: `REVIEW-PHASE-COMPLETE-YYYYMMDD-HHMM.md` (if exists, append `-v2`, `-v3`, ...).
+   - Note content (concise, machine-friendly):
+     - `# Review Phase Complete`
+     - `- Timestamp: <YYYY-MM-DDTHH:MM:SSZ>`
+     - `- REVIEW_STATUS: <APPROVED|NEEDS_REVISION|FAILED>`
+     - `- REVIEW_SUMMARY: total=<n> ok=<a> fail=<b> escalate=<c> skipped=<d>`
+     - `- RUNSUBAGENT_REVIEW_DISPATCH_COUNT: <n>`
+     - `- NEXT_COMMAND_CANDIDATE: <rw-archive|rw-run>`
+10) Print summary:
    - `REVIEW_SUMMARY total=<n> ok=<a> fail=<b> escalate=<c> skipped=<d>`
    - `RUNSUBAGENT_REVIEW_DISPATCH_COUNT=<n>`
-9) If any fail/escalate occurred:
+   - `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`
+   - `REVIEW_PHASE_NOTE_FILE=<path>`
+11) If `REVIEW_STATUS` is `NEEDS_REVISION` or `FAILED`:
    - print `REVIEW_BATCH_FAIL`
    - print `NEXT_COMMAND=rw-run`
    - stop.
-10) Otherwise:
+12) Otherwise:
    - print `REVIEW_BATCH_OK`
    - print `✅ Completed tasks verified`
    - print `NEXT_COMMAND=rw-archive`

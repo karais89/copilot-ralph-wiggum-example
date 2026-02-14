@@ -20,7 +20,7 @@ rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  → 
 2. **`rw-onboard-project`** — Existing-codebase onboarding (language-agnostic codebase signal detection + snapshot + handoff to `rw-feature`)
 3. **`rw-doctor`** — Optional standalone preflight diagnostic (rw-run always executes equivalent preflight once before loop)
 4. **`rw-run`** — Runs implementation subagent loop
-5. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch and writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
+5. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch, writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`, emits `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`, and creates one review phase note in `.ai/notes/` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
 6. **`rw-feature`** — Creates additional feature specification files
 7. **`rw-plan`** — Breaks additional features into atomic tasks
 8. **`rw-archive`** — Archives completed progress when it grows large
@@ -234,7 +234,7 @@ For verification, run the core flow directly in Copilot Chat:
 | [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
 | [`rw-plan`](.github/prompts/rw-plan.prompt.md) | Generate task breakdown for one READY_FOR_PLAN feature |
 | [`rw-run`](.github/prompts/rw-run.prompt.md) | Orchestration loop for implementation subagent dispatch (target-root pointer file) |
-| [`rw-review`](.github/prompts/rw-review.prompt.md) | Manual reviewer rules for subagent-backed batch validation of completed tasks |
+| [`rw-review`](.github/prompts/rw-review.prompt.md) | Manual reviewer rules for subagent-backed batch validation, normalized `REVIEW_STATUS`, and one review phase note artifact |
 | [`rw-archive`](.github/prompts/rw-archive.prompt.md) | Archive completed progress |
 
 ### Workspace (`.ai/`)
