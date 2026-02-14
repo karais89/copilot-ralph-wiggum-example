@@ -195,6 +195,53 @@ assert_command_output_contains() {
   fi
 }
 
+# --- JSON assertions ---
+
+json_get_field() {
+  local json_file="$1"
+  local path="$2"
+  python3 - "$json_file" "$path" <<'PY'
+import json
+import sys
+
+json_path = sys.argv[1]
+field_path = sys.argv[2]
+
+with open(json_path, encoding="utf-8") as f:
+    data = json.load(f)
+
+value = data
+for key in field_path.split("."):
+    if not isinstance(value, dict) or key not in value:
+        sys.exit(2)
+    value = value[key]
+
+if value is None:
+    print("null")
+elif isinstance(value, bool):
+    print("true" if value else "false")
+else:
+    print(str(value))
+PY
+}
+
+assert_json_field_equals() {
+  local json_file="$1"
+  local field_path="$2"
+  local expected="$3"
+  local label="${4:-$json_file $field_path equals $expected}"
+  local actual
+  if actual="$(json_get_field "$json_file" "$field_path")"; then
+    if [ "$actual" = "$expected" ]; then
+      assert_pass "$label"
+    else
+      assert_fail "$label" "actual=$actual expected=$expected"
+    fi
+  else
+    assert_fail "$label" "field missing: $field_path"
+  fi
+}
+
 # --- File count assertion ---
 
 assert_file_count() {

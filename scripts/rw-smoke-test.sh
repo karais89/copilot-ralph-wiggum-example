@@ -26,6 +26,20 @@ trap 'rm -rf "$TEST_DIR"' EXIT
 TODAY=$(date +%Y-%m-%d)
 TIMESTAMP=$(date +%Y%m%d-%H%M)
 CURRENT_STAGE="startup"
+SMOKE_TOTAL_PHASES=8
+SMOKE_EXPECTED_DISPATCHES=10
+TARGET_ROOT=""
+RESULT_DIR=""
+RESULT_JSON=""
+RESULT_MD=""
+CHECK_BUILD_STATUS="SKIPPED"
+CHECK_BUILD_DETAIL="not-run"
+CHECK_GREET_STATUS="SKIPPED"
+CHECK_GREET_DETAIL="not-run"
+CHECK_GOODBYE_STATUS="SKIPPED"
+CHECK_GOODBYE_DETAIL="not-run"
+CHECK_TEST_STATUS="SKIPPED"
+CHECK_TEST_DETAIL="not-run"
 
 set_stage() {
   CURRENT_STAGE="$1"
@@ -66,10 +80,138 @@ replace_task04_completed_row() {
   mv "$tmp_file" "$progress_file"
 }
 
+has_npm_test_script() {
+  local package_json="$1"
+  if [ ! -f "$package_json" ]; then
+    return 1
+  fi
+  python3 - "$package_json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+with open(path, encoding="utf-8") as f:
+    data = json.load(f)
+scripts = data.get("scripts", {})
+test_script = scripts.get("test", "")
+if isinstance(test_script, str) and test_script and test_script != "echo \"Error: no test specified\" && exit 1":
+    sys.exit(0)
+sys.exit(1)
+PY
+}
+
+write_smoke_result_artifacts() {
+  local status="$1"
+  local failed_phase="${2:-null}"
+  local reason="${3:-null}"
+  local git_head="null"
+  local safe_failed_phase="$failed_phase"
+  local safe_reason="$reason"
+
+  if [ -z "$RESULT_DIR" ] || [ -z "$RESULT_JSON" ] || [ -z "$RESULT_MD" ]; then
+    return 0
+  fi
+
+  mkdir -p "$RESULT_DIR"
+  if [ -d "$TARGET_ROOT/.git" ]; then
+    git_head="$(cd "$TARGET_ROOT" && git rev-parse --short HEAD 2>/dev/null || true)"
+    if [ -z "$git_head" ]; then
+      git_head="null"
+    fi
+  fi
+
+  if [ -z "$safe_failed_phase" ]; then
+    safe_failed_phase="null"
+  fi
+  if [ -z "$safe_reason" ]; then
+    safe_reason="null"
+  fi
+
+  STATUS="$status" \
+  TARGET_ROOT="$TARGET_ROOT" \
+  GIT_HEAD="$git_head" \
+  TOTAL_PHASES="$SMOKE_TOTAL_PHASES" \
+  DISPATCHES="$SMOKE_EXPECTED_DISPATCHES" \
+  FAILED_PHASE="$safe_failed_phase" \
+  REASON="$safe_reason" \
+  CHECK_BUILD_STATUS="$CHECK_BUILD_STATUS" \
+  CHECK_BUILD_DETAIL="$CHECK_BUILD_DETAIL" \
+  CHECK_GREET_STATUS="$CHECK_GREET_STATUS" \
+  CHECK_GREET_DETAIL="$CHECK_GREET_DETAIL" \
+  CHECK_GOODBYE_STATUS="$CHECK_GOODBYE_STATUS" \
+  CHECK_GOODBYE_DETAIL="$CHECK_GOODBYE_DETAIL" \
+  CHECK_TEST_STATUS="$CHECK_TEST_STATUS" \
+  CHECK_TEST_DETAIL="$CHECK_TEST_DETAIL" \
+  RESULT_JSON="$RESULT_JSON" \
+  python3 - <<'PY'
+import datetime as dt
+import json
+import os
+
+def to_optional(v):
+    return None if v in ("", "null", None) else v
+
+payload = {
+    "status": os.environ["STATUS"],
+    "timestamp": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+    "target_root": os.environ.get("TARGET_ROOT", ""),
+    "git_head": to_optional(os.environ.get("GIT_HEAD", "null")),
+    "total_phases": int(os.environ.get("TOTAL_PHASES", "0")),
+    "dispatches": int(os.environ.get("DISPATCHES", "0")),
+    "failed_phase": to_optional(os.environ.get("FAILED_PHASE", "null")),
+    "reason": to_optional(os.environ.get("REASON", "null")),
+    "checks": {
+        "build": {
+            "status": os.environ.get("CHECK_BUILD_STATUS", "SKIPPED"),
+            "detail": os.environ.get("CHECK_BUILD_DETAIL", "not-run"),
+        },
+        "greet": {
+            "status": os.environ.get("CHECK_GREET_STATUS", "SKIPPED"),
+            "detail": os.environ.get("CHECK_GREET_DETAIL", "not-run"),
+        },
+        "goodbye": {
+            "status": os.environ.get("CHECK_GOODBYE_STATUS", "SKIPPED"),
+            "detail": os.environ.get("CHECK_GOODBYE_DETAIL", "not-run"),
+        },
+        "test": {
+            "status": os.environ.get("CHECK_TEST_STATUS", "SKIPPED"),
+            "detail": os.environ.get("CHECK_TEST_DETAIL", "not-run"),
+        },
+    },
+}
+
+with open(os.environ["RESULT_JSON"], "w", encoding="utf-8") as f:
+    json.dump(payload, f, ensure_ascii=False, indent=2)
+    f.write("\n")
+PY
+
+  cat > "$RESULT_MD" <<EOF
+# RW Smoke Result
+
+- Status: $status
+- Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+- Target Root: $TARGET_ROOT
+- Git Head: $git_head
+- Total Phases: $SMOKE_TOTAL_PHASES
+- Dispatches: $SMOKE_EXPECTED_DISPATCHES
+- Failed Phase: $safe_failed_phase
+- Reason: $safe_reason
+
+## Checks
+- Build: $CHECK_BUILD_STATUS ($CHECK_BUILD_DETAIL)
+- Greet: $CHECK_GREET_STATUS ($CHECK_GREET_DETAIL)
+- Goodbye: $CHECK_GOODBYE_STATUS ($CHECK_GOODBYE_DETAIL)
+- Test: $CHECK_TEST_STATUS ($CHECK_TEST_DETAIL)
+EOF
+}
+
 on_unexpected_error() {
   local exit_code="${1:-1}"
   local line_no="${2:-unknown}"
   trap - ERR
+  if [ -n "$TARGET_ROOT" ]; then
+    write_smoke_result_artifacts "FAIL" "$CURRENT_STAGE" "line=$line_no exit=$exit_code"
+  fi
   assert_fail "stage failed: $CURRENT_STAGE" "line=$line_no exit=$exit_code"
   echo "  Stage failure: $CURRENT_STAGE (line $line_no, exit $exit_code)"
   echo ""
@@ -88,6 +230,10 @@ echo ""
 # ============================================================
 echo "[Scenario 1: New Project Flow]"
 S1="$TEST_DIR/scenario1"
+TARGET_ROOT="$S1"
+RESULT_DIR="$TARGET_ROOT/.ai/runtime/smoke"
+RESULT_JSON="$RESULT_DIR/last-result.json"
+RESULT_MD="$RESULT_DIR/last-result.md"
 
 # --- Step 1: Extract ---
 set_stage "extract"
@@ -111,6 +257,7 @@ assert_file_exists "$S1/.github/prompts/smoke/templates/run-task.subagent.md" "s
 assert_file_exists "$S1/scripts/rw-resolve-target-root.sh" "rw-resolve-target-root.sh extracted"
 assert_file_exists "$S1/scripts/rw-bootstrap-scaffold.sh" "rw-bootstrap-scaffold.sh extracted"
 assert_file_exists "$S1/scripts/rw-target-registry.sh" "rw-target-registry.sh extracted"
+assert_file_exists "$S1/scripts/validate-smoke-result.sh" "validate-smoke-result.sh extracted"
 assert_file_exists "$S1/.ai/CONTEXT.md" "CONTEXT.md extracted"
 assert_file_exists "$S1/.ai/GUIDE.md" "GUIDE.md extracted"
 assert_file_exists "$S1/.ai/features/FEATURE-TEMPLATE.md" "FEATURE-TEMPLATE.md extracted"
@@ -118,6 +265,7 @@ assert_file_exists "$S1/.ai/features/README.md" "features README extracted"
 assert_file_exists "$S1/.ai/templates/CONTEXT-BOOTSTRAP.md" "CONTEXT-BOOTSTRAP.md extracted"
 assert_file_exists "$S1/.ai/templates/PROJECT-CHARTER-TEMPLATE.md" "PROJECT-CHARTER-TEMPLATE.md extracted"
 assert_file_exists "$S1/.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md" "BOOTSTRAP-FEATURE-TEMPLATE.md extracted"
+assert_file_exists "$S1/.ai/templates/SMOKE-RESULT-SCHEMA.json" "SMOKE-RESULT-SCHEMA.json extracted"
 
 # --- Step 2: Scaffold ---
 set_stage "scaffold"
@@ -364,6 +512,73 @@ fi
 assert_progress_log_contains "$S1/.ai/PROGRESS.md" "REVIEW_OK TASK-04"
 assert_file_not_contains "$S1/.ai/PROGRESS.md" "REVIEW_FAIL" "no REVIEW_FAIL in final PROGRESS"
 assert_git_commit_count "$S1" 11 "Final commit count is 11"
+
+# --- Step 11: Final result artifacts ---
+set_stage "final-report artifacts"
+mkdir -p "$RESULT_DIR"
+
+if (cd "$S1" && npm run build --silent >/dev/null 2>&1); then
+  CHECK_BUILD_STATUS="PASS"
+  CHECK_BUILD_DETAIL="npm run build succeeded"
+else
+  CHECK_BUILD_STATUS="FAIL"
+  CHECK_BUILD_DETAIL="npm run build failed"
+fi
+
+FINAL_GREET_OUTPUT="$(cd "$S1" && node dist/index.js greet World 2>&1 || true)"
+if [ "$FINAL_GREET_OUTPUT" = "Hello, World!" ]; then
+  CHECK_GREET_STATUS="PASS"
+  CHECK_GREET_DETAIL='node dist/index.js greet World => "Hello, World!"'
+else
+  CHECK_GREET_STATUS="FAIL"
+  CHECK_GREET_DETAIL="unexpected output: $FINAL_GREET_OUTPUT"
+fi
+
+FINAL_GOODBYE_OUTPUT="$(cd "$S1" && node dist/index.js goodbye World 2>&1 || true)"
+if [ "$FINAL_GOODBYE_OUTPUT" = "Goodbye, World!" ]; then
+  CHECK_GOODBYE_STATUS="PASS"
+  CHECK_GOODBYE_DETAIL='node dist/index.js goodbye World => "Goodbye, World!"'
+else
+  CHECK_GOODBYE_STATUS="FAIL"
+  CHECK_GOODBYE_DETAIL="unexpected output: $FINAL_GOODBYE_OUTPUT"
+fi
+
+if has_npm_test_script "$S1/package.json"; then
+  if (cd "$S1" && npm test --silent >/dev/null 2>&1); then
+    CHECK_TEST_STATUS="PASS"
+    CHECK_TEST_DETAIL="npm test succeeded"
+  else
+    CHECK_TEST_STATUS="FAIL"
+    CHECK_TEST_DETAIL="npm test failed"
+  fi
+else
+  CHECK_TEST_STATUS="SKIPPED"
+  CHECK_TEST_DETAIL="no npm test script"
+fi
+
+OVERALL_STATUS="PASS"
+FAIL_REASON="null"
+FAIL_PHASE="null"
+if [ "$CHECK_BUILD_STATUS" = "FAIL" ] || [ "$CHECK_GREET_STATUS" = "FAIL" ] || [ "$CHECK_GOODBYE_STATUS" = "FAIL" ] || [ "$CHECK_TEST_STATUS" = "FAIL" ]; then
+  OVERALL_STATUS="FAIL"
+  FAIL_PHASE="final-report"
+  FAIL_REASON="one or more final checks failed"
+fi
+if [ "${_FAIL:-0}" -gt 0 ]; then
+  OVERALL_STATUS="FAIL"
+  FAIL_PHASE="${FAIL_PHASE:-final-report}"
+  FAIL_REASON="assertion failures=${_FAIL}"
+fi
+
+write_smoke_result_artifacts "$OVERALL_STATUS" "$FAIL_PHASE" "$FAIL_REASON"
+
+assert_file_exists "$RESULT_JSON" "smoke result json created"
+assert_file_exists "$RESULT_MD" "smoke result markdown created"
+assert_command_succeeds "smoke result json schema-valid" "$S1/scripts/validate-smoke-result.sh" "$RESULT_JSON" "$S1/.ai/templates/SMOKE-RESULT-SCHEMA.json"
+assert_file_contains "$RESULT_MD" "Status: $OVERALL_STATUS" "smoke result markdown has status"
+assert_json_field_equals "$RESULT_JSON" "status" "$OVERALL_STATUS" "result status matches expected"
+assert_json_field_equals "$RESULT_JSON" "total_phases" "$SMOKE_TOTAL_PHASES" "result total_phases is 8"
+assert_json_field_equals "$RESULT_JSON" "dispatches" "$SMOKE_EXPECTED_DISPATCHES" "result dispatches is 10"
 
 # ============================================================
 # Final summary

@@ -23,6 +23,8 @@ Result artifact contract (applies after `TARGET_ROOT` is resolved):
 - Persist final smoke results in both files:
   - `"$TARGET_ROOT/.ai/runtime/smoke/last-result.json"`
   - `"$TARGET_ROOT/.ai/runtime/smoke/last-result.md"`
+- Result JSON schema reference:
+  - `"$TARGET_ROOT/.ai/templates/SMOKE-RESULT-SCHEMA.json"`
 - Before printing a terminal final line (`SMOKE_TEST_PASS...` or `SMOKE_TEST_FAIL...`), update both artifacts first.
 - Required JSON fields:
   - `status` (`PASS` or `FAIL`)

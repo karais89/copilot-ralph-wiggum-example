@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RW Smoke Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "timestamp",
+    "target_root",
+    "git_head",
+    "total_phases",
+    "dispatches",
+    "failed_phase",
+    "reason",
+    "checks"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "target_root": {
+      "type": "string"
+    },
+    "git_head": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "total_phases": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "dispatches": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "failed_phase": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "build",
+        "greet",
+        "goodbye",
+        "test"
+      ],
+      "properties": {
+        "build": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "detail"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "PASS",
+                "FAIL",
+                "SKIPPED"
+              ]
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        },
+        "greet": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "detail"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "PASS",
+                "FAIL",
+                "SKIPPED"
+              ]
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        },
+        "goodbye": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "detail"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "PASS",
+                "FAIL",
+                "SKIPPED"
+              ]
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        },
+        "test": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "detail"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "PASS",
+                "FAIL",
+                "SKIPPED"
+              ]
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
