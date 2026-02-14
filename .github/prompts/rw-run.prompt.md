@@ -211,6 +211,13 @@ Rules:
 - Read/write only files under `TARGET_ROOT` for this run. Do not touch another workspace-level `.ai`.
 - Never call `#tool:agent/runSubagent` from this subagent (nested subagent calls are disallowed).
 - Run build/verification commands; if issues are found, fix them all.
+- TDD rule (testable tasks only):
+  - If `LOCKED_TASK_ID` is testable, follow Red -> Green before final commit:
+    - Write or update failing tests from Acceptance Criteria.
+    - Run the smallest relevant test command and confirm failure at least once.
+    - Implement the minimal code needed to pass.
+    - Re-run the task Verification command and confirm pass.
+  - If the task is non-testable (docs/config/chore), skip the Red step and include the reason in the completion log entry for `LOCKED_TASK_ID`.
 - After implementation, run the task Verification command at least once; on failure, self-fix and re-run verification up to 2 times before reporting.
 - Never fabricate verification output, completion status, or commit evidence.
 - Update <PROGRESS> for `LOCKED_TASK_ID` only (status to `completed`, commit message, and a Log entry).
