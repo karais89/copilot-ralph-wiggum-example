@@ -72,9 +72,16 @@ async function main() {
     ["rw-init.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND="]],
     ["rw-new-project.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-plan"]],
     ["rw-onboard-project.prompt.md", ["Step 0 (Mandatory):", "CODEBASE_SIGNAL_COUNT", "NEXT_COMMAND=rw-feature"]],
-    ["rw-plan.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-run"]],
-    ["rw-review.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=", "REVIEW_STATUS=", "REVIEW_PHASE_NOTE_FILE="]],
-    ["rw-run.prompt.md", ["Step 0 (Mandatory):", "RW_DOCTOR_AUTORUN_BEGIN", "NEXT_COMMAND=", "RW_SUBAGENT_COMPLETION_DELTA_INVALID"]],
+    ["rw-plan.prompt.md", ["Step 0 (Mandatory):", "PLAN_APPROVAL_GATE=<ON|OFF>", "NEXT_COMMAND=rw-run"]],
+    ["rw-review.prompt.md", [
+      "Step 0 (Mandatory):",
+      "NEXT_COMMAND=",
+      "REVIEW_STATUS=",
+      "REVIEW_PHASE_NOTE_FILE=",
+      "REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<line>|<rule>|<fix>",
+      "REVIEW_ISSUE <P0|P1|P2>|<file>|<line>|<rule>|<fix>",
+    ]],
+    ["rw-run.prompt.md", ["Step 0 (Mandatory):", "PLAN_APPROVAL_REQUIRED", "RW_DOCTOR_AUTORUN_BEGIN", "NEXT_COMMAND=", "RW_SUBAGENT_COMPLETION_DELTA_INVALID"]],
     ["rw-smoke-test.prompt.md", ["SMOKE_TEST_PASS", "SMOKE_TEST_FAIL", "$PROMPT_ROOT/smoke/SMOKE-CONTRACT.md"]],
   ]);
 
@@ -129,6 +136,14 @@ async function main() {
     if (!(await exists(requiredFile))) {
       errors.push(`${path.relative(repoRoot, requiredFile)}: missing file`);
     }
+  }
+
+  const ciWorkflowPath = path.join(repoRoot, ".github", "workflows", "rw-smoke-test.yml");
+  if (await exists(ciWorkflowPath)) {
+    const ciWorkflow = await fs.readFile(ciWorkflowPath, "utf8");
+    requireToken(errors, ".github/workflows/rw-smoke-test.yml", ciWorkflow, "node scripts/check-prompts.mjs");
+    requireToken(errors, ".github/workflows/rw-smoke-test.yml", ciWorkflow, "./scripts/rw-smoke-test.sh");
+    requireToken(errors, ".github/workflows/rw-smoke-test.yml", ciWorkflow, "npm test");
   }
 
   if (errors.length > 0) {

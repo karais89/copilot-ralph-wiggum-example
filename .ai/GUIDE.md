@@ -223,6 +223,10 @@ scripts/
     - 그 외에는 순차 실행
   - 리뷰 결과를 집계한 뒤 `REVIEW_OK`/`REVIEW_FAIL`/`REVIEW-ESCALATE`를 `PROGRESS`에 반영한다.
   - 리뷰 배치마다 상위 상태 토큰 `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`를 출력한다.
+  - structured finding 출력 형식:
+    - `REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<line>|<rule>|<fix>`
+    - `REVIEW_ISSUE <P0|P1|P2>|<file>|<line>|<rule>|<fix>`
+    - `<line>`은 1-based 정수 또는 `unknown`
   - 리뷰 배치마다 `.ai/notes/REVIEW-PHASE-COMPLETE-*.md` 1개를 생성한다.
 - `rw-archive.prompt.md`:
   - `PROGRESS.md`가 커졌을 때 수동 실행한다.
@@ -264,6 +268,10 @@ scripts/
 - `rw-run`은 같은 턴에서 doctor-equivalent preflight를 항상 1회 실행하고, 통과 시 루프로 진입한다.
 - 단, `rw-doctor-last-pass.env` 캐시가 유효하면(동일 타깃 + 10분 이내) 무거운 preflight를 건너뛴다.
 - preflight를 먼저 눈으로 확인하고 싶을 때만 `rw-doctor`를 수동 실행한다.
+- optional plan approval gate:
+  - `.ai/runtime/rw-plan-approval-required.flag`가 있으면 gate ON
+  - gate ON 상태에서 `.ai/runtime/rw-plan-approved.env`에 `PLAN_APPROVED=1`이 없으면 `PLAN_APPROVAL_REQUIRED`로 중단
+  - 승인 시 `./scripts/rw approve-plan` 사용
 - `rw-doctor`와 `rw-run`은 동일한 타깃 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/*.env`, legacy `.ai/runtime/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).
 - 오케스트레이터는 제품 코드를 직접 수정하지 않는다.
 - 제품 코드 경로는 저장소 구조(웹/앱/게임/유니티 등)에 따라 다르므로 `src/` 고정 가정을 두지 않는다.
