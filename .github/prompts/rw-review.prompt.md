@@ -12,6 +12,7 @@ Quick summary:
 - Dispatch review subagents per task (default sequential; parallel only when explicitly marked safe).
 - Write review outcomes to `PROGRESS` using `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`.
 - Emit one normalized review status token: `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`.
+- Emit structured issue counters: `REVIEW_ISSUE_COUNT`, `REVIEW_P0_COUNT`, `REVIEW_P1_COUNT`.
 - Write one phase completion note to `.ai/notes/`.
 
 Path resolution (mandatory before Step 0):
@@ -62,6 +63,9 @@ Procedure:
 2) If no completed task exists:
    - print `REVIEW_TARGET_MISSING`
    - print `REVIEW_STATUS=FAILED`
+   - print `REVIEW_ISSUE_COUNT=0`
+   - print `REVIEW_P0_COUNT=0`
+   - print `REVIEW_P1_COUNT=0`
    - print `REVIEW_PHASE_NOTE_FILE=none`
    - print `NEXT_COMMAND=rw-run`
    - stop.
@@ -73,6 +77,9 @@ Procedure:
    - print `REVIEW_NOTHING_TO_DO`
    - print `REVIEW_SUMMARY total=0 ok=0 fail=0 escalate=0 skipped=<completed-count>`
    - print `REVIEW_STATUS=APPROVED`
+   - print `REVIEW_ISSUE_COUNT=0`
+   - print `REVIEW_P0_COUNT=0`
+   - print `REVIEW_P1_COUNT=0`
    - print `REVIEW_PHASE_NOTE_FILE=none`
    - print `NEXT_COMMAND=rw-run`
    - stop.
@@ -80,6 +87,9 @@ Procedure:
    - print `runSubagent unavailable`
    - print `RW_ENV_UNSUPPORTED`
    - print `REVIEW_STATUS=FAILED`
+   - print `REVIEW_ISSUE_COUNT=0`
+   - print `REVIEW_P0_COUNT=0`
+   - print `REVIEW_P1_COUNT=0`
    - print `REVIEW_PHASE_NOTE_FILE=none`
    - print `NEXT_COMMAND=rw-run`
    - stop.
@@ -91,9 +101,19 @@ Procedure:
    - Before each dispatch print `RUNSUBAGENT_REVIEW_DISPATCH_BEGIN TASK-XX`.
    - After success print `RUNSUBAGENT_REVIEW_DISPATCH_OK TASK-XX`.
    - Subagent output contract (exactly one final line per task):
+     - Optional structured finding lines before the final line:
+       - `REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<rule>|<fix>`
+       - Use repository-relative `<file>` when possible; otherwise use `unknown`.
+       - `<rule>` and `<fix>` must be concise single-line strings without `|`.
      - `REVIEW_RESULT TASK-XX OK`
      - or `REVIEW_RESULT TASK-XX FAIL: <root-cause>`
 7) Aggregate subagent results and update `<PROGRESS>` once:
+   - Parse all `REVIEW_FINDING TASK-XX ...` lines and aggregate counters:
+     - `REVIEW_ISSUE_COUNT = total findings`
+     - `REVIEW_P0_COUNT = findings with severity P0`
+     - `REVIEW_P1_COUNT = findings with severity P1`
+   - If a task result is `FAIL` and no structured finding exists for that task, synthesize one:
+     - `P1|unknown|verification|<root-cause>`
    - If result is OK:
      - append `REVIEW_OK TASK-XX: verification passed`
    - If result is FAIL:
@@ -119,10 +139,18 @@ Procedure:
      - `- Timestamp: <YYYY-MM-DDTHH:MM:SSZ>`
      - `- REVIEW_STATUS: <APPROVED|NEEDS_REVISION|FAILED>`
      - `- REVIEW_SUMMARY: total=<n> ok=<a> fail=<b> escalate=<c> skipped=<d>`
+     - `- REVIEW_ISSUE_COUNT: <n>`
+     - `- REVIEW_P0_COUNT: <n>`
+     - `- REVIEW_P1_COUNT: <n>`
      - `- RUNSUBAGENT_REVIEW_DISPATCH_COUNT: <n>`
      - `- NEXT_COMMAND_CANDIDATE: <rw-archive|rw-run>`
 10) Print summary:
    - `REVIEW_SUMMARY total=<n> ok=<a> fail=<b> escalate=<c> skipped=<d>`
+   - `REVIEW_ISSUE_COUNT=<n>`
+   - `REVIEW_P0_COUNT=<n>`
+   - `REVIEW_P1_COUNT=<n>`
+   - Print one line per aggregated finding:
+     - `REVIEW_ISSUE <P0|P1|P2>|<file>|<rule>|<fix>`
    - `RUNSUBAGENT_REVIEW_DISPATCH_COUNT=<n>`
    - `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`
    - `REVIEW_PHASE_NOTE_FILE=<path>`
@@ -155,6 +183,8 @@ Rules:
 - Never fabricate outputs.
 
 Output contract:
+- Optional structured finding lines (zero or more):
+  - `REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<rule>|<fix>`
 - End with exactly one line:
   - `REVIEW_RESULT TASK-XX OK`
   - or `REVIEW_RESULT TASK-XX FAIL: <root-cause>`
