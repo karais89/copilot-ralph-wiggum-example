@@ -91,6 +91,7 @@ your-project/
 │   ├── rw-resolve-target-root.sh
 │   ├── rw-bootstrap-scaffold.sh
 │   ├── rw-target-registry.sh
+│   ├── rw
 │   ├── validate-smoke-result.sh
 │   └── check-prompts.mjs
 └── .ai/                       # Structural files
@@ -115,6 +116,7 @@ Copy these paths from this repo into your project:
 - `scripts/rw-resolve-target-root.sh`
 - `scripts/rw-bootstrap-scaffold.sh`
 - `scripts/rw-target-registry.sh`
+- `scripts/rw`
 - `scripts/validate-smoke-result.sh`
 - `scripts/check-prompts.mjs`
 - `.ai/CONTEXT.md`
@@ -175,6 +177,26 @@ Manual target switch from workspace root:
 ```
 
 If VS Code workspace root and actual target project root are different, update active target id + registry first, then keep legacy pointer synchronized for compatibility.
+
+### Workflow Helper Commands
+
+Use the lightweight helper script to check current state and next action:
+
+```bash
+./scripts/rw status
+./scripts/rw next
+```
+
+Optional workspace-root override:
+
+```bash
+./scripts/rw status /absolute/path/to/workspace-root
+./scripts/rw next /absolute/path/to/workspace-root
+```
+
+`rw next` prints machine-readable output:
+- `NEXT_COMMAND=<rw-new-project|rw-onboard-project|rw-feature|rw-plan|rw-run|rw-review|rw-archive>`
+- `NEXT_REASON=<reason-token>`
 
 ### Verification Guidance
 

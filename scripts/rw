@@ -1,0 +1,393 @@
+#!/usr/bin/env bash
+#
+# rw
+#
+# Lightweight workflow helper for Ralph Wiggum orchestration.
+#
+# Usage:
+#   ./scripts/rw status [workspace-root]
+#   ./scripts/rw next [workspace-root]
+#
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_ROOT_DEFAULT="$(pwd)"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./scripts/rw status [workspace-root]
+  ./scripts/rw next [workspace-root]
+
+Commands:
+  status   Print workflow state summary for the active target.
+  next     Print suggested NEXT_COMMAND based on current state.
+EOF
+}
+
+count_lines() {
+  local input="$1"
+  if [ -z "$input" ]; then
+    echo 0
+    return
+  fi
+  printf '%s\n' "$input" | awk 'NF{count++} END{print count+0}'
+}
+
+csv_or_none() {
+  local input="$1"
+  if [ -z "$input" ]; then
+    echo "none"
+    return
+  fi
+  printf '%s\n' "$input" | awk 'NF' | paste -sd, -
+}
+
+basename_csv_or_none() {
+  local input="$1"
+  local out=""
+  local line=""
+  if [ -z "$input" ]; then
+    echo "none"
+    return
+  fi
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    if [ -z "$out" ]; then
+      out="$(basename "$line")"
+    else
+      out="$out,$(basename "$line")"
+    fi
+  done <<EOF
+$input
+EOF
+  if [ -z "$out" ]; then
+    echo "none"
+  else
+    echo "$out"
+  fi
+}
+
+detect_existing_codebase() {
+  local root="$1"
+  local marker=""
+  local probe=""
+
+  for marker in \
+    package.json pyproject.toml requirements.txt setup.py Pipfile \
+    go.mod Cargo.toml Gemfile pom.xml build.gradle build.gradle.kts \
+    composer.json ; do
+    if [ -f "$root/$marker" ]; then
+      return 0
+    fi
+  done
+
+  for marker in src app lib cmd server client backend frontend; do
+    if [ -d "$root/$marker" ]; then
+      probe="$(find "$root/$marker" -type f -print -quit 2>/dev/null || true)"
+      if [ -n "$probe" ]; then
+        return 0
+      fi
+    fi
+  done
+
+  probe="$(
+    find "$root" -maxdepth 3 -type f \
+      \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.mjs' \
+         -o -name '*.py' -o -name '*.go' -o -name '*.rs' -o -name '*.java' -o -name '*.cs' \
+         -o -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.swift' \) \
+      ! -path "$root/.ai/*" \
+      ! -path "$root/.github/*" \
+      ! -path "$root/node_modules/*" \
+      ! -path "$root/dist/*" \
+      ! -path "$root/.git/*" \
+      -print -quit 2>/dev/null || true
+  )"
+  [ -n "$probe" ]
+}
+
+parse_task_counts() {
+  local progress_file="$1"
+  if [ ! -f "$progress_file" ]; then
+    echo "0 0 0"
+    return
+  fi
+  awk '
+    function trim(s) {
+      sub(/^[ \t]+/, "", s)
+      sub(/[ \t]+$/, "", s)
+      return s
+    }
+    BEGIN { in_table = 0 }
+    $0 ~ /^## Task Status/ { in_table = 1; next }
+    in_table && $0 ~ /^## / { in_table = 0 }
+    in_table && $0 ~ /^\|[[:space:]]*TASK-[0-9][0-9][[:space:]]*\|/ {
+      split($0, col, "|")
+      status = trim(col[4])
+      if (status == "pending") pending++
+      else if (status == "in-progress") in_progress++
+      else if (status == "completed") completed++
+    }
+    END {
+      printf "%d %d %d\n", pending + 0, in_progress + 0, completed + 0
+    }
+  ' "$progress_file"
+}
+
+collect_unresolved_escalate_ids() {
+  local progress_file="$1"
+  if [ ! -f "$progress_file" ]; then
+    return
+  fi
+  awk '
+    function first_task_id(line) {
+      if (match(line, /TASK-[0-9][0-9]/)) {
+        return substr(line, RSTART, RLENGTH)
+      }
+      return ""
+    }
+    {
+      if ($0 ~ /REVIEW-ESCALATE[[:space:]]+TASK-[0-9][0-9]/) {
+        id = first_task_id($0)
+        if (id != "") {
+          state[id] = 1
+        }
+      }
+      if ($0 ~ /REVIEW-ESCALATE-RESOLVED[[:space:]]+TASK-[0-9][0-9]/) {
+        id = first_task_id($0)
+        if (id != "") {
+          state[id] = 0
+        }
+      }
+    }
+    END {
+      for (id in state) {
+        if (state[id] == 1) {
+          print id
+        }
+      }
+    }
+  ' "$progress_file" | sort
+}
+
+collect_unreviewed_completed_ids() {
+  local progress_file="$1"
+  if [ ! -f "$progress_file" ]; then
+    return
+  fi
+  awk '
+    function trim(s) {
+      sub(/^[ \t]+/, "", s)
+      sub(/[ \t]+$/, "", s)
+      return s
+    }
+    function first_task_id(line) {
+      if (match(line, /TASK-[0-9][0-9]/)) {
+        return substr(line, RSTART, RLENGTH)
+      }
+      return ""
+    }
+    BEGIN { in_table = 0 }
+    $0 ~ /^## Task Status/ { in_table = 1; next }
+    in_table && $0 ~ /^## / { in_table = 0 }
+    in_table && $0 ~ /^\|[[:space:]]*TASK-[0-9][0-9][[:space:]]*\|/ {
+      split($0, col, "|")
+      task = trim(col[2])
+      status = trim(col[4])
+      if (status == "completed") {
+        completed_status[task] = 1
+      }
+    }
+    {
+      id = first_task_id($0)
+      if (id == "") {
+        next
+      }
+      if ($0 ~ /TASK-[0-9][0-9][[:space:]]+completed/) {
+        completed_log[id] = NR
+      }
+      if ($0 ~ /REVIEW_OK[[:space:]]+TASK-[0-9][0-9]/) {
+        review_log[id] = NR
+      }
+      if ($0 ~ /REVIEW_FAIL[[:space:]]+TASK-[0-9][0-9]/) {
+        review_log[id] = NR
+      }
+      if ($0 ~ /REVIEW-ESCALATE[[:space:]]+TASK-[0-9][0-9]/) {
+        review_log[id] = NR
+      }
+    }
+    END {
+      for (task in completed_status) {
+        complete_nr = (task in completed_log) ? completed_log[task] : 0
+        review_nr = (task in review_log) ? review_log[task] : 0
+        if (complete_nr == 0 || review_nr == 0 || review_nr <= complete_nr) {
+          print task
+        }
+      }
+    }
+  ' "$progress_file" | sort
+}
+
+count_log_entries() {
+  local progress_file="$1"
+  if [ ! -f "$progress_file" ]; then
+    echo 0
+    return
+  fi
+  awk '
+    BEGIN { in_log = 0 }
+    $0 ~ /^## Log/ { in_log = 1; next }
+    in_log && $0 ~ /^## / { in_log = 0 }
+    in_log && $0 ~ /^[[:space:]]*-[[:space:]]/ { count++ }
+    END { print count + 0 }
+  ' "$progress_file"
+}
+
+collect_ready_feature_files() {
+  local features_dir="$1"
+  if [ ! -d "$features_dir" ]; then
+    return
+  fi
+  rg -l --glob '*.md' '^Status:[[:space:]]*READY_FOR_PLAN[[:space:]]*$' "$features_dir" 2>/dev/null || true
+}
+
+select_next_command() {
+  if [ "$core_ready" -eq 0 ]; then
+    if detect_existing_codebase "$TARGET_ROOT"; then
+      next_command="rw-onboard-project"
+      next_reason="CORE_FILES_MISSING_EXISTING_CODEBASE"
+    else
+      next_command="rw-new-project"
+      next_reason="CORE_FILES_MISSING_EMPTY_REPO"
+    fi
+    return
+  fi
+
+  if [ -f "$PAUSE_FILE" ]; then
+    next_command="rw-archive"
+    next_reason="PAUSE_FILE_PRESENT"
+  elif [ -f "$ARCHIVE_LOCK_FILE" ]; then
+    next_command="rw-run"
+    next_reason="ARCHIVE_LOCK_PRESENT"
+  elif [ "$unresolved_escalate_count" -gt 0 ]; then
+    next_command="rw-review"
+    next_reason="UNRESOLVED_REVIEW_ESCALATE"
+  elif [ "$archive_required" -eq 1 ]; then
+    next_command="rw-archive"
+    next_reason="ARCHIVE_THRESHOLD_EXCEEDED"
+  elif [ "$pending_count" -gt 0 ] || [ "$in_progress_count" -gt 0 ]; then
+    next_command="rw-run"
+    next_reason="UNFINISHED_TASKS_PRESENT"
+  elif [ "$unreviewed_completed_count" -gt 0 ]; then
+    next_command="rw-review"
+    next_reason="COMPLETED_TASKS_NEED_REVIEW"
+  elif [ "$ready_feature_count" -gt 0 ]; then
+    next_command="rw-plan"
+    next_reason="FEATURE_READY_FOR_PLAN"
+  else
+    next_command="rw-feature"
+    next_reason="NO_READY_FEATURE_OR_PENDING_TASK"
+  fi
+}
+
+command="${1:-}"
+workspace_root="${2:-$WORKSPACE_ROOT_DEFAULT}"
+
+case "$command" in
+  status|next) ;;
+  -h|--help|"")
+    usage
+    exit 0
+    ;;
+  *)
+    echo "Unsupported command: $command" >&2
+    usage
+    exit 1
+    ;;
+esac
+
+resolver_output="$("$SCRIPT_DIR/rw-resolve-target-root.sh" "$workspace_root")"
+while IFS='=' read -r key value; do
+  case "$key" in
+    TARGET_ID) TARGET_ID="$value" ;;
+    TARGET_ROOT) TARGET_ROOT="$value" ;;
+  esac
+done <<EOF
+$resolver_output
+EOF
+
+if [ -z "${TARGET_ROOT:-}" ]; then
+  echo "RW_TARGET_ROOT_INVALID" >&2
+  echo "resolver did not return TARGET_ROOT" >&2
+  exit 2
+fi
+if [ -z "${TARGET_ID:-}" ]; then
+  TARGET_ID="unknown"
+fi
+
+AI_ROOT="$TARGET_ROOT/.ai"
+PLAN_FILE="$AI_ROOT/PLAN.md"
+PROGRESS_FILE="$AI_ROOT/PROGRESS.md"
+FEATURES_DIR="$AI_ROOT/features"
+PAUSE_FILE="$AI_ROOT/PAUSE.md"
+ARCHIVE_LOCK_FILE="$AI_ROOT/ARCHIVE_LOCK"
+
+core_ready=1
+if [ ! -f "$PLAN_FILE" ] || [ ! -f "$PROGRESS_FILE" ]; then
+  core_ready=0
+fi
+
+read -r pending_count in_progress_count completed_count <<EOF
+$(parse_task_counts "$PROGRESS_FILE")
+EOF
+task_total=$((pending_count + in_progress_count + completed_count))
+
+unresolved_escalate_ids="$(collect_unresolved_escalate_ids "$PROGRESS_FILE")"
+unresolved_escalate_count="$(count_lines "$unresolved_escalate_ids")"
+
+unreviewed_completed_ids="$(collect_unreviewed_completed_ids "$PROGRESS_FILE")"
+unreviewed_completed_count="$(count_lines "$unreviewed_completed_ids")"
+
+ready_feature_files="$(collect_ready_feature_files "$FEATURES_DIR")"
+ready_feature_count="$(count_lines "$ready_feature_files")"
+
+progress_size_chars=0
+if [ -f "$PROGRESS_FILE" ]; then
+  progress_size_chars="$(wc -m < "$PROGRESS_FILE" | tr -d '[:space:]')"
+fi
+log_entries_count="$(count_log_entries "$PROGRESS_FILE")"
+
+archive_required=0
+if [ "$progress_size_chars" -gt 8000 ] || [ "$completed_count" -gt 20 ] || [ "$log_entries_count" -gt 40 ]; then
+  archive_required=1
+fi
+
+next_command=""
+next_reason=""
+select_next_command
+
+if [ "$command" = "next" ]; then
+  echo "TARGET_ROOT=$TARGET_ROOT"
+  echo "NEXT_COMMAND=$next_command"
+  echo "NEXT_REASON=$next_reason"
+  exit 0
+fi
+
+echo "RW_STATUS=OK"
+echo "TARGET_ID=$TARGET_ID"
+echo "TARGET_ROOT=$TARGET_ROOT"
+echo "TASK_TOTAL=$task_total"
+echo "TASK_PENDING=$pending_count"
+echo "TASK_IN_PROGRESS=$in_progress_count"
+echo "TASK_COMPLETED=$completed_count"
+echo "UNREVIEWED_COMPLETED_COUNT=$unreviewed_completed_count"
+echo "UNREVIEWED_COMPLETED_TASKS=$(csv_or_none "$unreviewed_completed_ids")"
+echo "REVIEW_ESCALATE_UNRESOLVED_COUNT=$unresolved_escalate_count"
+echo "REVIEW_ESCALATE_UNRESOLVED_TASKS=$(csv_or_none "$unresolved_escalate_ids")"
+echo "FEATURE_READY_FOR_PLAN_COUNT=$ready_feature_count"
+echo "FEATURE_READY_FOR_PLAN_FILES=$(basename_csv_or_none "$ready_feature_files")"
+echo "PROGRESS_SIZE_CHARS=$progress_size_chars"
+echo "PROGRESS_LOG_ENTRIES=$log_entries_count"
+echo "ARCHIVE_REQUIRED=$archive_required"
+echo "NEXT_COMMAND=$next_command"
+echo "NEXT_REASON=$next_reason"
