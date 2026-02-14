@@ -32,6 +32,19 @@ rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  → 
 - Review is manual and explicit via `rw-review` (subagent-backed batch review, deterministic parallel gate).
 - Archive threshold is hard-stop; run resumes after manual `rw-archive`.
 
+### Branch Strategy (github-flow)
+
+- Keep `main` always releasable.
+- Do all work on short-lived branches, not directly on `main`.
+- Recommended branch naming: `codex/<short-topic>`.
+- Typical flow:
+  1. Update `main`
+  2. Create `codex/<short-topic>`
+  3. Commit on branch
+  4. Open PR and pass checks
+  5. Squash merge to `main`
+  6. Delete merged branch
+
 ### Key Benefits
 
 - **Cost efficiency** — 1 premium request can drive an entire project

@@ -48,6 +48,21 @@ scripts/
 - target root 해석은 `scripts/rw-resolve-target-root.sh`를 공통 기준으로 사용한다.
 - 신규 스캐폴딩은 `scripts/rw-bootstrap-scaffold.sh`를 공통 기준으로 사용한다.
 
+## Git 브랜치 정책 (github-flow)
+
+- 기본 전략은 `github-flow`를 유지한다.
+- `main`은 항상 배포 가능(또는 사용 가능) 상태로 유지한다.
+- 모든 변경은 `main`에서 직접 작업하지 않고 작업 브랜치에서 진행한다.
+- 브랜치 이름은 `codex/<short-topic>` 형식을 사용한다.
+- 작업 순서:
+  1. `main` 최신화
+  2. `codex/<short-topic>` 브랜치 생성
+  3. 브랜치에서 커밋
+  4. PR 생성 후 리뷰/체크 통과
+  5. squash merge
+  6. 머지 후 브랜치 삭제
+- 예외: 긴급 핫픽스도 원칙적으로 별도 브랜치(`codex/hotfix-...`)를 사용한다.
+
 ## 사용 방법
 
 1. VS Code Copilot Chat에서 새 대화를 연다.
