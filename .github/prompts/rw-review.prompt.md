@@ -13,7 +13,7 @@ Quick summary:
 - Write review outcomes to `PROGRESS` using `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`.
 - Emit one normalized review status token: `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`.
 - Emit structured issue counters: `REVIEW_ISSUE_COUNT`, `REVIEW_P0_COUNT`, `REVIEW_P1_COUNT`.
-- Write one phase completion note to `.ai/notes/`.
+- Write one phase completion note to `.ai/notes/` with standardized cycle-result fields.
 
 Path resolution (mandatory before Step 0):
 - Follow `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md` exactly.
@@ -134,10 +134,15 @@ Procedure:
 9) Write one review phase completion note under `<NOTES>`:
    - Ensure `<NOTES>` exists.
    - Create file: `REVIEW-PHASE-COMPLETE-YYYYMMDD-HHMM.md` (if exists, append `-v2`, `-v3`, ...).
+   - Determine `STOP_REASON` for the note:
+     - `REVIEW_BATCH_OK` when `REVIEW_STATUS=APPROVED`
+     - `REVIEW_BATCH_FAIL` when `REVIEW_STATUS=NEEDS_REVISION` or `REVIEW_STATUS=FAILED`
    - Note content (concise, machine-friendly):
      - `# Review Phase Complete`
      - `- Timestamp: <YYYY-MM-DDTHH:MM:SSZ>`
+     - `- PHASE: review`
      - `- REVIEW_STATUS: <APPROVED|NEEDS_REVISION|FAILED>`
+     - `- STOP_REASON: <REVIEW_BATCH_OK|REVIEW_BATCH_FAIL>`
      - `- REVIEW_SUMMARY: total=<n> ok=<a> fail=<b> escalate=<c> skipped=<d>`
      - `- REVIEW_ISSUE_COUNT: <n>`
      - `- REVIEW_P0_COUNT: <n>`
