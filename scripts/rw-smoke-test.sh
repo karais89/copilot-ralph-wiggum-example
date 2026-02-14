@@ -516,7 +516,121 @@ assert_progress_log_contains "$S1/.ai/PROGRESS.md" "REVIEW_OK TASK-04"
 assert_file_not_contains "$S1/.ai/PROGRESS.md" "REVIEW_FAIL" "no REVIEW_FAIL in final PROGRESS"
 assert_git_commit_count "$S1" 11 "Final commit count is 11"
 
-# --- Step 11: Final result artifacts ---
+# ============================================================
+# Scenario 3: Existing Project Onboarding Flow
+# ============================================================
+echo ""
+echo "[Scenario 3: Existing Project Onboarding Flow]"
+S3="$TEST_DIR/scenario3"
+
+# --- Step 11: Extract ---
+set_stage "extract (existing project)"
+"$REPO_ROOT/scripts/extract-template.sh" "$S3" >/dev/null 2>&1
+assert_file_exists "$S3/.github/prompts/rw-onboard-project.prompt.md" "rw-onboard-project.prompt.md extracted (scenario3)"
+
+# --- Step 12: Seed existing codebase signals ---
+set_stage "seed existing codebase (sim)"
+cat > "$S3/README.md" <<'EOF'
+# 기존 서비스 코드베이스
+
+이 저장소는 이미 구현이 진행된 서비스이며, 워크플로우 온보딩 대상입니다.
+기능 개발은 기존 구조를 유지하면서 확장되어야 하며, 변경 전후 검증 경로가 명확해야 합니다.
+문서 언어와 관계없이 파일 구조, 실행 경로, 검증 명령을 기준으로 작업 흐름을 결정합니다.
+EOF
+
+cat > "$S3/package.json" <<'EOF'
+{
+  "name": "existing-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}
+EOF
+
+cat > "$S3/tsconfig.json" <<'EOF'
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "strict": true,
+    "outDir": "dist"
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
+EOF
+
+mkdir -p "$S3/src"
+cat > "$S3/src/index.ts" <<'EOF'
+export function greet(name: string): string {
+  return `Hello, ${name}!`;
+}
+EOF
+
+assert_file_exists "$S3/README.md" "scenario3 README exists"
+assert_file_exists "$S3/package.json" "scenario3 package.json exists"
+assert_file_exists "$S3/src/index.ts" "scenario3 source file exists"
+
+# --- Step 13: rw-onboard-project (simulated) ---
+set_stage "rw-onboard-project (sim)"
+"$S3/scripts/rw-bootstrap-scaffold.sh" "$S3" >/dev/null 2>&1
+assert_file_exists "$S3/.ai/tasks/TASK-01-bootstrap-workspace.md" "scenario3 TASK-01 initially scaffolded"
+
+cat > "$S3/.ai/PLAN.md" <<EOF
+# existing-app
+
+## Overview
+- Existing TypeScript repository with source files under src/.
+- Manifest and build configuration are already present.
+- Next step: define first feature via rw-feature.
+
+## Current Codebase Snapshot
+- Captured At: $TODAY
+- Codebase Signals: MANIFEST_SIGNAL,SOURCE_SIGNAL,README_SIGNAL
+- Core Stack: TypeScript, Node.js
+- Key Paths: package.json, tsconfig.json, src/index.ts
+- Verification Baseline: npm run build
+
+## Feature Notes (append-only)
+EOF
+
+rm -f "$S3/.ai/tasks/TASK-01-bootstrap-workspace.md"
+
+cat > "$S3/.ai/PROGRESS.md" <<EOF
+# Progress
+
+## Task Status
+| Task | Title | Status | Commit |
+|------|-------|--------|--------|
+
+## Log
+- **$TODAY** — Initial workspace scaffolded by rw-bootstrap-scaffold.
+- **$TODAY** — Existing-project onboarding removed bootstrap TASK-01.
+EOF
+
+cat > "$S3/.ai/runtime/rw-onboard-sim-result.env" <<EOF
+ONBOARD_RESULT=updated
+CONTEXT_MODE=EXISTING_READY
+CODEBASE_SIGNAL_COUNT=3
+SNAPSHOT_RESULT=appended
+TASK01_RESULT=removed
+VERIFICATION_BASELINE=npm run build
+NEXT_COMMAND=rw-feature
+EOF
+
+assert_file_not_exists "$S3/.ai/tasks/TASK-01-bootstrap-workspace.md" "scenario3 bootstrap TASK-01 removed"
+assert_file_contains "$S3/.ai/PLAN.md" "## Current Codebase Snapshot" "scenario3 PLAN has snapshot section"
+assert_file_contains "$S3/.ai/PLAN.md" "Verification Baseline: npm run build" "scenario3 PLAN has verification baseline"
+assert_file_contains "$S3/.ai/PLAN.md" "## Feature Notes (append-only)" "scenario3 PLAN keeps Feature Notes section"
+assert_file_not_contains "$S3/.ai/PROGRESS.md" "| TASK-01 |" "scenario3 PROGRESS has no TASK-01 row"
+assert_progress_log_contains "$S3/.ai/PROGRESS.md" "Existing-project onboarding removed bootstrap TASK-01."
+assert_file_contains "$S3/.ai/runtime/rw-onboard-sim-result.env" "CONTEXT_MODE=EXISTING_READY" "scenario3 context mode is EXISTING_READY"
+assert_file_contains "$S3/.ai/runtime/rw-onboard-sim-result.env" "NEXT_COMMAND=rw-feature" "scenario3 next command is rw-feature"
+
+# --- Step 14: Final result artifacts ---
 set_stage "final-report artifacts"
 mkdir -p "$RESULT_DIR"
 
