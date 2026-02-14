@@ -43,6 +43,14 @@ Repository-specific instructions for Codex agents working in this project.
 - Keep commits focused by concern (prompt rules vs script logic vs docs).
 - In commit/PR summary, include what was validated.
 
+## Completion Handshake (Required)
+
+- For any non-readonly task that changed files, after commit you must explicitly ask merge intent before ending.
+- Default closing question:
+  - `작업 완료했습니다. main으로 머지(또는 PR 생성)할까요?`
+- Do not assume merge automatically, unless user explicitly requested merge/push in the same turn.
+- If user requested merge/push explicitly, execute it and then report the result.
+
 ## Safety Notes
 
 - Do not remove mandatory `Step 0` guards or required stop tokens without explicit request.
