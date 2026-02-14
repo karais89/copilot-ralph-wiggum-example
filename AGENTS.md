@@ -13,6 +13,8 @@ Repository-specific instructions for Codex agents working in this project.
 - Language/token policy: `.ai/CONTEXT.md`
 - Public project usage docs: `README.md`
 - Orchestration prompts: `.github/prompts/rw-*.prompt.md`
+- Smoke orchestration entry prompt: `.github/prompts/rw-smoke-test.prompt.md`
+- Historical verification reference (non-authoritative): `.ai/RW-VERIFICATION-REPORT.md`
 
 ## Branch Strategy (Required)
 
@@ -48,6 +50,7 @@ Repository-specific instructions for Codex agents working in this project.
 ## Validation Rules
 
 - When changing prompts/scripts/templates related to RW orchestration, run:
+  - `node scripts/check-prompts.mjs`
   - `./scripts/rw-smoke-test.sh`
 - When changing smoke result contract/schema/validation, ensure:
   - `scripts/validate-smoke-result.sh` still validates generated `last-result.json`.
