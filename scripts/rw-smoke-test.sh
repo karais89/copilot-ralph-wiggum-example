@@ -270,6 +270,8 @@ assert_file_exists "$S1/.ai/templates/PROJECT-CHARTER-TEMPLATE.md" "PROJECT-CHAR
 assert_file_exists "$S1/.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md" "BOOTSTRAP-FEATURE-TEMPLATE.md extracted"
 assert_file_exists "$S1/.ai/templates/SMOKE-RESULT-SCHEMA.json" "SMOKE-RESULT-SCHEMA.json extracted"
 assert_command_succeeds "prompt integrity check passes" bash -c "cd '$S1' && node scripts/check-prompts.mjs >/dev/null 2>&1"
+assert_command_succeeds "rw helper next works pre-scaffold" bash -c "cd '$S1' && ./scripts/rw next >/dev/null 2>&1"
+assert_command_succeeds "rw helper run alias resolves prompt" bash -c "cd '$S1' && ./scripts/rw run >/dev/null 2>&1"
 
 # --- Step 2: Scaffold ---
 set_stage "scaffold"

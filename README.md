@@ -185,6 +185,7 @@ Use the lightweight helper script to check current state and next action:
 ```bash
 ./scripts/rw status
 ./scripts/rw next
+./scripts/rw go
 ```
 
 Optional workspace-root override:
@@ -192,11 +193,31 @@ Optional workspace-root override:
 ```bash
 ./scripts/rw status /absolute/path/to/workspace-root
 ./scripts/rw next /absolute/path/to/workspace-root
+./scripts/rw go /absolute/path/to/workspace-root
 ```
 
-`rw next` prints machine-readable output:
+Single-command prompt aliases:
+
+```bash
+./scripts/rw new
+./scripts/rw onboard
+./scripts/rw init
+./scripts/rw doctor
+./scripts/rw feature
+./scripts/rw plan
+./scripts/rw run
+./scripts/rw review
+./scripts/rw archive
+./scripts/rw smoke
+```
+
+`rw next` prints machine-readable recommendation tokens:
 - `NEXT_COMMAND=<rw-new-project|rw-onboard-project|rw-feature|rw-plan|rw-run|rw-review|rw-archive>`
 - `NEXT_REASON=<reason-token>`
+
+`rw go` resolves `NEXT_COMMAND` and prints mapped prompt dispatch info:
+- `COPILOT_PROMPT=<rw-*.prompt target>`
+- `PROMPT_FILE=<workspace/.github/prompts/...>`
 
 ### Verification Guidance
 
