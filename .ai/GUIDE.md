@@ -202,6 +202,8 @@ scripts/
     - 병렬 batch size는 고정 2
     - 그 외에는 순차 실행
   - 리뷰 결과를 집계한 뒤 `REVIEW_OK`/`REVIEW_FAIL`/`REVIEW-ESCALATE`를 `PROGRESS`에 반영한다.
+  - 리뷰 배치마다 상위 상태 토큰 `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`를 출력한다.
+  - 리뷰 배치마다 `.ai/notes/REVIEW-PHASE-COMPLETE-*.md` 1개를 생성한다.
 - `rw-archive.prompt.md`:
   - `PROGRESS.md`가 커졌을 때 수동 실행한다.
   - 기준: `PROGRESS.md > 8000 chars` 또는 `completed > 20` 또는 `log > 40`.
