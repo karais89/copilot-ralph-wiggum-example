@@ -10,6 +10,7 @@ Language policy reference: `<CONTEXT>`
 Quick summary:
 - The orchestrator runs implementation subagents sequentially until all tasks are complete.
 - Run `rw-review.prompt.md` after `rw-run` completes to review completed tasks in batch.
+- On successful completion, write one run phase completion note under `.ai/notes/`.
 - Archive is always manual via `rw-archive.prompt.md`.
 
 Path resolution (mandatory before Step 0):
@@ -23,6 +24,7 @@ Path resolution (mandatory before Step 0):
   - `<PLAN>` = `TARGET_ROOT/.ai/PLAN.md`
   - `<TASKS>` = `TARGET_ROOT/.ai/tasks/`
   - `<PROGRESS>` = `TARGET_ROOT/.ai/PROGRESS.md`
+  - `<NOTES>` = `TARGET_ROOT/.ai/notes/`
   - `<ARCHIVE_DIR>` = `TARGET_ROOT/.ai/progress-archive/`
 
 <ORCHESTRATOR_INSTRUCTIONS>
@@ -86,7 +88,7 @@ Step 0 (Mandatory):
 Important:
 - The orchestrator must never edit product code directly.
 - Product code paths are repository-dependent (web/app/game/unity/etc.); do not assume `src/` as the only location.
-- The orchestrator may edit only: <PROGRESS> and <PLAN> (`Feature Notes` append-only runtime notes only).
+- The orchestrator may edit only: <PROGRESS>, <PLAN> (`Feature Notes` append-only runtime notes only), and one run phase completion note in <NOTES>.
 - Never create/modify `TARGET_ROOT/.ai/tasks/TASK-XX-*.md` during `rw-run`; task decomposition belongs to `rw-plan`.
 - This prompt must run in a top-level Copilot Chat turn.
   - If not top-level, print `TOP_LEVEL_REQUIRED` and stop.
@@ -138,7 +140,19 @@ Repeat:
          - stop
        - Append one log line to <PROGRESS>:
          - `- **YYYY-MM-DD** — RUNSUBAGENT_DISPATCH_COUNT: <RUNSUBAGENT_DISPATCH_COUNT>`
+       - Write one run phase completion note under <NOTES>:
+         - Ensure <NOTES> exists.
+         - Create file: `RUN-PHASE-COMPLETE-YYYYMMDD-HHMM.md` (if exists, append `-v2`, `-v3`, ...).
+         - Note content (concise, machine-friendly):
+           - `# Run Phase Complete`
+           - `- Timestamp: <YYYY-MM-DDTHH:MM:SSZ>`
+           - `- PHASE: run`
+           - `- RUN_STATUS: COMPLETED`
+           - `- STOP_REASON: ALL_TASKS_COMPLETED`
+           - `- RUNSUBAGENT_DISPATCH_COUNT: <RUNSUBAGENT_DISPATCH_COUNT>`
+           - `- NEXT_COMMAND_CANDIDATE: rw-review`
        - print `RUNSUBAGENT_DISPATCH_COUNT=<RUNSUBAGENT_DISPATCH_COUNT>`
+       - print `RUN_PHASE_NOTE_FILE=<path>`
        - print "✅ All tasks completed."
        - print "Next: run rw-review.prompt.md to review completed tasks."
        - print `NEXT_COMMAND=rw-review`
