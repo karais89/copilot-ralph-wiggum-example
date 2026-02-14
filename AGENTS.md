@@ -44,6 +44,9 @@ Repository-specific instructions for Codex agents working in this project.
 
 - Keep parser-safe tokens in English exactly as defined (`Task Status`, `Log`, `pending`, `in-progress`, `completed`, error tokens).
 - Prompt body language stays English; `.ai/*` user-facing docs default to Korean unless policy says otherwise.
+- Entry prompt selection:
+  - Use `rw-new-project` for new/empty repositories.
+  - Use `rw-onboard-project` for existing codebases, then follow `NEXT_COMMAND=rw-feature`.
 - For orchestration changes, prefer minimal diffs and preserve existing machine-readable tokens/contracts.
 - If you add or move template assets/prompts/scripts used by extraction, update `scripts/extract-template.sh` accordingly.
 
