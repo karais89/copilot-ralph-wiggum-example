@@ -41,6 +41,14 @@ CHECK_GOODBYE_DETAIL="not-run"
 CHECK_TEST_STATUS="SKIPPED"
 CHECK_TEST_DETAIL="not-run"
 
+# Ensure commits work in CI runners without global git identity.
+SMOKE_GIT_USER_NAME="${SMOKE_GIT_USER_NAME:-rw-smoke-bot}"
+SMOKE_GIT_USER_EMAIL="${SMOKE_GIT_USER_EMAIL:-rw-smoke@example.invalid}"
+export GIT_AUTHOR_NAME="$SMOKE_GIT_USER_NAME"
+export GIT_AUTHOR_EMAIL="$SMOKE_GIT_USER_EMAIL"
+export GIT_COMMITTER_NAME="$SMOKE_GIT_USER_NAME"
+export GIT_COMMITTER_EMAIL="$SMOKE_GIT_USER_EMAIL"
+
 set_stage() {
   CURRENT_STAGE="$1"
   echo ""
