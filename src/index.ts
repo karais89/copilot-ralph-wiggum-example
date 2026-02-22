@@ -7,6 +7,7 @@ import { doneCommand } from "./commands/update.js";
 import { deleteCommand } from "./commands/delete.js";
 import { statsCommand } from "./commands/stats.js";
 import { clearCommand } from "./commands/clear.js";
+import { exportCommand } from "./commands/export.js";
 
 // Global error handlers to prevent crashes from unhandled exceptions
 process.on("uncaughtException", (error: Error) => {
@@ -125,6 +126,19 @@ program
   .action(async () => {
     try {
       await clearCommand();
+    } catch (error) {
+      console.error(`❌ Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// Export command: todo export [output]
+program
+  .command("export [output]")
+  .description("Export all todos to a CSV file")
+  .action(async (output?: string) => {
+    try {
+      await exportCommand(output ?? "todos.csv");
     } catch (error) {
       console.error(`❌ Error: ${(error as Error).message}`);
       process.exit(1);
