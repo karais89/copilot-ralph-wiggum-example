@@ -2,7 +2,7 @@
 name: rw-orchestrator
 description: "All-in-one orchestrator: Plan → Run → Review pipeline in a single invocation"
 agent: agent
-argument-hint: "No input. Requires a READY_FOR_PLAN feature file in .ai/features/. Target root resolved via .ai/runtime/rw-active-target-id.txt."
+argument-hint: "Optional: one-line feature summary (e.g. 'add export command'). If omitted, a READY_FOR_PLAN feature file must already exist in .ai/features/. Target root resolved via .ai/runtime/rw-active-target-id.txt."
 ---
 Language policy reference: `<CONTEXT>`
 Quick summary:
@@ -54,6 +54,8 @@ Step 0 (Mandatory):
    - If `<HITL_FLAG>` exists, set `HITL_MODE=ON`.
    - Otherwise set `HITL_MODE=OFF`.
    - Print `HITL_MODE=<ON|OFF>`.
+10) Capture `FEATURE_SUMMARY` from agent invocation argument (the optional one-line feature summary; may be empty).
+
 Important:
 - The orchestrator must never edit product code directly.
 - The orchestrator may edit only: `<PROGRESS>`, `<PLAN>` (`Feature Notes` append-only), `<NOTES>`, feature file status, and new `TASK-XX` files during Plan phase.
@@ -62,26 +64,51 @@ Important:
   - `NEXT_COMMAND=<rw-plan|rw-run|rw-review|rw-archive|rw-feature>`
 - On every phase transition, print exactly one:
   - `ORCHESTRATOR_PHASE=<PLAN|RUN|REVIEW|COMPLETE>`
+## Phase 0 — FEATURE
+This phase runs only when no `READY_FOR_PLAN` feature file exists and `FEATURE_SUMMARY` is available.
+This phase performs the same work as `rw-feature.prompt.md`:
+1) Resolve `NON_INTERACTIVE_MODE`:
+   - true only if `TARGET_ROOT/.ai/runtime/rw-noninteractive.flag` exists.
+2) Resolve `FEATURE_SUMMARY`:
+   - Use agent argument if provided.
+   - If missing and `NON_INTERACTIVE_MODE=true`, use default: `Add a command to export action-item lists as a markdown report.`
+   - If missing and `NON_INTERACTIVE_MODE=false`, use `#tool:vscode/askQuestions` to ask for a one-line feature summary.
+   - If still missing after one interaction: print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
+3) Ensure `<FEATURES>` directory exists; create if missing.
+4) Build need statement from `FEATURE_SUMMARY` and repository context:
+   - `User`, `Problem`, `Desired Outcome`, `Acceptance Signal`.
+   - If any critical field (`User`, `Problem`, `Desired Outcome`) is missing and `NON_INTERACTIVE_MODE=false`, run at most one clarification round with at most two questions.
+   - If `NON_INTERACTIVE_MODE=true`, fill missing fields with conservative defaults and mark as assumptions.
+5) Generate filename: `YYYYMMDD-HHMM-<slug>.md` (append `-v2`, `-v3` if exists).
+6) Create exactly one feature file under `<FEATURES>` with sections:
+   `# FEATURE: <slug>`, `Status: READY_FOR_PLAN`, `Planning Profile: STANDARD`,
+   `## Summary`, `## Need Statement`, `## Goal`, `## In Scope`, `## Out of Scope`,
+   `## Functional Requirements`, `## Constraints`, `## Acceptance`,
+   `## Edge Cases and Error Handling`, `## Verification Baseline`, `## Notes`.
+   - Write user-facing prose in the resolved user-document language (Korean default).
+   - In `Notes`, include: source (`rw-orchestrator/phase-0`), created timestamp, assumptions list if any.
+7) Print output summary:
+   - `FEATURE_FILE=<path>`
+   - `FEATURE_STATUS=READY_FOR_PLAN`
+   - `ORCHESTRATOR_PHASE=PLAN`
+8) Proceed directly to Phase 1 (no HITL gate for Phase 0).
+
 ## Phase 1 — PLAN
 Print `ORCHESTRATOR_PHASE=PLAN`
 This phase performs the same work as `rw-plan.prompt.md`:
 1) Feature input resolution:
    a) Read `<FEATURES>`.
    b) If `<FEATURES>` is missing or unreadable:
-      - print `FEATURES_DIR_MISSING`
-      - print `Run rw-feature first, then retry rw-orchestrator.`
-      - print `NEXT_COMMAND=rw-feature`
-      - stop
+      - If `FEATURE_SUMMARY` is available: run Phase 0 first.
+      - Otherwise: print `FEATURES_DIR_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
    c) Build input-file candidates from `<FEATURES>/*.md`, excluding `FEATURE-TEMPLATE.md` and `README.md`.
    d) If no candidates exist:
-      - print `FEATURE_FILE_MISSING`
-      - print `NEXT_COMMAND=rw-feature`
-      - stop
+      - If `FEATURE_SUMMARY` is available: run Phase 0 first.
+      - Otherwise: print `FEATURE_FILE_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
    e) Select files with exact line: `Status: READY_FOR_PLAN`.
    f) If no READY candidates exist:
-      - print `FEATURE_NOT_READY`
-      - print `NEXT_COMMAND=rw-feature`
-      - stop
+      - If `FEATURE_SUMMARY` is available: run Phase 0 first.
+      - Otherwise: print `FEATURE_NOT_READY`, print `NEXT_COMMAND=rw-feature`, stop.
    g) If multiple READY candidates, select latest by lexical sort.
       - Print `FEATURE_MULTI_READY_AUTOSELECTED=<selected-filename>`.
    h) Resolve planning profile from selected feature file:
@@ -263,10 +290,15 @@ This phase performs the same work as `rw-review.prompt.md`:
     - stop
 ## Phase Detection (Resume Support)
 When this orchestrator starts, it must detect the current phase from workspace state:
-1) If `<PROGRESS>` does not exist or has no task rows → start at Phase 1 (Plan).
+0) If no `READY_FOR_PLAN` feature file exists:
+   - If `FEATURE_SUMMARY` argument is provided → start at Phase 0 (Feature).
+   - Otherwise → print `FEATURE_NOT_READY`, print `NEXT_COMMAND=rw-feature`, stop.
+1) If a `READY_FOR_PLAN` feature file exists and `<PROGRESS>` does not exist or has no task rows → start at Phase 1 (Plan).
 2) If `<PROGRESS>` has `pending`/`in-progress` tasks → start at Phase 2 (Run).
 3) If `<PROGRESS>` has only `completed` tasks and unreviewed candidates exist → start at Phase 3 (Review).
-4) If `<PROGRESS>` has only reviewed and completed tasks → print `ORCHESTRATOR_NOTHING_TO_DO`, `NEXT_COMMAND=rw-feature`, stop.
+4) If `<PROGRESS>` has only reviewed and completed tasks:
+   - If `FEATURE_SUMMARY` argument is provided → start at Phase 0 (Feature) for the next feature.
+   - Otherwise → print `ORCHESTRATOR_NOTHING_TO_DO`, print `NEXT_COMMAND=rw-feature`, stop.
 This allows `rw-orchestrator` to be re-invoked after HITL pauses or interruptions.
 ## Rules
 - Invoke runSubagent sequentially (one at a time) unless review parallel mode is enabled.
