@@ -3,6 +3,24 @@ name: rw-orchestrator
 description: "All-in-one orchestrator: Plan → Run → Review pipeline in a single invocation"
 agent: agent
 argument-hint: "Optional: one-line feature summary (e.g. 'add export command'). If omitted, a READY_FOR_PLAN feature file must already exist in .ai/features/. Target root resolved via .ai/runtime/rw-active-target-id.txt."
+tools:
+  - runSubagent
+  - runInTerminal
+  - editFiles
+  - codebase
+  - readFile
+  - listDirectory
+  - fileSearch
+  - textSearch
+  - terminalLastCommand
+  - problems
+  - agent
+agents: ['*']
+handoffs:
+  - label: "Continue →"
+    agent: rw-orchestrator
+    prompt: "Continue orchestration from current phase."
+    send: false
 ---
 Language policy reference: `<CONTEXT>`
 Quick summary:
@@ -61,7 +79,7 @@ Important:
 - The orchestrator may edit only: `<PROGRESS>`, `<PLAN>` (`Feature Notes` append-only), `<NOTES>`, feature file status, and new `TASK-XX` files during Plan phase.
 - Never resurrect archived completed tasks to `pending`.
 - On every controlled stop/exit path, print exactly one machine-readable line:
-  - `NEXT_COMMAND=<rw-plan|rw-run|rw-review|rw-archive|rw-feature>`
+  - `NEXT_COMMAND=<rw-plan|rw-run|rw-review|rw-archive|rw-feature|rw-orchestrator>`
 - On every phase transition, print exactly one:
   - `ORCHESTRATOR_PHASE=<PLAN|RUN|REVIEW|COMPLETE>`
 ## Phase 0 — FEATURE
@@ -73,25 +91,32 @@ This phase performs the same work as `rw-feature.prompt.md`:
    - Use agent argument if provided.
    - If missing and `NON_INTERACTIVE_MODE=true`, use default: `Add a command to export action-item lists as a markdown report.`
    - If missing and `NON_INTERACTIVE_MODE=false`, use `#tool:vscode/askQuestions` to ask for a one-line feature summary.
+   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
    - If still missing after one interaction: print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
 3) Ensure `<FEATURES>` directory exists; create if missing.
 4) Build need statement from `FEATURE_SUMMARY` and repository context:
    - `User`, `Problem`, `Desired Outcome`, `Acceptance Signal`.
    - If any critical field (`User`, `Problem`, `Desired Outcome`) is missing and `NON_INTERACTIVE_MODE=false`, run at most one clarification round with at most two questions.
    - If `NON_INTERACTIVE_MODE=true`, fill missing fields with conservative defaults and mark as assumptions.
-5) Generate filename: `YYYYMMDD-HHMM-<slug>.md` (append `-v2`, `-v3` if exists).
-6) Create exactly one feature file under `<FEATURES>` with sections:
+5) Re-evaluate need-gate:
+   - If any critical field (`User`, `Problem`, `Desired Outcome`) is still missing:
+     - print `FEATURE_NEED_INSUFFICIENT`
+     - print `MISSING_FIELDS=<comma-separated-field-names>`
+     - print `NEXT_COMMAND=rw-feature`
+     - stop
+6) Generate filename: `YYYYMMDD-HHMM-<slug>.md` (append `-v2`, `-v3` if exists).
+7) Create exactly one feature file under `<FEATURES>` with sections:
    `# FEATURE: <slug>`, `Status: READY_FOR_PLAN`, `Planning Profile: STANDARD`,
-   `## Summary`, `## Need Statement`, `## Goal`, `## In Scope`, `## Out of Scope`,
+   `## Summary`, `## Need Statement`, `## User Value`, `## Goal`, `## In Scope`, `## Out of Scope`,
    `## Functional Requirements`, `## Constraints`, `## Acceptance`,
-   `## Edge Cases and Error Handling`, `## Verification Baseline`, `## Notes`.
+   `## Edge Cases and Error Handling`, `## Verification Baseline`, `## Risks and Open Questions`, `## Notes`.
    - Write user-facing prose in the resolved user-document language (Korean default).
    - In `Notes`, include: source (`rw-orchestrator/phase-0`), created timestamp, assumptions list if any.
-7) Print output summary:
+8) Print output summary:
    - `FEATURE_FILE=<path>`
    - `FEATURE_STATUS=READY_FOR_PLAN`
    - `ORCHESTRATOR_PHASE=PLAN`
-8) Proceed directly to Phase 1 (no HITL gate for Phase 0).
+9) Proceed directly to Phase 1 (no HITL gate for Phase 0).
 
 ## Phase 1 — PLAN
 Print `ORCHESTRATOR_PHASE=PLAN`
@@ -130,10 +155,21 @@ This phase performs the same work as `rw-plan.prompt.md`:
    f) Update `<PROGRESS>` Task Status table with new `pending` rows.
    g) Add log entry: `YYYY-MM-DD — Added feature planning tasks TASK-XX~TASK-YY for [feature-slug].`
    h) Update feature file: `Status: READY_FOR_PLAN` → `Status: PLANNED`.
+   i) Resolve optional plan-approval gate:
+      - If `<PLAN_APPROVAL_GATE_FLAG>` exists, set `PLAN_APPROVAL_GATE=ON`; else `PLAN_APPROVAL_GATE=OFF`.
+      - If `PLAN_APPROVAL_GATE=ON`:
+        - Ensure `<RUNTIME_DIR>` exists.
+        - Write `<PLAN_APPROVAL_PENDING>` with:
+          - `PLAN_APPROVAL_REQUIRED=1`
+          - `PLANNED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
+          - `FEATURE_FILE=<selected feature filename>`
+          - `TASK_RANGE=<TASK-XX~TASK-YY>`
+        - Delete `<PLAN_APPROVAL_STAMP>` if it exists (stale approval invalidation).
 4) Print plan output summary:
    - `PLAN_FEATURE_FILE=<filename>`
    - `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
    - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
+   - `PLAN_APPROVAL_GATE=<ON|OFF>`
 5) HITL gate (Phase 1 → Phase 2):
    - If `HITL_MODE=ON`:
      - print `HITL_PAUSE: Plan phase complete. Review tasks in <TASKS> before proceeding.`
@@ -242,7 +278,7 @@ This phase performs the same work as `rw-review.prompt.md`:
 4) If candidate set is empty:
    - print `REVIEW_NOTHING_TO_DO`
    - print `REVIEW_STATUS=APPROVED`
-   - print `NEXT_COMMAND=rw-archive`
+   - print `NEXT_COMMAND=rw-run`
    - stop
 5) Determine review execution mode:
    - Default `SEQUENTIAL`.
@@ -280,7 +316,7 @@ This phase performs the same work as `rw-review.prompt.md`:
 12) If `FAILED` (escalation):
     - print `REVIEW_BATCH_FAIL`
     - print `Manual intervention required for escalated tasks.`
-    - print `NEXT_COMMAND=rw-review`
+    - print `NEXT_COMMAND=rw-run`
     - stop
 13) If `APPROVED`:
     - print `REVIEW_BATCH_OK`
