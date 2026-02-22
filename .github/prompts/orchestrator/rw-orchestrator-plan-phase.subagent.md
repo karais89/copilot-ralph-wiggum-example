@@ -7,8 +7,10 @@ Paths:
 - `<PLAN>` = `TARGET_ROOT/.ai/PLAN.md`
 - `<TASKS>` = `TARGET_ROOT/.ai/tasks/`
 - `<PROGRESS>` = `TARGET_ROOT/.ai/PROGRESS.md`
+- `<ARCHIVE_DIR>` = `TARGET_ROOT/.ai/progress-archive/`
 - `<FEATURES>` = `TARGET_ROOT/.ai/features/`
 - `<RUNTIME_DIR>` = `TARGET_ROOT/.ai/runtime/`
+- `<PLAN_REPLAN_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-replan.flag`
 - `<PLAN_APPROVAL_GATE_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-required.flag`
 - `<PLAN_APPROVAL_PENDING>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-pending.env`
 - `<PLAN_APPROVAL_STAMP>` = `TARGET_ROOT/.ai/runtime/rw-plan-approved.env`
@@ -23,11 +25,16 @@ Rules:
   - multiple READY files -> lexical latest + print `FEATURE_MULTI_READY_AUTOSELECTED=<selected-filename>`
   - on unresolved input errors, print matching token and `NEXT_COMMAND=rw-feature`, then stop:
     - `FEATURES_DIR_MISSING`, `FEATURE_FILE_MISSING`, `FEATURE_NOT_READY`
+- Plan mode resolution (required):
+  - `PLAN_MODE=REPLAN` when selected feature file contains exact line `Planning Intent: REPLAN`, or `<PLAN_REPLAN_FLAG>` exists.
+  - else `PLAN_MODE=EXTENSION` when active `<PROGRESS>` has at least one task row, or `<ARCHIVE_DIR>/STATUS-*.md` exists.
+  - else `PLAN_MODE=INITIAL`.
 - Ensure baseline files:
   - create `<PLAN>` skeleton when missing
   - create `<PROGRESS>` skeleton when missing
 - Plan outputs:
   - append one Feature Notes line to `<PLAN>`
+  - create/update `<TASKS>/TASK-00-READBEFORE.md` with reusable implementation context for this planning batch
   - create atomic `TASK-XX-*.md` files in `<TASKS>` (FAST_TEST: 2~3, STANDARD: 3~7)
   - update `<PROGRESS>` Task Status with new `pending` rows + one log line
   - update selected feature status: `READY_FOR_PLAN` -> `PLANNED`
@@ -37,5 +44,7 @@ Rules:
 - On success, output:
   - `PLAN_FEATURE_FILE=<filename>`
   - `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
+  - `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>`
+  - `TASK_BOOTSTRAP_FILE=<path>`
   - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
   - `PLAN_APPROVAL_GATE=<ON|OFF>`

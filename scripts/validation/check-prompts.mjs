@@ -72,7 +72,7 @@ async function main() {
     ["rw-init.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND="]],
     ["rw-new-project.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-plan"]],
     ["rw-onboard-project.prompt.md", ["Step 0 (Mandatory):", "CODEBASE_SIGNAL_COUNT", "NEXT_COMMAND=rw-feature"]],
-    ["rw-plan.prompt.md", ["Step 0 (Mandatory):", "PLAN_APPROVAL_GATE=<ON|OFF>", "NEXT_COMMAND=rw-run"]],
+    ["rw-plan.prompt.md", ["Step 0 (Mandatory):", "PLAN_MODE=<INITIAL|REPLAN|EXTENSION>", "TASK_BOOTSTRAP_FILE=.ai/tasks/TASK-00-READBEFORE.md", "PLAN_APPROVAL_GATE=<ON|OFF>", "NEXT_COMMAND=rw-run"]],
     ["rw-review.prompt.md", [
       "Step 0 (Mandatory):",
       "NEXT_COMMAND=",
@@ -144,6 +144,8 @@ async function main() {
         "Never call `#tool:agent/runSubagent`",
         "PLAN_FEATURE_FILE=<filename>",
         "PLAN_TASK_RANGE=<TASK-XX~TASK-YY>",
+        "PLAN_MODE=<INITIAL|REPLAN|EXTENSION>",
+        "TASK_BOOTSTRAP_FILE=<path>",
         "PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>",
         "PLAN_APPROVAL_GATE=<ON|OFF>",
       ],

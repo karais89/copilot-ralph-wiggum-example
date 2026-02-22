@@ -37,9 +37,10 @@ Rules:
   - `Problem`
   - `Desired Outcome`
   - `Acceptance Signal`
-- Interactive clarification limit:
-  - at most one clarification round
-  - at most two focused questions total
+- Interactive clarification budget:
+  - at most two clarification rounds
+  - at most five focused questions total
+  - recommended split: Round 1 (up to 3), Round 2 (up to 2 only if ambiguity remains)
 - Interactive fallback must follow `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
 - Non-interactive mode is enabled only when `.ai/runtime/rw-noninteractive.flag` exists.
 - In non-interactive mode, never call `#tool:vscode/askQuestions`; fill missing fields with explicit assumptions.
@@ -67,7 +68,9 @@ Workflow:
    - `Acceptance Signal`
 6) Need-gate handling:
    - Missing critical fields are: `User`, `Problem`, `Desired Outcome`.
-   - If `NON_INTERACTIVE_MODE=false` and any critical field is missing, run exactly one clarification round with at most two focused questions.
+   - If `NON_INTERACTIVE_MODE=false` and any critical field is missing or ambiguous, run staged clarification with a strict budget:
+     - Round 1 (up to 3 questions): resolve `User`, `Problem`, `Desired Outcome`.
+     - Round 2 (up to 2 questions): run only when critical ambiguity remains after Round 1; resolve completion signal/scope constraints required for planning.
    - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
    - If `NON_INTERACTIVE_MODE=true`, do not ask; fill missing fields with conservative defaults and mark them as assumptions.
 7) Re-evaluate need-gate:

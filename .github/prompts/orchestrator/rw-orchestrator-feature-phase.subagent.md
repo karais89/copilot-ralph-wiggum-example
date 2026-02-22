@@ -15,20 +15,26 @@ Rules:
 - Resolve `NON_INTERACTIVE_MODE=true` when either:
   - `TARGET_ROOT/.ai/runtime/rw-noninteractive.flag` exists, or
   - `HITL_MODE=OFF` is provided by the orchestrator.
+- Clarification budget policy:
+  - `CLARIFICATION_TOTAL_MAX=5` questions.
+  - Round A (discovery): up to 3 focused questions.
+  - Round B (refinement): up to 2 focused questions, only when critical ambiguity remains after Round A.
+  - Never exceed `CLARIFICATION_TOTAL_MAX`.
 - Summary resolution (user-first):
   - Use provided `FEATURE_SUMMARY` first.
   - Treat summary as unresolved only when it is empty.
-  - If unresolved and `NON_INTERACTIVE_MODE=false`, ask one open-ended question via `#tool:vscode/askQuestions` in the resolved user-document language (fallback once per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`).
+  - If unresolved and `NON_INTERACTIVE_MODE=false`, use Round A budget to ask one open-ended summary question via `#tool:vscode/askQuestions` in the resolved user-document language (fallback once per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`).
   - If unresolved and `NON_INTERACTIVE_MODE=true`, infer a minimal summary from latest `<PLAN>` overview or `TARGET_ROOT/README.md`; if both are unavailable, use: `Add a minimal improvement to the existing codebase.`
   - If still unresolved, print `FEATURE_SUMMARY_MISSING` and `NEXT_COMMAND=rw-feature`, then stop.
 - Need-gate (HITL priority):
   - Build initial `User`, `Problem`, `Desired Outcome`, `Acceptance Signal`.
   - Treat a field as ambiguous when it is too generic to implement/test (for example: `improve UX`, `make it better`, `편하게`).
-  - If `NON_INTERACTIVE_MODE=false` and any critical field is missing or ambiguous, run one clarification round with up to two focused questions:
-    - Q1 confirms/fills `User` + `Problem`.
-    - Q2 confirms/fills `Desired Outcome` + `Acceptance Signal`.
+  - If `NON_INTERACTIVE_MODE=false` and any critical field is missing or ambiguous, run staged clarification:
+    - Round A (up to 3 questions): confirm/fill `User`, `Problem`, `Desired Outcome`.
+    - Round B (up to 2 questions): only if still ambiguous after Round A; confirm implementation boundary, completion signal, and constraints needed for planning.
     - Use `#tool:vscode/askQuestions`; if unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
     - Prefer explicit user answers over inferred assumptions.
+    - If the budget is exhausted and critical fields remain unresolved, stop with insufficiency tokens below.
   - If `NON_INTERACTIVE_MODE=true`, fill missing/ambiguous fields with conservative assumptions and mark them under `## Notes`.
   - Missing critical fields (`User`, `Problem`, `Desired Outcome`) after clarification/defaulting must trigger:
     - `FEATURE_NEED_INSUFFICIENT`

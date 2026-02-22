@@ -23,6 +23,7 @@ Quick summary:
 - All-in-one wrapper that runs Plan → Run → Review in a single invocation.
 - Existing `rw-*` prompts are NOT modified; this orchestrator internalizes their logic.
 - Each phase emits the same tokens as the standalone prompts for compatibility.
+- Plan phase classifies each planning batch as `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>`.
 - HITL (Human-in-the-Loop) pauses are ON by default: feature intake question (Step 11) + pauses between phases; use --auto or --no-hitl to disable all pauses and questions.
 - Phase 0/1 are delegated to dedicated subagents to reduce top-level context pressure.
 - Falls back to manual prompt workflow on any unrecoverable error.
@@ -156,6 +157,8 @@ Procedure:
    - Success requires:
      - `PLAN_FEATURE_FILE=<filename>`
      - `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
+     - `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>`
+     - `TASK_BOOTSTRAP_FILE=<path>`
      - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
      - `PLAN_APPROVAL_GATE=<ON|OFF>`
    - If subagent emits a controlled stop token with `NEXT_COMMAND=...`, propagate and stop.
@@ -267,19 +270,26 @@ HITL gate (Phase 2 → Phase 3):
 ## Phase 3 — REVIEW
 Print `ORCHESTRATOR_PHASE=REVIEW`
 This phase performs the same work as `rw-review.prompt.md`:
-1) Read `<PROGRESS>` and collect all `completed` tasks in active Task Status.
-2) If no completed task exists:
+0) Read `<PROGRESS>` and collect all `completed` tasks in active Task Status.
+1) If no completed task exists:
    - print `REVIEW_TARGET_MISSING`
    - print `REVIEW_STATUS=FAILED`
    - print `NEXT_COMMAND=rw-run`
    - stop
-3) Build review candidates:
+2) Build review candidates:
    - For each completed task, check if already reviewed (skip if `REVIEW_OK`/`REVIEW_FAIL`/`REVIEW-ESCALATE` exists after completion log).
-4) If candidate set is empty:
+3) If candidate set is empty:
    - print `REVIEW_NOTHING_TO_DO`
    - print `REVIEW_STATUS=APPROVED`
    - print `NEXT_COMMAND=rw-run`
    - stop
+4) Lightweight phase-level precheck before task review:
+   - For each review candidate, verify task file exists and has non-empty `Verification` section.
+   - If any candidate fails this precheck:
+     - print `REVIEW_PHASE_PRECHECK_FAIL`
+     - print `NEXT_COMMAND=rw-run`
+     - stop
+   - Otherwise print `REVIEW_PHASE_PRECHECK_PASS`.
 5) Determine review execution mode:
    - Default `SEQUENTIAL`.
    - Enable `PARALLEL` (batch 2) only when every candidate task file contains `Review Parallel: SAFE`.
