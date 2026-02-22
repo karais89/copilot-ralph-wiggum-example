@@ -23,6 +23,7 @@ Path resolution (mandatory before Step 0):
   - `<DOCTOR_STAMP>` = `TARGET_ROOT/.ai/runtime/rw-doctor-last-pass.env`
   - `<PLAN>` = `TARGET_ROOT/.ai/PLAN.md`
   - `<TASKS>` = `TARGET_ROOT/.ai/tasks/`
+  - `<FEATURES>` = `TARGET_ROOT/.ai/features/`
   - `<PROGRESS>` = `TARGET_ROOT/.ai/PROGRESS.md`
   - `<NOTES>` = `TARGET_ROOT/.ai/notes/`
   - `<ARCHIVE_DIR>` = `TARGET_ROOT/.ai/progress-archive/`
@@ -75,7 +76,7 @@ Step 0 (Mandatory):
            - `Do not call any tools.`
            - pass only when final output is exactly one line: `RUNSUBAGENT_OK`
          - git repository readiness
-         - `<AI_ROOT>`, `<TASKS>`, `TARGET_ROOT/.ai/features/` readability
+         - `<AI_ROOT>`, `<TASKS>`, `<FEATURES>` readability
          - `<PLAN>` and `<PROGRESS>` readability when they exist
        - If any check fails:
          - print `RW_DOCTOR_BLOCKED`

@@ -2,6 +2,9 @@
 
 Language policy reference: `.ai/CONTEXT.md`
 
+Scope:
+- This smoke contract validates the bundled Node.js/TypeScript example scenario shipped with this repository.
+
 Pre-pipeline guards (checked before any phase starts):
 - If not running in a top-level Copilot Chat turn, print `TOP_LEVEL_REQUIRED` and stop.
 - If `#tool:agent/runSubagent` is unavailable, print `RW_ENV_UNSUPPORTED` and stop.

@@ -118,18 +118,11 @@ Output format (machine-friendly, fixed keys):
 - `CHARTER_FILE=<path>`
 - `BOOTSTRAP_FEATURE_FILE=<path>`
 - `BOOTSTRAP_FEATURE_STATUS=<READY_FOR_PLAN>`
-- `BOOTSTRAP_TASKS=<created|skipped>`
-- `TASK_RANGE=<TASK-XX~TASK-YY|none>`
-- `TASK_COUNT=<n>`
-- `DISCOVERY_ROUNDS=<0|1|2>`
-- `UNRESOLVED_OPEN_QUESTIONS=<n>`
-- `BOOTSTRAP_COMMIT_RESULT=<created|skipped|failed>`
-- `BOOTSTRAP_COMMIT_SHA=<sha|none>`
-- `NEXT_COMMAND=rw-plan`
-
-Output defaults for removed responsibilities:
 - `BOOTSTRAP_TASKS=skipped`
 - `TASK_RANGE=none`
 - `TASK_COUNT=0`
+- `DISCOVERY_ROUNDS=<0|1|2>`
+- `UNRESOLVED_OPEN_QUESTIONS=<n>`
 - `BOOTSTRAP_COMMIT_RESULT=skipped`
 - `BOOTSTRAP_COMMIT_SHA=none`
+- `NEXT_COMMAND=rw-plan`

@@ -27,6 +27,7 @@ Quick summary:
 - Plan artifacts are grouped under `.ai/plans/<plan_id>/` with confidence/risk/open-question metrics.
 - HITL (Human-in-the-Loop) pauses are ON by default: feature intake question (Step 11) + pauses between phases; use --auto or --no-hitl to disable all pauses and questions.
 - Phase 0/1 are delegated to dedicated subagents to reduce top-level context pressure.
+- Run phase includes extra inspector dispatches and counters (`TASK_INSPECTOR_DISPATCH_COUNT`, `PHASE_INSPECTOR_DISPATCH_COUNT`) that are not part of standalone `rw-run`.
 - Falls back to manual prompt workflow on any unrecoverable error.
 Path resolution (mandatory before Step 0):
 - Follow `.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md` exactly.
@@ -329,7 +330,12 @@ This phase performs the same work as `rw-review.prompt.md`:
    - For each completed task, check if already reviewed (skip if `REVIEW_OK`/`REVIEW_FAIL`/`REVIEW-ESCALATE` exists after completion log).
 3) If candidate set is empty:
    - print `REVIEW_NOTHING_TO_DO`
+   - print `REVIEW_SUMMARY total=0 ok=0 fail=0 escalate=0 skipped=<completed-count>`
    - print `REVIEW_STATUS=APPROVED`
+   - print `REVIEW_ISSUE_COUNT=0`
+   - print `REVIEW_P0_COUNT=0`
+   - print `REVIEW_P1_COUNT=0`
+   - print `REVIEW_PHASE_NOTE_FILE=none`
    - print `NEXT_COMMAND=rw-run`
    - stop
 4) Lightweight phase-level precheck before task review:

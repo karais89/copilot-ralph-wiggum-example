@@ -66,7 +66,16 @@ async function main() {
     .sort();
 
   const requiredPerFile = new Map([
-    ["rw-archive.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-run"]],
+    [
+      "rw-archive.prompt.md",
+      [
+        "Path resolution (mandatory before Step 0):",
+        "Step 0 (Mandatory):",
+        "RW_TARGET_ROOT_INVALID",
+        "NEXT_COMMAND=<rw-run|rw-archive>",
+        "NEXT_COMMAND=rw-run",
+      ],
+    ],
     ["rw-doctor.prompt.md", ["Step 0 (Mandatory):", "RW_DOCTOR_PASS", "RW_DOCTOR_BLOCKED", "NEXT_COMMAND=rw-run"]],
     ["rw-feature.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-plan"]],
     ["rw-init.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND="]],
@@ -93,8 +102,11 @@ async function main() {
       "REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<line>|<rule>|<fix>",
       "REVIEW_ISSUE <P0|P1|P2>|<file>|<line>|<rule>|<fix>",
     ]],
-    ["rw-run.prompt.md", ["Step 0 (Mandatory):", "PLAN_APPROVAL_REQUIRED", "RW_DOCTOR_AUTORUN_BEGIN", "NEXT_COMMAND=", "RW_SUBAGENT_COMPLETION_DELTA_INVALID"]],
-    ["rw-smoke-test.prompt.md", ["SMOKE_TEST_PASS", "SMOKE_TEST_FAIL", "$PROMPT_ROOT/smoke/SMOKE-CONTRACT.md"]],
+    [
+      "rw-run.prompt.md",
+      ["Step 0 (Mandatory):", "PLAN_APPROVAL_REQUIRED", "RW_DOCTOR_AUTORUN_BEGIN", "<FEATURES>", "NEXT_COMMAND=", "RW_SUBAGENT_COMPLETION_DELTA_INVALID"],
+    ],
+    ["rw-smoke-test.prompt.md", ["SMOKE_TEST_PASS", "SMOKE_TEST_FAIL", "$PROMPT_ROOT/smoke/SMOKE-CONTRACT.md", "Node.js/TypeScript"]],
   ]);
 
   const errors = [];
@@ -128,6 +140,15 @@ async function main() {
     for (const token of requiredPerFile.get(fileName) ?? []) {
       requireToken(errors, fileName, normalized, token);
     }
+  }
+
+  const contextPath = path.join(repoRoot, ".ai", "CONTEXT.md");
+  if (!(await exists(contextPath))) {
+    errors.push(".ai/CONTEXT.md: missing file");
+  } else {
+    const contextBody = await fs.readFile(contextPath, "utf8");
+    requireToken(errors, ".ai/CONTEXT.md", contextBody, "`REVIEW_OK`");
+    requireToken(errors, ".ai/CONTEXT.md", contextBody, "`FEATURE_MULTI_READY_AUTOSELECTED`");
   }
 
   const smokeContractPath = path.join(promptsDir, "smoke", "SMOKE-CONTRACT.md");
@@ -166,6 +187,7 @@ async function main() {
         "OPEN_QUESTIONS_COUNT=<n>",
         "PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>",
         "PLAN_APPROVAL_GATE=<ON|OFF>",
+        "Bootstrap foundation features (STANDARD): 10~20 tasks",
       ],
     ],
   ]);
@@ -198,6 +220,8 @@ async function main() {
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "RW_REPLAN_TRIGGERED");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "TASK_INSPECTION_RESULT LOCKED_TASK_ID PASS");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PHASE_INSPECTION_RESULT RUN READY");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "REVIEW_SUMMARY total=0 ok=0 fail=0 escalate=0 skipped=<completed-count>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "REVIEW_PHASE_NOTE_FILE=none");
     if (orchestratorAgent.includes("<FEATURE_PHASE_SUBAGENT_PROMPT>")) {
       errors.push(".github/agents/rw-orchestrator.agent.md: legacy inline FEATURE phase subagent prompt block detected");
     }

@@ -37,7 +37,7 @@ Use advanced/exception prompts only when needed:
 - `rw-doctor`: preflight diagnostics only
 - `rw-archive`: only when `rw-run` stops for archive thresholds
 - `rw-init`: scaffold-only fallback
-- `rw-smoke-test`: template/runtime validation
+- `rw-smoke-test`: template/runtime validation (bundled Node.js/TypeScript example scenario)
 
 Optional helper commands:
 - `./scripts/rw next`
@@ -66,6 +66,7 @@ rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  → 
 ### Runtime Policy
 
 - Single `rw-run` policy (no lite/strict split).
+- `rw-orchestrator` Run phase includes additional inspector subagents/counters (`TASK_INSPECTOR_DISPATCH_COUNT`, `PHASE_INSPECTOR_DISPATCH_COUNT`); standalone `rw-run` does not emit these counters.
 - Review is manual and explicit via `rw-review` (subagent-backed batch review, deterministic parallel gate).
 - Archive threshold is hard-stop; run resumes after manual `rw-archive`.
 - `rw-run` preflight uses doctor-stamp cache first (same target + 10-minute TTL), then falls back to full preflight on cache miss.
@@ -203,7 +204,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 
 ### Target Root Resolution
 
-`rw-doctor`, `rw-run`, and `rw-review` resolve target root in this order:
+`rw-doctor`, `rw-run`, `rw-review`, and `rw-archive` resolve target root in this order:
 1. `workspace-root/.ai/runtime/rw-active-target-id.txt`
 2. `workspace-root/.ai/runtime/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
 3. `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
@@ -261,6 +262,8 @@ Single-command prompt aliases:
 ./scripts/rw smoke
 ./scripts/rw approve-plan
 ```
+
+`./scripts/rw smoke` targets the bundled Node.js/TypeScript example flow (`npm run build`, `node dist/index.js ...`).
 
 `rw next` prints machine-readable recommendation tokens:
 - `NEXT_COMMAND=<rw-new-project|rw-onboard-project|rw-feature|rw-plan|rw-run|rw-review|rw-archive>`

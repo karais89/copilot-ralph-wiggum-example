@@ -48,7 +48,11 @@ Rules:
 - Plan outputs:
   - append one Feature Notes line to `<PLAN>`
   - create/update `<TASKS>/TASK-00-READBEFORE.md` with reusable implementation context for this planning batch
-  - create atomic `TASK-XX-*.md` files in `<TASKS>` (FAST_TEST: 2~3, STANDARD: 3~7)
+  - create atomic `TASK-XX-*.md` files in `<TASKS>` with task-count policy:
+    - FAST_TEST: 2~3 tasks
+    - STANDARD default features: 3~7 tasks
+    - Bootstrap foundation features (STANDARD): 10~20 tasks
+    - If bootstrap scope is clearly very small/simple, 5 tasks are allowed
   - update `<PROGRESS>` Task Status with new `pending` rows + one log line
   - update selected feature status: `READY_FOR_PLAN` -> `PLANNED`
   - compute and emit plan quality metrics:

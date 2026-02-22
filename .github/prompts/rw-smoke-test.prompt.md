@@ -1,6 +1,6 @@
 ---
 name: rw-smoke-test
-description: "E2E smoke test: dispatches subagents to run the full RW pipeline (new-project → plan → run → review → feature → plan → run → review) on a temp project and validates results"
+description: "E2E smoke test for the bundled Node.js/TypeScript example: dispatches subagents to run the full RW pipeline (new-project → plan → run → review → feature → plan → run → review) on a temp project and validates results"
 agent: agent
 argument-hint: "Optional: absolute path to workspace root. Default: creates temp dir under /tmp."
 ---
@@ -10,7 +10,7 @@ Language policy reference: `.ai/CONTEXT.md`
 Quick summary:
 - Automated end-to-end smoke test for the RW orchestration pipeline.
 - Creates a temporary project, then dispatches subagents for each RW step.
-- Validates file contracts, state transitions, and build results between steps.
+- Validates file contracts, state transitions, and Node.js/TypeScript CLI build/runtime results between steps.
 - Outputs `SMOKE_TEST_PASS` on success, `SMOKE_TEST_FAIL <phase>` on failure.
 
 Modular layout:

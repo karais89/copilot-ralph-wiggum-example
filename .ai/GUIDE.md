@@ -75,6 +75,7 @@ scripts/
 ## 실행 정책
 
 - 실행 프롬프트는 단일 `rw-run.prompt.md`만 사용한다.
+- `rw-orchestrator`의 Run 단계는 추가 inspector subagent/counter(`TASK_INSPECTOR_DISPATCH_COUNT`, `PHASE_INSPECTOR_DISPATCH_COUNT`)를 사용하며, standalone `rw-run`에는 해당 카운터가 없다.
 - 리뷰는 별도 수동 단계 `rw-review.prompt.md`로 수행한다.
 - archive 임계치 도달 시 `rw-run`은 중단하고 `rw-archive`를 수동 실행한다.
 - 대화형 입력 fallback은 `.github/prompts/shared/RW-INTERACTIVE-POLICY.md` 단일 정책을 따른다.
@@ -282,7 +283,7 @@ scripts/
   - `.ai/runtime/rw-plan-approval-required.flag`가 있으면 gate ON
   - gate ON 상태에서 `.ai/runtime/rw-plan-approved.env`에 `PLAN_APPROVED=1`이 없으면 `PLAN_APPROVAL_REQUIRED`로 중단
   - 승인 시 `./scripts/rw approve-plan` 사용
-- `rw-doctor`와 `rw-run`은 동일한 타깃 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/*.env`, legacy `.ai/runtime/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).
+- `rw-doctor`, `rw-run`, `rw-review`, `rw-archive`는 동일한 타깃 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/*.env`, legacy `.ai/runtime/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).
 - 오케스트레이터는 제품 코드를 직접 수정하지 않는다.
 - 제품 코드 경로는 저장소 구조(웹/앱/게임/유니티 등)에 따라 다르므로 `src/` 고정 가정을 두지 않는다.
 - `PLAN.md`는 `Feature Notes`만 append 한다.

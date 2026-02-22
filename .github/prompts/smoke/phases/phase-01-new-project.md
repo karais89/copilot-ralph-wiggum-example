@@ -18,7 +18,7 @@ Expected subagent last line:
 
 Gate 1 checks (fail as `SMOKE_TEST_FAIL new-project: <detail>`):
 - `"$TARGET_ROOT/.ai/PLAN.md"` exists and contains `## Feature Notes (append-only)`
-- `"$TARGET_ROOT/.ai/PLAN.md"` contains technology stack info (`Node.js` or `TypeScript`)
+- `"$TARGET_ROOT/.ai/PLAN.md"` contains technology stack info for this bundled smoke scenario (`Node.js` or `TypeScript`)
 - Number of `PROJECT-CHARTER-*.md` files is greater than `CHARTER_COUNT_BEFORE`
 - Number of feature files with `Status: READY_FOR_PLAN` is greater than `FEATURE_COUNT_BEFORE`
 - Newly created feature file contains `Planning Profile: FAST_TEST`
