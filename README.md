@@ -4,7 +4,7 @@ An AI-driven software development orchestration technique for **GitHub Copilot**
 
 This repository serves two purposes:
 
-1. **The RW orchestration template** — `rw-orchestrator` agent entrypoint + 9 orchestration prompts + smoke-test prompt/modules + structural docs that can be extracted and dropped into any project
+1. **The RW orchestration template** — `rw-orchestrator` agent entrypoint + 9 orchestration prompts + orchestrator phase subagent prompts + smoke-test prompt/modules + structural docs that can be extracted and dropped into any project
 2. **A working example** — A Todo CLI app built entirely by this technique (70+ commits, 20 tasks, zero manual coding)
 
 ## Quick Start (Minimal Mode)
@@ -112,7 +112,7 @@ This copies the full RW template bundle (prompts, smoke modules, scripts, and `.
 your-project/
 ├── .github/agents/
 │   └── rw-orchestrator.agent.md
-├── .github/prompts/           # 9 orchestration prompts + rw-smoke-test
+├── .github/prompts/           # 9 orchestration prompts + orchestrator phase subagent prompts + rw-smoke-test
 │   ├── rw-init.prompt.md
 │   ├── rw-new-project.prompt.md
 │   ├── rw-onboard-project.prompt.md
@@ -123,6 +123,8 @@ your-project/
 │   ├── rw-review.prompt.md
 │   ├── rw-archive.prompt.md
 │   ├── rw-smoke-test.prompt.md
+│   ├── rw-orchestrator-feature-phase.subagent.md
+│   ├── rw-orchestrator-plan-phase.subagent.md
 │   ├── RW-INTERACTIVE-POLICY.md
 │   └── RW-TARGET-ROOT-RESOLUTION.md
 ├── scripts/
@@ -149,6 +151,8 @@ your-project/
 
 Copy these paths from this repo into your project:
 - `.github/prompts/*.prompt.md` (all `rw-*.prompt.md` files, including `rw-smoke-test.prompt.md`)
+- `.github/prompts/rw-orchestrator-feature-phase.subagent.md`
+- `.github/prompts/rw-orchestrator-plan-phase.subagent.md`
 - `.github/agents/rw-orchestrator.agent.md`
 - `.github/prompts/RW-INTERACTIVE-POLICY.md`
 - `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md`

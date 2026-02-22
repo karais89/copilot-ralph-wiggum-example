@@ -128,6 +128,55 @@ async function main() {
     requireToken(errors, ".github/prompts/smoke/SMOKE-CONTRACT.md", smokeContract, "last-result.md");
   }
 
+  const subagentPromptContracts = new Map([
+    [
+      path.join(promptsDir, "rw-orchestrator-feature-phase.subagent.md"),
+      [
+        "Never call `#tool:agent/runSubagent`",
+        "FEATURE_NEED_INSUFFICIENT",
+        "FEATURE_FILE=<path>",
+        "FEATURE_STATUS=READY_FOR_PLAN",
+      ],
+    ],
+    [
+      path.join(promptsDir, "rw-orchestrator-plan-phase.subagent.md"),
+      [
+        "Never call `#tool:agent/runSubagent`",
+        "PLAN_FEATURE_FILE=<filename>",
+        "PLAN_TASK_RANGE=<TASK-XX~TASK-YY>",
+        "PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>",
+        "PLAN_APPROVAL_GATE=<ON|OFF>",
+      ],
+    ],
+  ]);
+
+  for (const [subagentPromptPath, tokens] of subagentPromptContracts.entries()) {
+    const relPath = path.relative(repoRoot, subagentPromptPath);
+    if (!(await exists(subagentPromptPath))) {
+      errors.push(`${relPath}: missing file`);
+      continue;
+    }
+    const promptBody = await fs.readFile(subagentPromptPath, "utf8");
+    for (const token of tokens) {
+      requireToken(errors, relPath, promptBody, token);
+    }
+  }
+
+  const orchestratorAgentPath = path.join(repoRoot, ".github", "agents", "rw-orchestrator.agent.md");
+  if (!(await exists(orchestratorAgentPath))) {
+    errors.push(".github/agents/rw-orchestrator.agent.md: missing file");
+  } else {
+    const orchestratorAgent = await fs.readFile(orchestratorAgentPath, "utf8");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "rw-orchestrator-feature-phase.subagent.md");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "rw-orchestrator-plan-phase.subagent.md");
+    if (orchestratorAgent.includes("<FEATURE_PHASE_SUBAGENT_PROMPT>")) {
+      errors.push(".github/agents/rw-orchestrator.agent.md: legacy inline FEATURE phase subagent prompt block detected");
+    }
+    if (orchestratorAgent.includes("<PLAN_PHASE_SUBAGENT_PROMPT>")) {
+      errors.push(".github/agents/rw-orchestrator.agent.md: legacy inline PLAN phase subagent prompt block detected");
+    }
+  }
+
   const requiredSmokeFiles = [
     path.join(promptsDir, "smoke", "phases", "phase-01-new-project.md"),
     path.join(promptsDir, "smoke", "phases", "phase-08-review-2.md"),

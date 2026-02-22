@@ -257,6 +257,8 @@ assert_file_exists "$S1/.github/prompts/rw-run.prompt.md" "rw-run.prompt.md extr
 assert_file_exists "$S1/.github/prompts/rw-review.prompt.md" "rw-review.prompt.md extracted"
 assert_file_exists "$S1/.github/prompts/rw-archive.prompt.md" "rw-archive.prompt.md extracted"
 assert_file_exists "$S1/.github/prompts/rw-smoke-test.prompt.md" "rw-smoke-test.prompt.md extracted"
+assert_file_exists "$S1/.github/prompts/rw-orchestrator-feature-phase.subagent.md" "rw-orchestrator feature-phase subagent prompt extracted"
+assert_file_exists "$S1/.github/prompts/rw-orchestrator-plan-phase.subagent.md" "rw-orchestrator plan-phase subagent prompt extracted"
 assert_file_exists "$S1/.github/prompts/RW-INTERACTIVE-POLICY.md" "RW-INTERACTIVE-POLICY.md extracted"
 assert_file_exists "$S1/.github/prompts/RW-TARGET-ROOT-RESOLUTION.md" "RW-TARGET-ROOT-RESOLUTION.md extracted"
 assert_dir_exists "$S1/.github/prompts/smoke" "smoke prompt module directory extracted"
