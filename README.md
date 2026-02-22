@@ -9,6 +9,17 @@ This repository serves two purposes:
 
 ## Quick Start (Minimal Mode)
 
+### Option A — VS Code Agent Picker (recommended)
+
+Open GitHub Copilot Chat, select the **`rw`** agent from the agent picker, and type anything (or just press Enter). The agent checks the current project state with `./scripts/rw next` and executes the right step automatically. When done, click the **Continue →** handoff button to proceed to the next step.
+
+```
+[rw] → checks state → executes rw-new-project / rw-feature / rw-plan / rw-run / rw-review / …
+         ↑___________________________ Continue → _______________________________________________|
+```
+
+### Option B — Manual prompt selection
+
 If you are new to this project, use only this 4-step loop first:
 
 1. Choose an entry prompt:
