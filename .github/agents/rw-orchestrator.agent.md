@@ -15,12 +15,8 @@ tools:
   - terminalLastCommand
   - problems
   - agent
+  - askQuestions
 agents: ['*']
-handoffs:
-  - label: "Continue →"
-    agent: rw-orchestrator
-    prompt: "Continue orchestration from current phase."
-    send: false
 ---
 Language policy reference: `<CONTEXT>`
 Quick summary:
@@ -127,9 +123,9 @@ Procedure:
 5) HITL gate (Phase 1 → Phase 2):
    - If `HITL_MODE=ON`:
      - print `HITL_PAUSE: Plan phase complete. Review tasks in <TASKS> before proceeding.`
-     - print `To continue: rerun rw-orchestrator. To abort: use rw-plan manually.`
-     - print `NEXT_COMMAND=rw-orchestrator`
-     - stop
+     - Use `#tool:vscode/askQuestions` with a single question: header `continue-to-run`, question `Plan phase complete. Tasks created in .ai/tasks/. Proceed to Run phase?`, options `Yes, continue` (recommended) and `No, stop here`.
+     - If answer is `No, stop here`: print `NEXT_COMMAND=rw-orchestrator`, stop.
+     - If answer is `Yes, continue`: proceed to Phase 2.
    - If `HITL_MODE=OFF`: proceed to Phase 2.
 ## Phase 2 — RUN
 Print `ORCHESTRATOR_PHASE=RUN`
@@ -215,8 +211,9 @@ Run loop — Repeat:
 HITL gate (Phase 2 → Phase 3):
 - If `HITL_MODE=ON`:
   - print `HITL_PAUSE: Run phase complete. Review implementation before review phase.`
-  - print `NEXT_COMMAND=rw-orchestrator`
-  - stop
+  - Use `#tool:vscode/askQuestions` with a single question: header `continue-to-review`, question `Run phase complete. All tasks implemented. Proceed to Review phase?`, options `Yes, continue` (recommended) and `No, stop here`.
+  - If answer is `No, stop here`: print `NEXT_COMMAND=rw-orchestrator`, stop.
+  - If answer is `Yes, continue`: proceed to Phase 3.
 - If `HITL_MODE=OFF`: proceed to Phase 3.
 ## Phase 3 — REVIEW
 Print `ORCHESTRATOR_PHASE=REVIEW`
