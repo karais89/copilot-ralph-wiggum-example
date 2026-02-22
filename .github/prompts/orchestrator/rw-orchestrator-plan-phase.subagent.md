@@ -10,6 +10,8 @@ Paths:
 - `<ARCHIVE_DIR>` = `TARGET_ROOT/.ai/progress-archive/`
 - `<FEATURES>` = `TARGET_ROOT/.ai/features/`
 - `<RUNTIME_DIR>` = `TARGET_ROOT/.ai/runtime/`
+- `<PLANS_DIR>` = `TARGET_ROOT/.ai/plans/`
+- `<ACTIVE_PLAN_ID_FILE>` = `TARGET_ROOT/.ai/runtime/rw-active-plan-id.txt`
 - `<PLAN_REPLAN_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-replan.flag`
 - `<PLAN_APPROVAL_GATE_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-required.flag`
 - `<PLAN_APPROVAL_PENDING>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-pending.env`
@@ -29,6 +31,17 @@ Rules:
   - `PLAN_MODE=REPLAN` when selected feature file contains exact line `Planning Intent: REPLAN`, or `<PLAN_REPLAN_FLAG>` exists.
   - else `PLAN_MODE=EXTENSION` when active `<PROGRESS>` has at least one task row, or `<ARCHIVE_DIR>/STATUS-*.md` exists.
   - else `PLAN_MODE=INITIAL`.
+- Plan identity + artifact layout (required):
+  - Generate `PLAN_ID` using local timestamp + feature slug (`YYYYMMDD-HHMM-<slug>`).
+  - Ensure `<PLANS_DIR>/<PLAN_ID>/` exists as `PLAN_ARTIFACT_DIR`.
+  - Write/update `<ACTIVE_PLAN_ID_FILE>` with `PLAN_ID`.
+  - Create/update research artifact: `<PLANS_DIR>/<PLAN_ID>/research_findings_<slug>.yaml` as `RESEARCH_FINDINGS_FILE` with factual sections:
+    - objective summary
+    - relevant files/modules scanned
+    - coverage estimate (`0-100`)
+    - confidence (`HIGH|MEDIUM|LOW`)
+    - known gaps/open questions
+  - Planning must reference `RESEARCH_FINDINGS_FILE` as primary evidence input for task decomposition.
 - Ensure baseline files:
   - create `<PLAN>` skeleton when missing
   - create `<PROGRESS>` skeleton when missing
@@ -38,13 +51,25 @@ Rules:
   - create atomic `TASK-XX-*.md` files in `<TASKS>` (FAST_TEST: 2~3, STANDARD: 3~7)
   - update `<PROGRESS>` Task Status with new `pending` rows + one log line
   - update selected feature status: `READY_FOR_PLAN` -> `PLANNED`
+  - compute and emit plan quality metrics:
+    - `PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>`
+    - `PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>`
+    - `OPEN_QUESTIONS_COUNT=<n>`
 - Optional approval gate:
   - if `<PLAN_APPROVAL_GATE_FLAG>` exists, set `PLAN_APPROVAL_GATE=ON`, write `<PLAN_APPROVAL_PENDING>`, and delete stale `<PLAN_APPROVAL_STAMP>`
   - else `PLAN_APPROVAL_GATE=OFF`
+- Replan-flag cleanup:
+  - when planning succeeds and `<PLAN_REPLAN_FLAG>` exists, delete it.
 - On success, output:
+  - `PLAN_ID=<id>`
+  - `PLAN_ARTIFACT_DIR=<path>`
+  - `RESEARCH_FINDINGS_FILE=<path>`
   - `PLAN_FEATURE_FILE=<filename>`
   - `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
   - `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>`
   - `TASK_BOOTSTRAP_FILE=<path>`
+  - `PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>`
+  - `PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>`
+  - `OPEN_QUESTIONS_COUNT=<n>`
   - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
   - `PLAN_APPROVAL_GATE=<ON|OFF>`

@@ -72,7 +72,19 @@ async function main() {
     ["rw-init.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND="]],
     ["rw-new-project.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-plan"]],
     ["rw-onboard-project.prompt.md", ["Step 0 (Mandatory):", "CODEBASE_SIGNAL_COUNT", "NEXT_COMMAND=rw-feature"]],
-    ["rw-plan.prompt.md", ["Step 0 (Mandatory):", "PLAN_MODE=<INITIAL|REPLAN|EXTENSION>", "TASK_BOOTSTRAP_FILE=.ai/tasks/TASK-00-READBEFORE.md", "PLAN_APPROVAL_GATE=<ON|OFF>", "NEXT_COMMAND=rw-run"]],
+    ["rw-plan.prompt.md", [
+      "Step 0 (Mandatory):",
+      "PLAN_ID=<id>",
+      "PLAN_ARTIFACT_DIR=.ai/plans/<plan_id>/",
+      "RESEARCH_FINDINGS_FILE=.ai/plans/<plan_id>/research_findings_<slug>.yaml",
+      "PLAN_MODE=<INITIAL|REPLAN|EXTENSION>",
+      "TASK_BOOTSTRAP_FILE=.ai/tasks/TASK-00-READBEFORE.md",
+      "PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>",
+      "PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>",
+      "OPEN_QUESTIONS_COUNT=<n>",
+      "PLAN_APPROVAL_GATE=<ON|OFF>",
+      "NEXT_COMMAND=rw-run",
+    ]],
     ["rw-review.prompt.md", [
       "Step 0 (Mandatory):",
       "NEXT_COMMAND=",
@@ -142,10 +154,16 @@ async function main() {
       path.join(promptsDir, "orchestrator", "rw-orchestrator-plan-phase.subagent.md"),
       [
         "Never call `#tool:agent/runSubagent`",
+        "PLAN_ID=<id>",
+        "PLAN_ARTIFACT_DIR=<path>",
+        "RESEARCH_FINDINGS_FILE=<path>",
         "PLAN_FEATURE_FILE=<filename>",
         "PLAN_TASK_RANGE=<TASK-XX~TASK-YY>",
         "PLAN_MODE=<INITIAL|REPLAN|EXTENSION>",
         "TASK_BOOTSTRAP_FILE=<path>",
+        "PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>",
+        "PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>",
+        "OPEN_QUESTIONS_COUNT=<n>",
         "PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>",
         "PLAN_APPROVAL_GATE=<ON|OFF>",
       ],
@@ -171,6 +189,15 @@ async function main() {
     const orchestratorAgent = await fs.readFile(orchestratorAgentPath, "utf8");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "rw-orchestrator-feature-phase.subagent.md");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "rw-orchestrator-plan-phase.subagent.md");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_ID=<id>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_ARTIFACT_DIR=<path>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "RESEARCH_FINDINGS_FILE=<path>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "OPEN_QUESTIONS_COUNT=<n>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "RW_REPLAN_TRIGGERED");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "TASK_INSPECTION_RESULT LOCKED_TASK_ID PASS");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PHASE_INSPECTION_RESULT RUN READY");
     if (orchestratorAgent.includes("<FEATURE_PHASE_SUBAGENT_PROMPT>")) {
       errors.push(".github/agents/rw-orchestrator.agent.md: legacy inline FEATURE phase subagent prompt block detected");
     }

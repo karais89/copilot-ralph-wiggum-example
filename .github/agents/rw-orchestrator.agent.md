@@ -24,6 +24,7 @@ Quick summary:
 - Existing `rw-*` prompts are NOT modified; this orchestrator internalizes their logic.
 - Each phase emits the same tokens as the standalone prompts for compatibility.
 - Plan phase classifies each planning batch as `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>`.
+- Plan artifacts are grouped under `.ai/plans/<plan_id>/` with confidence/risk/open-question metrics.
 - HITL (Human-in-the-Loop) pauses are ON by default: feature intake question (Step 11) + pauses between phases; use --auto or --no-hitl to disable all pauses and questions.
 - Phase 0/1 are delegated to dedicated subagents to reduce top-level context pressure.
 - Falls back to manual prompt workflow on any unrecoverable error.
@@ -42,9 +43,12 @@ Path resolution (mandatory before Step 0):
   - `<ARCHIVE_DIR>` = `TARGET_ROOT/.ai/progress-archive/`
   - `<FEATURES>` = `TARGET_ROOT/.ai/features/`
   - `<HITL_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-orchestrator-hitl.flag`
+  - `<PLAN_REPLAN_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-replan.flag`
+  - `<ACTIVE_PLAN_ID_FILE>` = `TARGET_ROOT/.ai/runtime/rw-active-plan-id.txt`
   - `<PLAN_APPROVAL_GATE_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-required.flag`
   - `<PLAN_APPROVAL_PENDING>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-pending.env`
   - `<PLAN_APPROVAL_STAMP>` = `TARGET_ROOT/.ai/runtime/rw-plan-approved.env`
+  - `<PLANS_DIR>` = `TARGET_ROOT/.ai/plans/`
   - `<FEATURE_PHASE_SUBAGENT_PROMPT_FILE>` = `TARGET_ROOT/.github/prompts/orchestrator/rw-orchestrator-feature-phase.subagent.md`
   - `<PLAN_PHASE_SUBAGENT_PROMPT_FILE>` = `TARGET_ROOT/.github/prompts/orchestrator/rw-orchestrator-plan-phase.subagent.md`
 <ORCHESTRATOR_INSTRUCTIONS>
@@ -112,7 +116,7 @@ Step 0 (Mandatory):
 
 Important:
 - The orchestrator must never edit product code directly.
-- The orchestrator may edit only: `<PROGRESS>`, `<PLAN>` (`Feature Notes` append-only), `<NOTES>`, feature file status, and new `TASK-XX` files during Plan phase.
+- The orchestrator may edit only: `<PROGRESS>`, `<PLAN>` (`Feature Notes` append-only), `<NOTES>`, feature file status, new `TASK-XX` files during Plan phase, `<PLANS_DIR>`, `<ACTIVE_PLAN_ID_FILE>`, and `<PLAN_REPLAN_FLAG>`.
 - Never resurrect archived completed tasks to `pending`.
 - On every controlled stop/exit path, print exactly one machine-readable line:
   - `NEXT_COMMAND=<rw-plan|rw-run|rw-review|rw-archive|rw-feature|rw-orchestrator>`
@@ -155,10 +159,16 @@ Procedure:
    - `FEATURE_SUMMARY`
 4) Validate subagent result:
    - Success requires:
+     - `PLAN_ID=<id>`
+     - `PLAN_ARTIFACT_DIR=<path>`
+     - `RESEARCH_FINDINGS_FILE=<path>`
      - `PLAN_FEATURE_FILE=<filename>`
      - `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
      - `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>`
      - `TASK_BOOTSTRAP_FILE=<path>`
+     - `PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>`
+     - `PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>`
+     - `OPEN_QUESTIONS_COUNT=<n>`
      - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
      - `PLAN_APPROVAL_GATE=<ON|OFF>`
    - If subagent emits a controlled stop token with `NEXT_COMMAND=...`, propagate and stop.
@@ -189,6 +199,8 @@ Optional plan-approval gate (default OFF):
   - stop
 Initialize runtime counters:
 - `RUNSUBAGENT_DISPATCH_COUNT=0`
+- `TASK_INSPECTOR_DISPATCH_COUNT=0`
+- `PHASE_INSPECTOR_DISPATCH_COUNT=0`
 - `UNFINISHED_TASK_SEEN=false`
 Mandatory one-time preflight (same as rw-run):
 - Cache policy using `<DOCTOR_STAMP>` (TTL 10 minutes, same target).
@@ -236,17 +248,39 @@ Run loop — Repeat:
        - print `RW_SUBAGENT_NOT_DISPATCHED`
        - print `NEXT_COMMAND=rw-run`
        - stop
+     - Dispatch phase-inspector subagent with PHASE_INSPECTOR_SUBAGENT_PROMPT:
+       - Print `RUNSUBAGENT_PHASE_INSPECT_DISPATCH_BEGIN RUN`.
+       - Success requires:
+         - `PHASE_INSPECTION_RESULT RUN READY`
+         - `PHASE_VALIDATION_REPORT_FILE=<path>`
+       - If result is `PHASE_INSPECTION_RESULT RUN NOT_READY: <reason>`:
+         - print `PHASE_VALIDATION_FAIL RUN`
+         - print `NEXT_COMMAND=rw-run`
+         - stop
+       - If output is malformed:
+         - print `RW_SUBAGENT_PHASE_INSPECT_INVALID`
+         - print `NEXT_COMMAND=rw-run`
+         - stop
+       - Increment `PHASE_INSPECTOR_DISPATCH_COUNT`, print `RUNSUBAGENT_PHASE_INSPECT_DISPATCH_OK RUN`.
      - Append one log line to `<PROGRESS>`: `YYYY-MM-DD — RUNSUBAGENT_DISPATCH_COUNT: <n>`.
      - Write run phase completion note under `<NOTES>`:
        - Create file: `RUN-PHASE-COMPLETE-YYYYMMDD-HHMM.md` (if exists, append `-v2`, `-v3`, ...).
-       - Content: `# Run Phase Complete`, `- Timestamp: <YYYY-MM-DDTHH:MM:SSZ>`, `- PHASE: run`, `- RUN_STATUS: COMPLETED`, `- STOP_REASON: ALL_TASKS_COMPLETED`, `- RUNSUBAGENT_DISPATCH_COUNT: <n>`, `- NEXT_COMMAND_CANDIDATE: rw-review`.
+       - Content: `# Run Phase Complete`, `- Timestamp: <YYYY-MM-DDTHH:MM:SSZ>`, `- PHASE: run`, `- RUN_STATUS: COMPLETED`, `- STOP_REASON: ALL_TASKS_COMPLETED`, `- RUNSUBAGENT_DISPATCH_COUNT: <n>`, `- TASK_INSPECTOR_DISPATCH_COUNT: <n>`, `- PHASE_INSPECTOR_DISPATCH_COUNT: <n>`, `- PHASE_VALIDATION_REPORT_FILE: <path>`, `- NEXT_COMMAND_CANDIDATE: rw-review`.
      - print `RUNSUBAGENT_DISPATCH_COUNT=<n>`
+     - print `TASK_INSPECTOR_DISPATCH_COUNT=<n>`
+     - print `PHASE_INSPECTOR_DISPATCH_COUNT=<n>`
+     - print `PHASE_VALIDATION_REPORT_FILE=<path>`
      - print `RUN_PHASE_NOTE_FILE=<path>`
      - print "✅ All tasks completed."
      - Proceed to Phase 3 (or HITL gate).
   9) Build one-task dispatch lock:
      - Select exactly one dispatchable task as `LOCKED_TASK_ID` (highest priority, dependencies met).
-     - If no dispatchable task: print `RW_TASK_DEPENDENCY_BLOCKED`, `NEXT_COMMAND=rw-plan`, stop.
+     - If no dispatchable task:
+       - print `RW_TASK_DEPENDENCY_BLOCKED`
+       - write/update `<PLAN_REPLAN_FLAG>` with reason and timestamp (dependency deadlock signal)
+       - print `RW_REPLAN_TRIGGERED`
+       - print `NEXT_COMMAND=rw-plan`
+       - stop
      - Capture `BEFORE_COMPLETED_SET`.
   10) Call `#tool:agent/runSubagent` with CODER_SUBAGENT_PROMPT (below), injecting `LOCKED_TASK_ID`.
       - Print `RUNSUBAGENT_DISPATCH_BEGIN <LOCKED_TASK_ID>` before call.
@@ -255,7 +289,22 @@ Run loop — Repeat:
       - If `|NEWLY_COMPLETED_TASKS| != 1`: print `RW_SUBAGENT_COMPLETION_DELTA_INVALID`, `NEXT_COMMAND=rw-run`, stop.
       - If `ONLY_COMPLETED != LOCKED_TASK_ID`: print `RW_SUBAGENT_COMPLETED_WRONG_TASK`, `NEXT_COMMAND=rw-run`, stop.
       - Increment `RUNSUBAGENT_DISPATCH_COUNT`, print `RUNSUBAGENT_DISPATCH_OK <LOCKED_TASK_ID>`.
-  12) Repeat.
+  12) Dispatch task-inspector subagent:
+      - Print `RUNSUBAGENT_TASK_INSPECT_DISPATCH_BEGIN <LOCKED_TASK_ID>`.
+      - Call `#tool:agent/runSubagent` with TASK_INSPECTOR_LITE_SUBAGENT_PROMPT (below), injecting `LOCKED_TASK_ID`.
+  13) Validate task-inspector result:
+      - Success requires one:
+        - `TASK_INSPECTION_RESULT <LOCKED_TASK_ID> PASS`
+        - `TASK_INSPECTION_RESULT <LOCKED_TASK_ID> FAIL: <reason>`
+      - If malformed: print `RW_SUBAGENT_TASK_INSPECT_INVALID`, `NEXT_COMMAND=rw-run`, stop.
+      - Increment `TASK_INSPECTOR_DISPATCH_COUNT`, print `RUNSUBAGENT_TASK_INSPECT_DISPATCH_OK <LOCKED_TASK_ID>`.
+      - If FAIL:
+        - print `TASK_INSPECT_FAIL <LOCKED_TASK_ID>`
+        - continue loop (task is expected to be reset to `pending` by inspector).
+      - If PASS:
+        - print `TASK_INSPECT_PASS <LOCKED_TASK_ID>`
+        - continue loop.
+  14) Repeat.
 HITL gate (Phase 2 → Phase 3):
 - If `HITL_MODE=ON`:
   - print `HITL_PAUSE: Run phase complete. Review implementation before review phase.`
@@ -359,6 +408,7 @@ This allows `rw-orchestrator` to be re-invoked after HITL pauses or interruption
 - rw-orchestrator never archives by itself; archive is manual via `rw-archive`.
 - If requirements are missing/changed, stop and print `NEXT_COMMAND=rw-feature`.
 - Keep `PLAN.md` concise; place details in task files.
+- Keep plan artifacts under `.ai/plans/<plan_id>/` and update `.ai/runtime/rw-active-plan-id.txt`.
 - Keep Phase 2 (RUN) and Phase 3 (REVIEW) in top-level orchestrator execution; do not wrap them in extra subagents.
 <CODER_SUBAGENT_PROMPT>
 You are a senior software engineer coding subagent implementing the PRD in <PLAN>.
@@ -385,6 +435,46 @@ Rules:
 - Commit changes with a conventional commit message focused on user impact.
 - Exit immediately after implementation and commit.
 </CODER_SUBAGENT_PROMPT>
+<TASK_INSPECTOR_LITE_SUBAGENT_PROMPT>
+You are a lightweight task inspector for one completed task (`LOCKED_TASK_ID`) under `TARGET_ROOT`.
+Inputs:
+- locked task id: `LOCKED_TASK_ID`
+- tasks dir: `<TASKS>`
+- progress file: `<PROGRESS>`
+Rules:
+- Find and read exactly one matching task file in `<TASKS>/LOCKED_TASK_ID-*.md`.
+- Validate that acceptance criteria and `Verification` commands are coherent for the implemented scope.
+- Run verification commands from the task file at least once.
+- Never call `#tool:agent/runSubagent` (nested calls are disallowed).
+- Never fabricate outputs.
+- If verification or acceptance validation fails:
+  - reset `LOCKED_TASK_ID` status in `<PROGRESS>` to `pending`
+  - append one log entry: `TASK_INSPECT_FAIL LOCKED_TASK_ID: <reason>`
+Output contract (exactly one line):
+- `TASK_INSPECTION_RESULT LOCKED_TASK_ID PASS`
+- or `TASK_INSPECTION_RESULT LOCKED_TASK_ID FAIL: <reason>`
+</TASK_INSPECTOR_LITE_SUBAGENT_PROMPT>
+<PHASE_INSPECTOR_SUBAGENT_PROMPT>
+You are a phase inspector for run-phase completion under `TARGET_ROOT`.
+Inputs:
+- phase id: `RUN`
+- tasks dir: `<TASKS>`
+- progress file: `<PROGRESS>`
+- notes dir: `<NOTES>`
+Rules:
+- Review all active `completed` tasks and verify each has a task file with non-empty `Verification` section.
+- Sample-run at least one representative verification command from the current completion batch.
+- Write one validation report file under `<NOTES>`:
+  - `RUN-PHASE-VALIDATION-YYYYMMDD-HHMM.md` (`-v2`, `-v3` on conflict)
+  - include: checked task count, pass/fail summary, blocking reasons (if any).
+- Never call `#tool:agent/runSubagent` (nested calls are disallowed).
+Output contract:
+- `PHASE_INSPECTION_RESULT RUN READY`
+- `PHASE_VALIDATION_REPORT_FILE=<path>`
+- or:
+- `PHASE_INSPECTION_RESULT RUN NOT_READY: <reason>`
+- `PHASE_VALIDATION_REPORT_FILE=<path>`
+</PHASE_INSPECTOR_SUBAGENT_PROMPT>
 <REVIEW_SUBAGENT_PROMPT>
 You are a task reviewer subagent for one task (`TASK-XX`) under `TARGET_ROOT`.
 Inputs:
