@@ -9,7 +9,7 @@
 #   ./scripts/rw next [workspace-root]
 #   ./scripts/rw go [workspace-root]
 #   ./scripts/rw approve-plan [workspace-root]
-#   ./scripts/rw <new|onboard|init|doctor|feature|plan|run|review|archive|smoke> [workspace-root]
+#   ./scripts/rw <orchestrator|new|onboard|init|doctor|feature|plan|run|review|archive|smoke> [workspace-root]
 #
 set -euo pipefail
 
@@ -23,13 +23,14 @@ Usage:
   ./scripts/rw next [workspace-root]
   ./scripts/rw go [workspace-root]
   ./scripts/rw approve-plan [workspace-root]
-  ./scripts/rw <new|onboard|init|doctor|feature|plan|run|review|archive|smoke> [workspace-root]
+  ./scripts/rw <orchestrator|new|onboard|init|doctor|feature|plan|run|review|archive|smoke> [workspace-root]
 
 Commands:
   status   Print workflow state summary for the active target.
   next     Print suggested NEXT_COMMAND and reason tokens.
   go       Resolve suggested NEXT_COMMAND and print mapped prompt info.
   approve-plan  Approve latest planned task set when optional plan-approval gate is enabled.
+  orchestrator  Map to rw-orchestrator agent entrypoint.
   new      Map to rw-new-project prompt.
   onboard  Map to rw-onboard-project prompt.
   init     Map to rw-init prompt.
@@ -272,6 +273,7 @@ collect_ready_feature_files() {
 resolve_prompt_name() {
   local requested="$1"
   case "$requested" in
+    orchestrator|rw-orchestrator) echo "rw-orchestrator" ;;
     new|rw-new-project) echo "rw-new-project" ;;
     onboard|rw-onboard-project) echo "rw-onboard-project" ;;
     init|rw-init) echo "rw-init" ;;
@@ -290,16 +292,28 @@ resolve_prompt_name() {
 print_prompt_dispatch() {
   local prompt_name="$1"
   local dispatch_reason="${2:-MANUAL_SELECTION}"
+  local target_kind="prompt"
   local prompt_file="$WORKSPACE_ROOT_ABS/.github/prompts/$prompt_name.prompt.md"
+  local agent_file="$WORKSPACE_ROOT_ABS/.github/agents/$prompt_name.agent.md"
+  if [ ! -f "$prompt_file" ]; then
+    target_kind="agent"
+    prompt_file="$agent_file"
+  fi
   local prompt_file_exists=0
   if [ -f "$prompt_file" ]; then
     prompt_file_exists=1
   fi
 
   echo "TARGET_ROOT=$TARGET_ROOT"
+  if [ "$target_kind" = "agent" ]; then
+    echo "COPILOT_AGENT=$prompt_name"
+    echo "AGENT_FILE=$prompt_file"
+    echo "AGENT_FILE_EXISTS=$prompt_file_exists"
+  fi
   echo "COPILOT_PROMPT=$prompt_name"
   echo "PROMPT_FILE=$prompt_file"
   echo "PROMPT_FILE_EXISTS=$prompt_file_exists"
+  echo "COPILOT_TARGET_KIND=$target_kind"
   echo "NEXT_REASON=$dispatch_reason"
   echo "RUN_HINT=Open Copilot Chat and run: $prompt_name"
 }
@@ -395,8 +409,8 @@ command="${1:-}"
 workspace_root="${2:-$WORKSPACE_ROOT_DEFAULT}"
 
 case "$command" in
-  status|next|go|approve|approve-plan|new|onboard|init|doctor|feature|plan|run|review|archive|smoke|\
-  rw-approve-plan|rw-new-project|rw-onboard-project|rw-init|rw-doctor|rw-feature|rw-plan|rw-run|rw-review|rw-archive|rw-smoke-test) ;;
+  status|next|go|approve|approve-plan|orchestrator|new|onboard|init|doctor|feature|plan|run|review|archive|smoke|\
+  rw-approve-plan|rw-orchestrator|rw-new-project|rw-onboard-project|rw-init|rw-doctor|rw-feature|rw-plan|rw-run|rw-review|rw-archive|rw-smoke-test) ;;
   -h|--help|"")
     usage
     exit 0

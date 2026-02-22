@@ -28,8 +28,8 @@ fi
 
 TARGET="$1"
 
-if [ -d "$TARGET/.github/prompts" ] || [ -d "$TARGET/.ai" ]; then
-  echo "⚠️  Target already contains .github/prompts or .ai directories."
+if [ -d "$TARGET/.github/prompts" ] || [ -d "$TARGET/.github/agents" ] || [ -d "$TARGET/.ai" ]; then
+  echo "⚠️  Target already contains .github/prompts, .github/agents, or .ai directories."
   read -r -p "Overwrite? [y/N] " confirm
   if [[ ! "$confirm" =~ ^[yY]$ ]]; then
     echo "Aborted."
@@ -41,6 +41,7 @@ fi
 echo "📁 Creating directory structure in $TARGET ..."
 
 mkdir -p "$TARGET/.github/prompts"
+mkdir -p "$TARGET/.github/agents"
 mkdir -p "$TARGET/scripts"
 mkdir -p "$TARGET/.ai/features"
 mkdir -p "$TARGET/.ai/templates"
@@ -65,6 +66,7 @@ cp "$REPO_ROOT/.github/prompts/rw-smoke-test.prompt.md"   "$TARGET/.github/promp
 cp "$REPO_ROOT/.github/prompts/RW-INTERACTIVE-POLICY.md"  "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/RW-TARGET-ROOT-RESOLUTION.md" "$TARGET/.github/prompts/"
 cp -R "$REPO_ROOT/.github/prompts/smoke" "$TARGET/.github/prompts/"
+cp "$REPO_ROOT/.github/agents/rw-orchestrator.agent.md" "$TARGET/.github/agents/"
 
 # --- Copy shared utility scripts ---
 echo "🛠️  Copying shared utility scripts ..."
@@ -104,6 +106,8 @@ echo ""
 echo "✅ Ralph Wiggum template extracted to: $TARGET"
 echo ""
 echo "Extracted files:"
+echo "  .github/agents/"
+echo "    rw-orchestrator.agent.md"
 echo "  .github/prompts/"
 echo "    rw-init.prompt.md"
 echo "    rw-new-project.prompt.md"
@@ -145,17 +149,10 @@ echo ""
 echo "Next steps:"
 echo "  1. cd $TARGET"
 echo "  2. Open VS Code with Copilot Chat"
-echo "  3. Run rw-new-project.prompt.md (integrated init + discovery)"
-echo "     - For existing codebases, run rw-onboard-project.prompt.md instead."
+echo "  3. Recommended: run rw-orchestrator agent from Agent Picker (optional arg: '--h <feature-summary>')"
+echo "  4. Manual flow alternative: rw-new-project -> rw-plan -> rw-run -> rw-review"
 echo "     - Existing-codebase path: rw-onboard-project -> rw-feature -> rw-plan."
 echo "     - Optional helper: ./scripts/rw next (or ./scripts/rw go)"
-echo "  4. Run rw-plan.prompt.md to generate bootstrap tasks"
-echo "  5. Run rw-run.prompt.md to start the orchestration loop"
-echo "  6. Run rw-review.prompt.md after rw-run (batch review)"
-echo "  7. Run rw-feature.prompt.md to add another feature (optional)"
-echo "  8. Run rw-plan.prompt.md"
-echo "  9. Run rw-run.prompt.md"
-echo " 10. Run rw-review.prompt.md"
-echo " 11. Optional: run rw-doctor.prompt.md if you want standalone preflight diagnostics"
-echo " 12. Optional: use rw-init.prompt.md only when scaffold-only setup is needed"
-echo " 13. Optional: run rw-smoke-test.prompt.md for end-to-end smoke validation"
+echo "  5. Optional: run rw-doctor.prompt.md if you want standalone preflight diagnostics"
+echo "  6. Optional: use rw-init.prompt.md only when scaffold-only setup is needed"
+echo "  7. Optional: run rw-smoke-test.prompt.md for end-to-end smoke validation"

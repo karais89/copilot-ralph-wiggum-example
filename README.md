@@ -4,18 +4,18 @@ An AI-driven software development orchestration technique for **GitHub Copilot**
 
 This repository serves two purposes:
 
-1. **The RW orchestration template** — 9 orchestration prompts + smoke-test prompt/modules + structural docs that can be extracted and dropped into any project
+1. **The RW orchestration template** — `rw-orchestrator` agent entrypoint + 9 orchestration prompts + smoke-test prompt/modules + structural docs that can be extracted and dropped into any project
 2. **A working example** — A Todo CLI app built entirely by this technique (70+ commits, 20 tasks, zero manual coding)
 
 ## Quick Start (Minimal Mode)
 
 ### Option A — VS Code Agent Picker (recommended)
 
-Open GitHub Copilot Chat, select the **`rw`** agent from the agent picker, and type anything (or just press Enter). The agent checks the current project state with `./scripts/rw next` and executes the right step automatically. When done, click the **Continue →** handoff button to proceed to the next step.
+Open GitHub Copilot Chat and select the **`rw-orchestrator`** agent from the agent picker. Provide an optional one-line feature summary (for example: `--h add export command`). The agent auto-detects the current phase and runs the Plan -> Run -> Review pipeline in one flow.
 
 ```
-[rw] → checks state → executes rw-new-project / rw-feature / rw-plan / rw-run / rw-review / …
-         ↑___________________________ Continue → _______________________________________________|
+[rw-orchestrator] → (feature) → plan → run → review
+                      ↑___________ Continue → (HITL mode) ___________|
 ```
 
 ### Option B — Manual prompt selection
@@ -110,6 +110,8 @@ This copies the full RW template bundle (prompts, smoke modules, scripts, and `.
 
 ```
 your-project/
+├── .github/agents/
+│   └── rw-orchestrator.agent.md
 ├── .github/prompts/           # 9 orchestration prompts + rw-smoke-test
 │   ├── rw-init.prompt.md
 │   ├── rw-new-project.prompt.md
@@ -147,6 +149,7 @@ your-project/
 
 Copy these paths from this repo into your project:
 - `.github/prompts/*.prompt.md` (all `rw-*.prompt.md` files, including `rw-smoke-test.prompt.md`)
+- `.github/agents/rw-orchestrator.agent.md`
 - `.github/prompts/RW-INTERACTIVE-POLICY.md`
 - `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md`
 - `scripts/rw-resolve-target-root.sh`
@@ -236,6 +239,7 @@ Optional workspace-root override:
 Single-command prompt aliases:
 
 ```bash
+./scripts/rw orchestrator
 ./scripts/rw new
 ./scripts/rw onboard
 ./scripts/rw init
@@ -254,8 +258,8 @@ Single-command prompt aliases:
 - `NEXT_REASON=<reason-token>`
 
 `rw go` resolves `NEXT_COMMAND` and prints mapped prompt dispatch info:
-- `COPILOT_PROMPT=<rw-*.prompt target>`
-- `PROMPT_FILE=<workspace/.github/prompts/...>`
+- `COPILOT_PROMPT=<rw-*.prompt target>` or `COPILOT_AGENT=<rw-orchestrator>`
+- `PROMPT_FILE=<workspace/.github/prompts/...>` or `AGENT_FILE=<workspace/.github/agents/...>`
 
 ### Verification Guidance
 

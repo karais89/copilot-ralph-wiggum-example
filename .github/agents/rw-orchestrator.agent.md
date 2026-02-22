@@ -19,7 +19,7 @@ agents: ['*']
 handoffs:
   - label: "Continue →"
     agent: rw-orchestrator
-    prompt: "Continue orchestration from current phase."
+    prompt: "--hitl Continue orchestration from current phase."
     send: false
 ---
 Language policy reference: `<CONTEXT>`
@@ -92,7 +92,7 @@ This phase performs the same work as `rw-feature.prompt.md`:
    - true only if `TARGET_ROOT/.ai/runtime/rw-noninteractive.flag` exists.
 2) Resolve `FEATURE_SUMMARY`:
    - Use agent argument if provided.
-   - If missing and `NON_INTERACTIVE_MODE=true`, use default: `Add a command to export action-item lists as a markdown report.`
+   - If missing and `NON_INTERACTIVE_MODE=true`, infer a minimal feature summary from the most recent `.ai/PLAN.md` overview or the repository `README.md`. If neither is readable, use: `Add a minimal improvement to the existing codebase.`
    - If missing and `NON_INTERACTIVE_MODE=false`, use `#tool:vscode/askQuestions` to ask for a one-line feature summary.
    - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
    - If still missing after one interaction: print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.

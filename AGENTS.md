@@ -14,7 +14,7 @@ Repository-specific instructions for Codex agents working in this project.
 - Public project usage docs: `README.md`
 - Orchestration prompts: `.github/prompts/rw-*.prompt.md`
 - Smoke orchestration entry prompt: `.github/prompts/rw-smoke-test.prompt.md`
-- VS Code agent picker entry point: `.github/agents/rw.agent.md` (thin delegation layer only — all logic lives in `.github/prompts/`)
+- VS Code agent picker entry point: `.github/agents/rw-orchestrator.agent.md`
 - Historical verification reference (non-authoritative): `.ai/RW-VERIFICATION-REPORT.md`
 
 ## Branch Strategy (Required)
@@ -49,7 +49,7 @@ Repository-specific instructions for Codex agents working in this project.
   - Use `rw-new-project` for new/empty repositories.
   - Use `rw-onboard-project` for existing codebases, then follow `NEXT_COMMAND=rw-feature`.
 - For orchestration changes, prefer minimal diffs and preserve existing machine-readable tokens/contracts.
-- `.github/agents/rw.agent.md` must remain a delegation-only file: do not add logic, workflow rules, or token definitions to it — those belong exclusively in `.github/prompts/`.
+- `.github/agents/rw-orchestrator.agent.md` is the primary agent-picker entrypoint; keep its stop tokens and `NEXT_COMMAND` contracts aligned with `.github/prompts/rw-*.prompt.md`.
 - If you add or move template assets/prompts/scripts used by extraction, update `scripts/extract-template.sh` accordingly.
 
 ## Validation Rules
