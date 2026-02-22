@@ -59,6 +59,9 @@
 - **2026-02-13** — REVIEW_OK TASK-19: verification passed
 - **2026-02-13** — REVIEW_OK TASK-20: verification passed
 - **2026-02-22** — Added feature planning tasks TASK-21~TASK-23 for [export-csv-command].
+- **2026-02-22** — REVIEW_OK TASK-21: verification passed
+- **2026-02-22** — REVIEW_OK TASK-22: verification passed
+- **2026-02-22** — REVIEW_OK TASK-23: verification passed
 - **2026-02-22** — TASK-21 completed: `src/commands/export.ts` 구현 — RFC 4180 CSV 직렬화, 이스케이프 처리, 빈 목록 경고, 디렉터리 없음/권한 오류 처리 포함. 빌드 통과.
 - **2026-02-22** — TASK-22 completed: `src/index.ts`에 export 명령 등록 — `import { exportCommand }` 추가, `.command('export [output]')` 등록, 기본값 `todos.csv` 처리, 기존 명령 패턴과 일치하는 try/catch 적용. 빌드 통과, `todo export --help` 출력 확인.
 - **2026-02-23** — TASK-23 completed: export 명령 6개 시나리오 검증 완료 — 빌드 통과, `--help`에 `[output]` 인자 노출 확인, 빈 목록 시 헤더만 포함된 CSV 생성 및 경고 메시지 출력, 쉼표 포함 제목(`"Buy milk, bread"`) RFC 4180 올바른 따옴표 처리 확인, 존재하지 않는 디렉터리 에러 메시지 확인. README에 `todo export` 명령 테이블 행 및 사용 예시 추가.
