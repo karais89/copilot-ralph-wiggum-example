@@ -2,7 +2,7 @@
 name: rw-orchestrator
 description: "All-in-one orchestrator: Plan → Run → Review pipeline in a single invocation"
 agent: agent
-argument-hint: "Optional: one-line feature summary (e.g. 'add export command'). HITL pauses between phases are ON by default. Prefix with --auto or --no-hitl to run fully automated without pauses (e.g. '--auto add export command'). If omitted, a READY_FOR_PLAN feature file must already exist in .ai/features/. Target root resolved via .ai/runtime/rw-active-target-id.txt."
+argument-hint: "Optional: one-line feature summary (e.g. 'add export command'). If omitted, you will be asked interactively (HITL_MODE=ON). Prefix with --auto or --no-hitl to disable all pauses/questions (e.g. '--auto add export command'). Target root resolved via .ai/runtime/rw-active-target-id.txt."
 tools:
   - runSubagent
   - runInTerminal
@@ -23,7 +23,7 @@ Quick summary:
 - All-in-one wrapper that runs Plan → Run → Review in a single invocation.
 - Existing `rw-*` prompts are NOT modified; this orchestrator internalizes their logic.
 - Each phase emits the same tokens as the standalone prompts for compatibility.
-- HITL (Human-in-the-Loop) pauses between phases are ON by default; use --auto or --no-hitl to disable.
+- HITL (Human-in-the-Loop) pauses are ON by default: feature intake question (Step 11) + pauses between phases; use --auto or --no-hitl to disable all pauses and questions.
 - Phase 0/1 are delegated to dedicated subagents to reduce top-level context pressure.
 - Falls back to manual prompt workflow on any unrecoverable error.
 Path resolution (mandatory before Step 0):
@@ -74,7 +74,30 @@ Step 0 (Mandatory):
    - Print `HITL_MODE=<ON|OFF>`.
 10) Capture `FEATURE_SUMMARY` from agent invocation argument:
    - Strip leading `--auto`, `--no-hitl`, `--hitl`, or `--h` prefix and any surrounding whitespace to obtain the raw feature summary.
-   - The remaining text (may be empty) is `FEATURE_SUMMARY`.
+   - The remaining text (may be empty) is the candidate `FEATURE_SUMMARY`.
+   - Normalize to empty string if the candidate matches any recognized empty-trigger pattern (case-insensitive, exact match after trimming):
+     - Single punctuation or symbol: `?`, `!`, `-`, `.`, `*`
+     - Generic launch words (Korean): `시작`, `실행`, `새기능`, `기능`, `추가`, `ㅇ`, `ㄱ`
+     - Generic launch words (English): `start`, `go`, `run`, `new`, `yes`, `ok`, `hi`, `hello`, `hey`
+   - After normalization, the result is `FEATURE_SUMMARY`.
+11) HITL feature intake gate (runs at top-level, before any phase dispatch):
+   - First, evaluate resumable workspace state:
+     - `HAS_READY_FEATURE`: any `*.md` in `<FEATURES>` (excluding `FEATURE-TEMPLATE.md` and `README.md`) with exact line `Status: READY_FOR_PLAN`.
+     - `HAS_PENDING_OR_IN_PROGRESS`: `<PROGRESS>` has any `pending` or `in-progress` task row.
+     - `HAS_UNREVIEWED_COMPLETED`: `<PROGRESS>` has completed tasks with unreviewed candidates.
+   - If `HAS_PENDING_OR_IN_PROGRESS=true` OR `HAS_UNREVIEWED_COMPLETED=true`: skip this step (resume flow must not be blocked by feature intake).
+   - Else if `HAS_READY_FEATURE=true`: skip this step.
+   - Else if `FEATURE_SUMMARY` is empty AND `HITL_MODE=ON`:
+     - Ask one question via `#tool:vscode/askQuestions` in the resolved user-document language:
+       - header: `feature-summary`
+       - question (Korean): `어떤 기능을 추가할까요? (예: 날짜 필터가 있는 export 명령어 추가)`
+       - question (English): `What feature should be added? (e.g., add an export command with date filters)`
+       - allowFreeformInput: true
+     - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+     - Set `FEATURE_SUMMARY` to the trimmed answer.
+     - If `FEATURE_SUMMARY` is still empty, print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
+   - Else if `FEATURE_SUMMARY` is empty AND `HITL_MODE=OFF`:
+     - print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
 
 Important:
 - The orchestrator must never edit product code directly.
@@ -129,10 +152,14 @@ Procedure:
 5) Print `RUNSUBAGENT_PLAN_PHASE_DISPATCH_OK`.
 6) HITL gate (Phase 1 → Phase 2):
    - If `HITL_MODE=ON`:
-     - print `HITL_PAUSE: Plan phase complete. Review tasks in <TASKS> before proceeding.`
-     - Use `#tool:vscode/askQuestions` with a single question: header `continue-to-run`, question `Plan phase complete. Tasks created in .ai/tasks/. Proceed to Run phase?`, options `Yes, continue` (recommended) and `No, stop here`.
-     - If answer is `No, stop here`: print `NEXT_COMMAND=rw-orchestrator`, stop.
-     - If answer is `Yes, continue`: proceed to Phase 2.
+      - print `HITL_PAUSE: Plan phase complete. Review tasks in <TASKS> before proceeding.`
+      - Use `#tool:vscode/askQuestions` with a single yes/no question:
+        - header: `continue-to-run`
+        - question: `Plan phase complete. Tasks created in .ai/tasks/. Proceed to Run phase?`
+        - options: `Yes, continue` (recommended), `No, stop here`
+      - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+      - Continue only on explicit affirmative answer (`Yes, continue` or equivalent yes intent).
+      - Otherwise print `NEXT_COMMAND=rw-orchestrator`, stop.
    - If `HITL_MODE=OFF`: proceed to Phase 2.
 ## Phase 2 — RUN
 Print `ORCHESTRATOR_PHASE=RUN`
@@ -218,9 +245,13 @@ Run loop — Repeat:
 HITL gate (Phase 2 → Phase 3):
 - If `HITL_MODE=ON`:
   - print `HITL_PAUSE: Run phase complete. Review implementation before review phase.`
-  - Use `#tool:vscode/askQuestions` with a single question: header `continue-to-review`, question `Run phase complete. All tasks implemented. Proceed to Review phase?`, options `Yes, continue` (recommended) and `No, stop here`.
-  - If answer is `No, stop here`: print `NEXT_COMMAND=rw-orchestrator`, stop.
-  - If answer is `Yes, continue`: proceed to Phase 3.
+  - Use `#tool:vscode/askQuestions` with a single yes/no question:
+    - header: `continue-to-review`
+    - question: `Run phase complete. All tasks implemented. Proceed to Review phase?`
+    - options: `Yes, continue` (recommended), `No, stop here`
+  - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+  - Continue only on explicit affirmative answer (`Yes, continue` or equivalent yes intent).
+  - Otherwise print `NEXT_COMMAND=rw-orchestrator`, stop.
 - If `HITL_MODE=OFF`: proceed to Phase 3.
 ## Phase 3 — REVIEW
 Print `ORCHESTRATOR_PHASE=REVIEW`
@@ -284,15 +315,17 @@ This phase performs the same work as `rw-review.prompt.md`:
     - stop
 ## Phase Detection (Resume Support)
 When this orchestrator starts, it must detect the current phase from workspace state:
-0) If no `READY_FOR_PLAN` feature file exists:
-   - If `FEATURE_SUMMARY` argument is provided → start at Phase 0 (Feature).
-   - Otherwise → print `FEATURE_NOT_READY`, print `NEXT_COMMAND=rw-feature`, stop.
-1) If a `READY_FOR_PLAN` feature file exists and `<PROGRESS>` does not exist or has no task rows → start at Phase 1 (Plan).
-2) If `<PROGRESS>` has `pending`/`in-progress` tasks → start at Phase 2 (Run).
-3) If `<PROGRESS>` has only `completed` tasks and unreviewed candidates exist → start at Phase 3 (Review).
+0) If `<PROGRESS>` has `pending`/`in-progress` tasks → start at Phase 2 (Run).
+1) If `<PROGRESS>` has only `completed` tasks and unreviewed candidates exist → start at Phase 3 (Review).
+2) If a `READY_FOR_PLAN` feature file exists and `<PROGRESS>` does not exist or has no task rows → start at Phase 1 (Plan).
+3) If no `READY_FOR_PLAN` feature file exists and `FEATURE_SUMMARY` is non-empty → start at Phase 0 (Feature).
 4) If `<PROGRESS>` has only reviewed and completed tasks:
    - If `FEATURE_SUMMARY` argument is provided → start at Phase 0 (Feature) for the next feature.
    - Otherwise → print `ORCHESTRATOR_NOTHING_TO_DO`, print `NEXT_COMMAND=rw-feature`, stop.
+5) If no `READY_FOR_PLAN` feature file exists and `FEATURE_SUMMARY` is empty:
+   - print `FEATURE_NOT_READY`
+   - print `NEXT_COMMAND=rw-feature`
+   - stop
 This allows `rw-orchestrator` to be re-invoked after HITL pauses or interruptions.
 ## Rules
 - Invoke runSubagent sequentially (one at a time) unless review parallel mode is enabled.
