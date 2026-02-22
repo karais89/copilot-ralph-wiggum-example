@@ -41,14 +41,24 @@
 ├── rw-plan.prompt.md
 ├── rw-run.prompt.md
 ├── rw-review.prompt.md
-└── rw-archive.prompt.md
+├── rw-archive.prompt.md
+├── orchestrator/
+│   ├── rw-orchestrator-feature-phase.subagent.md
+│   └── rw-orchestrator-plan-phase.subagent.md
+└── shared/
+    ├── RW-INTERACTIVE-POLICY.md
+    └── RW-TARGET-ROOT-RESOLUTION.md
 
 scripts/
-├── rw-resolve-target-root.sh
-├── rw-bootstrap-scaffold.sh
-├── rw-target-registry.sh
-├── validate-smoke-result.sh
-└── check-prompts.mjs
+├── rw
+├── rw-smoke-test.sh
+├── orchestration/
+│   ├── rw-resolve-target-root.sh
+│   ├── rw-bootstrap-scaffold.sh
+│   └── rw-target-registry.sh
+└── validation/
+    ├── validate-smoke-result.sh
+    └── check-prompts.mjs
 ```
 
 ## 언어 정책
@@ -67,11 +77,11 @@ scripts/
 - 실행 프롬프트는 단일 `rw-run.prompt.md`만 사용한다.
 - 리뷰는 별도 수동 단계 `rw-review.prompt.md`로 수행한다.
 - archive 임계치 도달 시 `rw-run`은 중단하고 `rw-archive`를 수동 실행한다.
-- 대화형 입력 fallback은 `.github/prompts/RW-INTERACTIVE-POLICY.md` 단일 정책을 따른다.
-- target root 해석은 `scripts/rw-resolve-target-root.sh`를 공통 기준으로 사용한다.
-- 신규 스캐폴딩은 `scripts/rw-bootstrap-scaffold.sh`를 공통 기준으로 사용한다.
+- 대화형 입력 fallback은 `.github/prompts/shared/RW-INTERACTIVE-POLICY.md` 단일 정책을 따른다.
+- target root 해석은 `scripts/orchestration/rw-resolve-target-root.sh`를 공통 기준으로 사용한다.
+- 신규 스캐폴딩은 `scripts/orchestration/rw-bootstrap-scaffold.sh`를 공통 기준으로 사용한다.
 - 문서 기본 언어는 `RW_DOC_LANG` 환경변수로 제어할 수 있다(`ko` 기본, `en` 지원).
-- 프롬프트 변경 시 `node scripts/check-prompts.mjs`로 무결성을 먼저 검증한다.
+- 프롬프트 변경 시 `node scripts/validation/check-prompts.mjs`로 무결성을 먼저 검증한다.
 
 ## Git 브랜치 정책 (github-flow)
 
@@ -97,7 +107,7 @@ scripts/
    - `rw-new-project`는 `rw-init + low-friction discovery + bootstrap feature seed` 통합 프롬프트다.
    - 먼저 "무엇을 만들지" 한 문장을 받고, 그 내용을 바탕으로 필요한 보완 질문만 맞춤 생성한다.
    - 답하지 않은 항목은 안전 기본값으로 자동 채운다.
-   - 스캐폴딩은 우선 `scripts/rw-bootstrap-scaffold.sh`를 사용한다.
+   - 스캐폴딩은 우선 `scripts/orchestration/rw-bootstrap-scaffold.sh`를 사용한다.
    - 필요 시 실행 전에 `RW_DOC_LANG=en`을 설정해 `.ai/*` 문서 기본 언어를 영어로 시작할 수 있다.
    - `.ai` 스캐폴딩, 프로젝트 방향 확정, bootstrap feature 생성까지 한 번에 수행한다.
    - 실행 중 아래 타깃 포인터를 현재 워크스페이스 루트 기준으로 자동 갱신한다.
@@ -112,8 +122,8 @@ scripts/
      - `workspace-root/.ai/runtime/rw-targets/<target-id>.env` (`TARGET_ROOT=<absolute-path>`)
    - legacy 호환을 위해 `workspace-root/.ai/runtime/rw-active-target-root.txt`도 같은 경로로 동기화한다.
    - 수동 전환이 필요하면 워크스페이스 루트에서:
-     - `./scripts/rw-target-registry.sh set-active "$(pwd)" <target-id> "<absolute-target-root>"`
-     - `./scripts/rw-target-registry.sh resolve-active "$(pwd)"`
+     - `./scripts/orchestration/rw-target-registry.sh set-active "$(pwd)" <target-id> "<absolute-target-root>"`
+     - `./scripts/orchestration/rw-target-registry.sh resolve-active "$(pwd)"`
 5. `rw-run` 완료 후 `rw-review.prompt.md`를 실행한다(배치 리뷰).
 6. 기존 코드베이스 경로는 `rw-onboard-project -> rw-feature -> rw-plan -> rw-run -> rw-review`로 시작한다.
 7. 이후 추가 기능은 `rw-feature.prompt.md` -> `rw-plan.prompt.md` -> `rw-run.prompt.md` 순서로 진행한다.

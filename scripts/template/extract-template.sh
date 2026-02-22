@@ -6,16 +6,16 @@
 # The extracted files can be dropped into any new project to enable the RW workflow.
 #
 # Usage:
-#   ./scripts/extract-template.sh <target-directory>
+#   ./scripts/template/extract-template.sh <target-directory>
 #
 # Example:
-#   ./scripts/extract-template.sh ~/my-new-project
+#   ./scripts/template/extract-template.sh ~/my-new-project
 #   cd ~/my-new-project && git init
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # --- Argument check ---
 if [ $# -lt 1 ]; then
@@ -41,8 +41,12 @@ fi
 echo "📁 Creating directory structure in $TARGET ..."
 
 mkdir -p "$TARGET/.github/prompts"
+mkdir -p "$TARGET/.github/prompts/orchestrator"
+mkdir -p "$TARGET/.github/prompts/shared"
 mkdir -p "$TARGET/.github/agents"
 mkdir -p "$TARGET/scripts"
+mkdir -p "$TARGET/scripts/orchestration"
+mkdir -p "$TARGET/scripts/validation"
 mkdir -p "$TARGET/.ai/features"
 mkdir -p "$TARGET/.ai/templates"
 mkdir -p "$TARGET/.ai/tasks"
@@ -63,26 +67,26 @@ cp "$REPO_ROOT/.github/prompts/rw-run.prompt.md"     "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-review.prompt.md"       "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-archive.prompt.md"      "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-smoke-test.prompt.md"   "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/rw-orchestrator-feature-phase.subagent.md" "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/rw-orchestrator-plan-phase.subagent.md" "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/RW-INTERACTIVE-POLICY.md"  "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/RW-TARGET-ROOT-RESOLUTION.md" "$TARGET/.github/prompts/"
+cp "$REPO_ROOT/.github/prompts/orchestrator/rw-orchestrator-feature-phase.subagent.md" "$TARGET/.github/prompts/orchestrator/"
+cp "$REPO_ROOT/.github/prompts/orchestrator/rw-orchestrator-plan-phase.subagent.md" "$TARGET/.github/prompts/orchestrator/"
+cp "$REPO_ROOT/.github/prompts/shared/RW-INTERACTIVE-POLICY.md"  "$TARGET/.github/prompts/shared/"
+cp "$REPO_ROOT/.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md" "$TARGET/.github/prompts/shared/"
 cp -R "$REPO_ROOT/.github/prompts/smoke" "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/agents/rw-orchestrator.agent.md" "$TARGET/.github/agents/"
 
 # --- Copy shared utility scripts ---
 echo "🛠️  Copying shared utility scripts ..."
-cp "$REPO_ROOT/scripts/rw-resolve-target-root.sh" "$TARGET/scripts/"
-cp "$REPO_ROOT/scripts/rw-bootstrap-scaffold.sh" "$TARGET/scripts/"
-cp "$REPO_ROOT/scripts/rw-target-registry.sh" "$TARGET/scripts/"
+cp "$REPO_ROOT/scripts/orchestration/rw-resolve-target-root.sh" "$TARGET/scripts/orchestration/"
+cp "$REPO_ROOT/scripts/orchestration/rw-bootstrap-scaffold.sh" "$TARGET/scripts/orchestration/"
+cp "$REPO_ROOT/scripts/orchestration/rw-target-registry.sh" "$TARGET/scripts/orchestration/"
 cp "$REPO_ROOT/scripts/rw" "$TARGET/scripts/"
-cp "$REPO_ROOT/scripts/validate-smoke-result.sh" "$TARGET/scripts/"
-cp "$REPO_ROOT/scripts/check-prompts.mjs" "$TARGET/scripts/"
-chmod +x "$TARGET/scripts/rw-resolve-target-root.sh"
-chmod +x "$TARGET/scripts/rw-bootstrap-scaffold.sh"
-chmod +x "$TARGET/scripts/rw-target-registry.sh"
+cp "$REPO_ROOT/scripts/validation/validate-smoke-result.sh" "$TARGET/scripts/validation/"
+cp "$REPO_ROOT/scripts/validation/check-prompts.mjs" "$TARGET/scripts/validation/"
+chmod +x "$TARGET/scripts/orchestration/rw-resolve-target-root.sh"
+chmod +x "$TARGET/scripts/orchestration/rw-bootstrap-scaffold.sh"
+chmod +x "$TARGET/scripts/orchestration/rw-target-registry.sh"
 chmod +x "$TARGET/scripts/rw"
-chmod +x "$TARGET/scripts/validate-smoke-result.sh"
+chmod +x "$TARGET/scripts/validation/validate-smoke-result.sh"
 
 # --- Copy .ai structural files ---
 echo "📄 Copying .ai structural files ..."
@@ -121,21 +125,21 @@ echo "    rw-run.prompt.md"
 echo "    rw-review.prompt.md"
 echo "    rw-archive.prompt.md"
 echo "    rw-smoke-test.prompt.md"
-echo "    rw-orchestrator-feature-phase.subagent.md"
-echo "    rw-orchestrator-plan-phase.subagent.md"
-echo "    RW-INTERACTIVE-POLICY.md"
-echo "    RW-TARGET-ROOT-RESOLUTION.md"
+echo "    orchestrator/rw-orchestrator-feature-phase.subagent.md"
+echo "    orchestrator/rw-orchestrator-plan-phase.subagent.md"
+echo "    shared/RW-INTERACTIVE-POLICY.md"
+echo "    shared/RW-TARGET-ROOT-RESOLUTION.md"
 echo "    smoke/"
 echo "      SMOKE-CONTRACT.md"
 echo "      phases/phase-*.md"
 echo "      templates/*.subagent.md"
 echo "  scripts/"
-echo "    rw-resolve-target-root.sh"
-echo "    rw-bootstrap-scaffold.sh"
-echo "    rw-target-registry.sh"
+echo "    orchestration/rw-resolve-target-root.sh"
+echo "    orchestration/rw-bootstrap-scaffold.sh"
+echo "    orchestration/rw-target-registry.sh"
 echo "    rw"
-echo "    validate-smoke-result.sh"
-echo "    check-prompts.mjs"
+echo "    validation/validate-smoke-result.sh"
+echo "    validation/check-prompts.mjs"
 echo "  .ai/"
 echo "    CONTEXT.md"
 echo "    GUIDE.md"
@@ -157,6 +161,7 @@ echo "  3. Recommended: run rw-orchestrator agent from Agent Picker (optional ar
 echo "  4. Manual flow alternative: rw-new-project -> rw-plan -> rw-run -> rw-review"
 echo "     - Existing-codebase path: rw-onboard-project -> rw-feature -> rw-plan."
 echo "     - Optional helper: ./scripts/rw next (or ./scripts/rw go)"
+echo "     - Prompt integrity check: node ./scripts/validation/check-prompts.mjs"
 echo "  5. Optional: run rw-doctor.prompt.md if you want standalone preflight diagnostics"
 echo "  6. Optional: use rw-init.prompt.md only when scaffold-only setup is needed"
 echo "  7. Optional: run rw-smoke-test.prompt.md for end-to-end smoke validation"

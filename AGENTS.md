@@ -50,15 +50,15 @@ Repository-specific instructions for Codex agents working in this project.
   - Use `rw-onboard-project` for existing codebases, then follow `NEXT_COMMAND=rw-feature`.
 - For orchestration changes, prefer minimal diffs and preserve existing machine-readable tokens/contracts.
 - `.github/agents/rw-orchestrator.agent.md` is the primary agent-picker entrypoint; keep its stop tokens and `NEXT_COMMAND` contracts aligned with `.github/prompts/rw-*.prompt.md`.
-- If you add or move template assets/prompts/scripts used by extraction, update `scripts/extract-template.sh` accordingly.
+- If you add or move template assets/prompts/scripts used by extraction, update `scripts/template/extract-template.sh` accordingly.
 
 ## Validation Rules
 
 - When changing prompts/scripts/templates related to RW orchestration, run:
-  - `node scripts/check-prompts.mjs`
+  - `node scripts/validation/check-prompts.mjs`
   - `./scripts/rw-smoke-test.sh`
 - When changing smoke result contract/schema/validation, ensure:
-  - `scripts/validate-smoke-result.sh` still validates generated `last-result.json`.
+  - `scripts/validation/validate-smoke-result.sh` still validates generated `last-result.json`.
 - For app/runtime code changes, run relevant project checks (`npm run build`, `npm test`) as applicable.
 
 ## Commit Rules

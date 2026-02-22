@@ -15,7 +15,7 @@ Rules:
 - Summary resolution:
   - Use provided `FEATURE_SUMMARY` first.
   - If empty and `NON_INTERACTIVE_MODE=true`, infer a minimal summary from latest `<PLAN>` overview or `TARGET_ROOT/README.md`; if both unavailable, use: `Add a minimal improvement to the existing codebase.`
-  - If empty and `NON_INTERACTIVE_MODE=false`, run one question via `#tool:vscode/askQuestions` (fallback once per `.github/prompts/RW-INTERACTIVE-POLICY.md`).
+  - If empty and `NON_INTERACTIVE_MODE=false`, run one question via `#tool:vscode/askQuestions` (fallback once per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`).
   - If still empty, print `FEATURE_SUMMARY_MISSING` and `NEXT_COMMAND=rw-feature`, then stop.
 - Need-gate:
   - Build `User`, `Problem`, `Desired Outcome`, `Acceptance Signal`.

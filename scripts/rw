@@ -424,7 +424,7 @@ esac
 
 WORKSPACE_ROOT_ABS="$(cd "$workspace_root" && pwd -P)"
 
-resolver_output="$("$SCRIPT_DIR/rw-resolve-target-root.sh" "$workspace_root")"
+resolver_output="$("$SCRIPT_DIR/orchestration/rw-resolve-target-root.sh" "$workspace_root")"
 while IFS='=' read -r key value; do
   case "$key" in
     TARGET_ID) TARGET_ID="$value" ;;

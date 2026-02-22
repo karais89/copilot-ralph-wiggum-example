@@ -13,8 +13,8 @@ Quick summary:
 - Print machine-readable PASS/FAIL tokens and blocker list.
 
 Path resolution (mandatory before checks):
-- Follow `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md` exactly.
-- Resolve target metadata via `scripts/rw-resolve-target-root.sh` against workspace root.
+- Follow `.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md` exactly.
+- Resolve target metadata via `scripts/orchestration/rw-resolve-target-root.sh` against workspace root.
 - Resolve paths from `TARGET_ROOT`:
   - `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
   - `<AI_ROOT>` = `TARGET_ROOT/.ai/`

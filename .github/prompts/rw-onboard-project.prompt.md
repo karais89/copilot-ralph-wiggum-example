@@ -41,7 +41,7 @@ Workflow:
    - Record whether `TASK-01-bootstrap-workspace.md` existed before scaffold.
 
 2) Scaffold baseline via shared script (required):
-   - Run `scripts/rw-bootstrap-scaffold.sh "<workspace-root-absolute-path>"`.
+   - Run `scripts/orchestration/rw-bootstrap-scaffold.sh "<workspace-root-absolute-path>"`.
    - If script is missing or fails, stop immediately and output:
      - first line exactly: `RW_SCAFFOLD_FAILED`
      - second line: `<short reason>`

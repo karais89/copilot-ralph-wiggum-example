@@ -5,7 +5,7 @@
 # Validates a smoke result JSON file against the smoke result schema.
 #
 # Usage:
-#   ./scripts/validate-smoke-result.sh <result-json> [schema-json]
+#   ./scripts/validation/validate-smoke-result.sh <result-json> [schema-json]
 #
 set -euo pipefail
 

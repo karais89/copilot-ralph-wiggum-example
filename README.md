@@ -100,10 +100,10 @@ git clone https://github.com/karais89/copilot-ralph-wiggum-example.git
 cd copilot-ralph-wiggum-example
 
 # Extract only the RW template files into your project
-./scripts/extract-template.sh ~/your-project
+./scripts/template/extract-template.sh ~/your-project
 
 # Optional: scaffold default user-doc language as English
-# RW_DOC_LANG=en ./scripts/rw-bootstrap-scaffold.sh ~/your-project
+# RW_DOC_LANG=en ./scripts/orchestration/rw-bootstrap-scaffold.sh ~/your-project
 ```
 
 This copies the full RW template bundle (prompts, smoke modules, scripts, and `.ai` structural files) into your project:
@@ -123,17 +123,22 @@ your-project/
 │   ├── rw-review.prompt.md
 │   ├── rw-archive.prompt.md
 │   ├── rw-smoke-test.prompt.md
-│   ├── rw-orchestrator-feature-phase.subagent.md
-│   ├── rw-orchestrator-plan-phase.subagent.md
-│   ├── RW-INTERACTIVE-POLICY.md
-│   └── RW-TARGET-ROOT-RESOLUTION.md
+│   ├── orchestrator/
+│   │   ├── rw-orchestrator-feature-phase.subagent.md
+│   │   └── rw-orchestrator-plan-phase.subagent.md
+│   ├── shared/
+│   │   ├── RW-INTERACTIVE-POLICY.md
+│   │   └── RW-TARGET-ROOT-RESOLUTION.md
+│   └── smoke/
 ├── scripts/
-│   ├── rw-resolve-target-root.sh
-│   ├── rw-bootstrap-scaffold.sh
-│   ├── rw-target-registry.sh
 │   ├── rw
-│   ├── validate-smoke-result.sh
-│   └── check-prompts.mjs
+│   ├── orchestration/
+│   │   ├── rw-resolve-target-root.sh
+│   │   ├── rw-bootstrap-scaffold.sh
+│   │   └── rw-target-registry.sh
+│   ├── validation/
+│   │   ├── validate-smoke-result.sh
+│   │   └── check-prompts.mjs
 └── .ai/                       # Structural files
     ├── CONTEXT.md             # Language policy & parser tokens
     ├── GUIDE.md               # Operational guide
@@ -151,17 +156,17 @@ your-project/
 
 Copy these paths from this repo into your project:
 - `.github/prompts/*.prompt.md` (all `rw-*.prompt.md` files, including `rw-smoke-test.prompt.md`)
-- `.github/prompts/rw-orchestrator-feature-phase.subagent.md`
-- `.github/prompts/rw-orchestrator-plan-phase.subagent.md`
+- `.github/prompts/orchestrator/rw-orchestrator-feature-phase.subagent.md`
+- `.github/prompts/orchestrator/rw-orchestrator-plan-phase.subagent.md`
 - `.github/agents/rw-orchestrator.agent.md`
-- `.github/prompts/RW-INTERACTIVE-POLICY.md`
-- `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md`
-- `scripts/rw-resolve-target-root.sh`
-- `scripts/rw-bootstrap-scaffold.sh`
-- `scripts/rw-target-registry.sh`
+- `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`
+- `.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md`
+- `scripts/orchestration/rw-resolve-target-root.sh`
+- `scripts/orchestration/rw-bootstrap-scaffold.sh`
+- `scripts/orchestration/rw-target-registry.sh`
 - `scripts/rw`
-- `scripts/validate-smoke-result.sh`
-- `scripts/check-prompts.mjs`
+- `scripts/validation/validate-smoke-result.sh`
+- `scripts/validation/check-prompts.mjs`
 - `.ai/CONTEXT.md`
 - `.ai/GUIDE.md`
 - `.ai/features/FEATURE-TEMPLATE.md`
@@ -179,7 +184,7 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 2. Open Copilot Chat and choose one entry prompt:
    - **`rw-new-project`** for new/empty repos (scaffolding + lightweight project-direction discovery + bootstrap feature seed generation)
    - **`rw-onboard-project`** for existing codebases (language-agnostic codebase detection + `PLAN` snapshot + handoff to `rw-feature`)
-   - `rw-new-project` uses `scripts/rw-bootstrap-scaffold.sh` as the default scaffold path.
+   - `rw-new-project` uses `scripts/orchestration/rw-bootstrap-scaffold.sh` as the default scaffold path.
    - Entry prompts refresh target pointers automatically:
      - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
      - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
@@ -206,17 +211,17 @@ Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive
 Shared resolver script:
 
 ```bash
-./scripts/rw-resolve-target-root.sh "$(pwd)"
+./scripts/orchestration/rw-resolve-target-root.sh "$(pwd)"
 ```
 
 Resolver contract reference:
-- `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md`
+- `.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md`
 
 Manual target switch from workspace root:
 
 ```bash
-./scripts/rw-target-registry.sh set-active "$(pwd)" my-project "/absolute/path/to/project"
-./scripts/rw-target-registry.sh resolve-active "$(pwd)"
+./scripts/orchestration/rw-target-registry.sh set-active "$(pwd)" my-project "/absolute/path/to/project"
+./scripts/orchestration/rw-target-registry.sh resolve-active "$(pwd)"
 ```
 
 If VS Code workspace root and actual target project root are different, update active target id + registry first, then keep legacy pointer synchronized for compatibility.

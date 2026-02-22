@@ -40,7 +40,7 @@ Rules:
 - Interactive clarification limit:
   - at most one clarification round
   - at most two focused questions total
-- Interactive fallback must follow `.github/prompts/RW-INTERACTIVE-POLICY.md`.
+- Interactive fallback must follow `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
 - Non-interactive mode is enabled only when `.ai/runtime/rw-noninteractive.flag` exists.
 - In non-interactive mode, never call `#tool:vscode/askQuestions`; fill missing fields with explicit assumptions.
 - Write `.ai/features/*.md` content in the user-document language resolved from `.ai/CONTEXT.md`.
@@ -58,7 +58,7 @@ Workflow:
      - `Add a command to export action-item lists as a markdown report.`
    - If missing and `NON_INTERACTIVE_MODE=false`, use `#tool:vscode/askQuestions` with one open-ended question written in the resolved user-document language from Step 2.
    - Question intent (do not hardcode this English string in output): "What feature should be added? (Example: add export command with date filter)"
-   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
+   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
    - If `NON_INTERACTIVE_MODE=false` and still missing after that single interaction, stop immediately and output exactly: `FEATURE_SUMMARY_MISSING`.
 5) Build an initial need snapshot from summary + repository context:
    - `User`
@@ -68,7 +68,7 @@ Workflow:
 6) Need-gate handling:
    - Missing critical fields are: `User`, `Problem`, `Desired Outcome`.
    - If `NON_INTERACTIVE_MODE=false` and any critical field is missing, run exactly one clarification round with at most two focused questions.
-   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
+   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
    - If `NON_INTERACTIVE_MODE=true`, do not ask; fill missing fields with conservative defaults and mark them as assumptions.
 7) Re-evaluate need-gate:
    - If any critical field remains missing, stop immediately and output:

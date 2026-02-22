@@ -4,7 +4,7 @@ Purpose:
 - Define one canonical way to resolve the active RW target root.
 
 Authoritative resolver:
-- `scripts/rw-resolve-target-root.sh`
+- `scripts/orchestration/rw-resolve-target-root.sh`
 
 Required behavior:
 1) Run the resolver against workspace root.

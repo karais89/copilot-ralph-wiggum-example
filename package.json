@@ -12,7 +12,7 @@
     "start": "node dist/src/index.js",
     "dev": "tsx src/index.ts",
     "test": "vitest run test/stats-json.test.ts",
-    "check:prompts": "node scripts/check-prompts.mjs"
+    "check:prompts": "node scripts/validation/check-prompts.mjs"
   },
   "keywords": [
     "github-copilot",

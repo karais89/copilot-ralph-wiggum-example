@@ -42,7 +42,7 @@ Execution rules:
    - The current VS Code workspace root (where this prompt file lives).
 3) Set `PROMPT_ROOT`:
    - Absolute path to the directory containing this file (`.github/prompts`).
-4) Run `"$TEMPLATE_SOURCE/scripts/extract-template.sh" "$WORKSPACE_ROOT"`.
+4) Run `"$TEMPLATE_SOURCE/scripts/template/extract-template.sh" "$WORKSPACE_ROOT"`.
    - If it fails, print `SMOKE_TEST_FAIL setup: extract-template.sh failed` and stop.
 5) Initialize git:
    - `cd "$WORKSPACE_ROOT" && git init && git add -A && git commit -m "chore: initial extract"`

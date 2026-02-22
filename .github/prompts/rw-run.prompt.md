@@ -14,8 +14,8 @@ Quick summary:
 - Archive is always manual via `rw-archive.prompt.md`.
 
 Path resolution (mandatory before Step 0):
-- Follow `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md` exactly.
-- Resolve target metadata via `scripts/rw-resolve-target-root.sh` against workspace root.
+- Follow `.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md` exactly.
+- Resolve target metadata via `scripts/orchestration/rw-resolve-target-root.sh` against workspace root.
 - Resolve paths from `TARGET_ROOT`:
   - `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
   - `<AI_ROOT>` = `TARGET_ROOT/.ai/`

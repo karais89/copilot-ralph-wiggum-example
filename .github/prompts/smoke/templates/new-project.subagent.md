@@ -3,7 +3,7 @@ Target project root is `<ACTUAL_TARGET_ROOT>`.
 NON_INTERACTIVE_MODE=true — do not ask questions, do not call askQuestions, use safe defaults for any missing input.
 
 Steps:
-1) Run `<ACTUAL_TARGET_ROOT>/scripts/rw-bootstrap-scaffold.sh "<ACTUAL_TARGET_ROOT>"`.
+1) Run `<ACTUAL_TARGET_ROOT>/scripts/orchestration/rw-bootstrap-scaffold.sh "<ACTUAL_TARGET_ROOT>"`.
 2) Read `<ACTUAL_TARGET_ROOT>/.ai/CONTEXT.md`.
 3) Update `<ACTUAL_TARGET_ROOT>/.ai/PLAN.md`:
    - Set overview to describe this project: simple hello CLI that greets users by name

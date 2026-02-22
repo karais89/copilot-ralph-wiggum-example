@@ -27,8 +27,8 @@ Quick summary:
 - Phase 0/1 are delegated to dedicated subagents to reduce top-level context pressure.
 - Falls back to manual prompt workflow on any unrecoverable error.
 Path resolution (mandatory before Step 0):
-- Follow `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md` exactly.
-- Resolve target metadata via `scripts/rw-resolve-target-root.sh` against workspace root.
+- Follow `.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md` exactly.
+- Resolve target metadata via `scripts/orchestration/rw-resolve-target-root.sh` against workspace root.
 - Resolve paths from `TARGET_ROOT`:
   - `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
   - `<AI_ROOT>` = `TARGET_ROOT/.ai/`
@@ -44,8 +44,8 @@ Path resolution (mandatory before Step 0):
   - `<PLAN_APPROVAL_GATE_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-required.flag`
   - `<PLAN_APPROVAL_PENDING>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-pending.env`
   - `<PLAN_APPROVAL_STAMP>` = `TARGET_ROOT/.ai/runtime/rw-plan-approved.env`
-  - `<FEATURE_PHASE_SUBAGENT_PROMPT_FILE>` = `TARGET_ROOT/.github/prompts/rw-orchestrator-feature-phase.subagent.md`
-  - `<PLAN_PHASE_SUBAGENT_PROMPT_FILE>` = `TARGET_ROOT/.github/prompts/rw-orchestrator-plan-phase.subagent.md`
+  - `<FEATURE_PHASE_SUBAGENT_PROMPT_FILE>` = `TARGET_ROOT/.github/prompts/orchestrator/rw-orchestrator-feature-phase.subagent.md`
+  - `<PLAN_PHASE_SUBAGENT_PROMPT_FILE>` = `TARGET_ROOT/.github/prompts/orchestrator/rw-orchestrator-plan-phase.subagent.md`
 <ORCHESTRATOR_INSTRUCTIONS>
 You are the all-in-one orchestrator agent.
 Your job is to execute the full Plan → Run → Review pipeline automatically.

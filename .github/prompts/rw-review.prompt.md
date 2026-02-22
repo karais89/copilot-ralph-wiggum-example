@@ -17,8 +17,8 @@ Quick summary:
 - Write one phase completion note to `.ai/notes/` with standardized cycle-result fields.
 
 Path resolution (mandatory before Step 0):
-- Follow `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md` exactly.
-- Resolve target metadata via `scripts/rw-resolve-target-root.sh` against workspace root.
+- Follow `.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md` exactly.
+- Resolve target metadata via `scripts/orchestration/rw-resolve-target-root.sh` against workspace root.
 - Resolve paths from `TARGET_ROOT`:
   - `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
   - `<PLAN>` = `TARGET_ROOT/.ai/PLAN.md`

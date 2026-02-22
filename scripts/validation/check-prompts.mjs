@@ -130,7 +130,7 @@ async function main() {
 
   const subagentPromptContracts = new Map([
     [
-      path.join(promptsDir, "rw-orchestrator-feature-phase.subagent.md"),
+      path.join(promptsDir, "orchestrator", "rw-orchestrator-feature-phase.subagent.md"),
       [
         "Never call `#tool:agent/runSubagent`",
         "FEATURE_NEED_INSUFFICIENT",
@@ -139,7 +139,7 @@ async function main() {
       ],
     ],
     [
-      path.join(promptsDir, "rw-orchestrator-plan-phase.subagent.md"),
+      path.join(promptsDir, "orchestrator", "rw-orchestrator-plan-phase.subagent.md"),
       [
         "Never call `#tool:agent/runSubagent`",
         "PLAN_FEATURE_FILE=<filename>",
@@ -191,7 +191,7 @@ async function main() {
   const ciWorkflowPath = path.join(repoRoot, ".github", "workflows", "rw-smoke-test.yml");
   if (await exists(ciWorkflowPath)) {
     const ciWorkflow = await fs.readFile(ciWorkflowPath, "utf8");
-    requireToken(errors, ".github/workflows/rw-smoke-test.yml", ciWorkflow, "node scripts/check-prompts.mjs");
+    requireToken(errors, ".github/workflows/rw-smoke-test.yml", ciWorkflow, "node scripts/validation/check-prompts.mjs");
     requireToken(errors, ".github/workflows/rw-smoke-test.yml", ciWorkflow, "./scripts/rw-smoke-test.sh");
     requireToken(errors, ".github/workflows/rw-smoke-test.yml", ciWorkflow, "npm test");
   }

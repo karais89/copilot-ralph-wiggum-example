@@ -245,7 +245,7 @@ RESULT_MD="$RESULT_DIR/last-result.md"
 
 # --- Step 1: Extract ---
 set_stage "extract"
-"$REPO_ROOT/scripts/extract-template.sh" "$S1" >/dev/null 2>&1
+"$REPO_ROOT/scripts/template/extract-template.sh" "$S1" >/dev/null 2>&1
 
 assert_file_exists "$S1/.github/prompts/rw-init.prompt.md" "rw-init.prompt.md extracted"
 assert_file_exists "$S1/.github/prompts/rw-new-project.prompt.md" "rw-new-project.prompt.md extracted"
@@ -257,20 +257,20 @@ assert_file_exists "$S1/.github/prompts/rw-run.prompt.md" "rw-run.prompt.md extr
 assert_file_exists "$S1/.github/prompts/rw-review.prompt.md" "rw-review.prompt.md extracted"
 assert_file_exists "$S1/.github/prompts/rw-archive.prompt.md" "rw-archive.prompt.md extracted"
 assert_file_exists "$S1/.github/prompts/rw-smoke-test.prompt.md" "rw-smoke-test.prompt.md extracted"
-assert_file_exists "$S1/.github/prompts/rw-orchestrator-feature-phase.subagent.md" "rw-orchestrator feature-phase subagent prompt extracted"
-assert_file_exists "$S1/.github/prompts/rw-orchestrator-plan-phase.subagent.md" "rw-orchestrator plan-phase subagent prompt extracted"
-assert_file_exists "$S1/.github/prompts/RW-INTERACTIVE-POLICY.md" "RW-INTERACTIVE-POLICY.md extracted"
-assert_file_exists "$S1/.github/prompts/RW-TARGET-ROOT-RESOLUTION.md" "RW-TARGET-ROOT-RESOLUTION.md extracted"
+assert_file_exists "$S1/.github/prompts/orchestrator/rw-orchestrator-feature-phase.subagent.md" "rw-orchestrator feature-phase subagent prompt extracted"
+assert_file_exists "$S1/.github/prompts/orchestrator/rw-orchestrator-plan-phase.subagent.md" "rw-orchestrator plan-phase subagent prompt extracted"
+assert_file_exists "$S1/.github/prompts/shared/RW-INTERACTIVE-POLICY.md" "RW-INTERACTIVE-POLICY.md extracted"
+assert_file_exists "$S1/.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md" "RW-TARGET-ROOT-RESOLUTION.md extracted"
 assert_dir_exists "$S1/.github/prompts/smoke" "smoke prompt module directory extracted"
 assert_file_exists "$S1/.github/prompts/smoke/SMOKE-CONTRACT.md" "SMOKE-CONTRACT.md extracted"
 assert_file_exists "$S1/.github/prompts/smoke/phases/phase-01-new-project.md" "smoke phase-01 extracted"
 assert_file_exists "$S1/.github/prompts/smoke/templates/run-task.subagent.md" "smoke run-task template extracted"
-assert_file_exists "$S1/scripts/rw-resolve-target-root.sh" "rw-resolve-target-root.sh extracted"
-assert_file_exists "$S1/scripts/rw-bootstrap-scaffold.sh" "rw-bootstrap-scaffold.sh extracted"
-assert_file_exists "$S1/scripts/rw-target-registry.sh" "rw-target-registry.sh extracted"
+assert_file_exists "$S1/scripts/orchestration/rw-resolve-target-root.sh" "rw-resolve-target-root.sh extracted"
+assert_file_exists "$S1/scripts/orchestration/rw-bootstrap-scaffold.sh" "rw-bootstrap-scaffold.sh extracted"
+assert_file_exists "$S1/scripts/orchestration/rw-target-registry.sh" "rw-target-registry.sh extracted"
 assert_file_exists "$S1/scripts/rw" "rw helper script extracted"
-assert_file_exists "$S1/scripts/validate-smoke-result.sh" "validate-smoke-result.sh extracted"
-assert_file_exists "$S1/scripts/check-prompts.mjs" "check-prompts.mjs extracted"
+assert_file_exists "$S1/scripts/validation/validate-smoke-result.sh" "validate-smoke-result.sh extracted"
+assert_file_exists "$S1/scripts/validation/check-prompts.mjs" "check-prompts.mjs extracted"
 assert_file_exists "$S1/.ai/CONTEXT.md" "CONTEXT.md extracted"
 assert_file_exists "$S1/.ai/GUIDE.md" "GUIDE.md extracted"
 assert_file_exists "$S1/.ai/features/FEATURE-TEMPLATE.md" "FEATURE-TEMPLATE.md extracted"
@@ -279,14 +279,14 @@ assert_file_exists "$S1/.ai/templates/CONTEXT-BOOTSTRAP.md" "CONTEXT-BOOTSTRAP.m
 assert_file_exists "$S1/.ai/templates/PROJECT-CHARTER-TEMPLATE.md" "PROJECT-CHARTER-TEMPLATE.md extracted"
 assert_file_exists "$S1/.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md" "BOOTSTRAP-FEATURE-TEMPLATE.md extracted"
 assert_file_exists "$S1/.ai/templates/SMOKE-RESULT-SCHEMA.json" "SMOKE-RESULT-SCHEMA.json extracted"
-assert_command_succeeds "prompt integrity check passes" bash -c "cd '$S1' && node scripts/check-prompts.mjs >/dev/null 2>&1"
+assert_command_succeeds "prompt integrity check passes" bash -c "cd '$S1' && node scripts/validation/check-prompts.mjs >/dev/null 2>&1"
 assert_command_succeeds "rw helper next works pre-scaffold" bash -c "cd '$S1' && ./scripts/rw next >/dev/null 2>&1"
 assert_command_succeeds "rw helper run alias resolves prompt" bash -c "cd '$S1' && ./scripts/rw run >/dev/null 2>&1"
 
 # --- Step 2: Scaffold ---
 set_stage "scaffold"
 (cd "$S1" && git init -q && git add -A && git commit -q -m "chore: initial extract")
-"$S1/scripts/rw-bootstrap-scaffold.sh" "$S1" >/dev/null 2>&1
+"$S1/scripts/orchestration/rw-bootstrap-scaffold.sh" "$S1" >/dev/null 2>&1
 
 assert_file_exists "$S1/.ai/PLAN.md" "PLAN.md created"
 assert_file_exists "$S1/.ai/PROGRESS.md" "PROGRESS.md created"
@@ -538,7 +538,7 @@ S3="$TEST_DIR/scenario3"
 
 # --- Step 11: Extract ---
 set_stage "extract (existing project)"
-"$REPO_ROOT/scripts/extract-template.sh" "$S3" >/dev/null 2>&1
+"$REPO_ROOT/scripts/template/extract-template.sh" "$S3" >/dev/null 2>&1
 assert_file_exists "$S3/.github/prompts/rw-onboard-project.prompt.md" "rw-onboard-project.prompt.md extracted (scenario3)"
 
 # --- Step 12: Seed existing codebase signals ---
@@ -589,7 +589,7 @@ assert_file_exists "$S3/src/index.ts" "scenario3 source file exists"
 
 # --- Step 13: rw-onboard-project (simulated) ---
 set_stage "rw-onboard-project (sim)"
-"$S3/scripts/rw-bootstrap-scaffold.sh" "$S3" >/dev/null 2>&1
+"$S3/scripts/orchestration/rw-bootstrap-scaffold.sh" "$S3" >/dev/null 2>&1
 assert_file_exists "$S3/.ai/tasks/TASK-01-bootstrap-workspace.md" "scenario3 TASK-01 initially scaffolded"
 
 cat > "$S3/.ai/PLAN.md" <<EOF
@@ -704,7 +704,7 @@ write_smoke_result_artifacts "$OVERALL_STATUS" "$FAIL_PHASE" "$FAIL_REASON"
 
 assert_file_exists "$RESULT_JSON" "smoke result json created"
 assert_file_exists "$RESULT_MD" "smoke result markdown created"
-assert_command_succeeds "smoke result json schema-valid" "$S1/scripts/validate-smoke-result.sh" "$RESULT_JSON" "$S1/.ai/templates/SMOKE-RESULT-SCHEMA.json"
+assert_command_succeeds "smoke result json schema-valid" "$S1/scripts/validation/validate-smoke-result.sh" "$RESULT_JSON" "$S1/.ai/templates/SMOKE-RESULT-SCHEMA.json"
 assert_file_contains "$RESULT_MD" "Status: $OVERALL_STATUS" "smoke result markdown has status"
 assert_json_field_equals "$RESULT_JSON" "status" "$OVERALL_STATUS" "result status matches expected"
 assert_json_field_equals "$RESULT_JSON" "total_phases" "$SMOKE_TOTAL_PHASES" "result total_phases is 8"
