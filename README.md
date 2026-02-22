@@ -143,7 +143,7 @@ your-project/
 │   ├── validation/
 │   │   ├── validate-smoke-result.sh
 │   │   └── check-prompts.mjs
-└── .ai/                       # Structural files
+└── .ai/                       # Template source files (runtime dirs/files are created during execution)
     ├── CONTEXT.md             # Language policy & parser tokens
     ├── GUIDE.md               # Operational guide
     ├── features/
@@ -180,7 +180,9 @@ Copy these paths from this repo into your project:
 - `.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md`
 - `.ai/templates/SMOKE-RESULT-SCHEMA.json`
 
-Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`
+Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/runtime/rw-targets/`
+
+`rw-plan` creates `.ai/plans/<plan-id>/` automatically when the first plan batch runs.
 
 ### After Extraction
 
@@ -354,6 +356,11 @@ Task verification convention:
 | [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (`rw-new-project` or `rw-init` creates skeleton, `rw-plan`/`rw-run` update entries) |
 | `tasks/TASK-XX-*.md` | Individual task definitions (bootstrap and additional feature tasks are created by `rw-plan`) |
 | `features/*.md` | Feature specifications (bootstrap feature may be created by `rw-new-project`; additional ones are created by `rw-feature`) |
+| `notes/*.md` | Phase notes created by orchestration (`RUN-PHASE-*`, `REVIEW-PHASE-*`, project charter notes) |
+| `progress-archive/*.md` | Archived progress snapshots created by `rw-archive` |
+| `runtime/rw-active-target-id.txt`, `runtime/rw-targets/*.env`, `runtime/rw-active-target-root.txt` | Target-root pointer set used by `rw-doctor` / `rw-run` / `rw-review` / `rw-archive` |
+| `runtime/rw-active-plan-id.txt` | Active plan pointer written by `rw-plan` / orchestrator plan phase |
+| `plans/<plan-id>/` | Plan artifacts (`research_findings_<slug>.yaml`, `plan-summary.yaml`) |
 
 ### Safety Mechanisms
 

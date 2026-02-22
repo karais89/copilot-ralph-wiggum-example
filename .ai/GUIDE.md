@@ -22,15 +22,24 @@
 - `rw-init.prompt.md`: 스캐폴딩만 필요할 때만
 - `rw-smoke-test.prompt.md`: 템플릿/런타임 검증이 필요할 때만
 
-## 최소 구조
+## 구조 (초기 + 실행 중 생성)
 
 ```text
 .ai/
+├── CONTEXT.md
+├── GUIDE.md
 ├── PLAN.md
 ├── PROGRESS.md
 ├── features/
 ├── templates/
-└── tasks/
+├── tasks/
+├── notes/
+├── progress-archive/
+├── runtime/
+│   ├── rw-active-target-id.txt
+│   ├── rw-active-target-root.txt   # legacy fallback pointer
+│   └── rw-targets/
+└── plans/                          # created/updated by rw-plan
 
 .github/prompts/
 ├── rw-init.prompt.md
