@@ -25,7 +25,7 @@
 | TASK-19 | CLI에 Clear 명령 등록 | completed | feat(clear): complete clear workflow and harden rw prompts |
 | TASK-20 | Clear 명령 통합 테스트 | completed | feat(clear): complete clear workflow and harden rw prompts |
 | TASK-21 | export 명령 핸들러 구현 | completed | 2811da4 |
-| TASK-22 | CLI에 export 명령 등록 | completed | feat(export): register export command in CLI |
+| TASK-22 | CLI에 export 명령 등록 | completed | 81d3300 |
 | TASK-23 | export 명령 통합 테스트 및 문서 업데이트 | pending | |
 
 ## Log
