@@ -209,10 +209,10 @@ scripts/
 - `rw-feature.prompt.md`:
   - `rw-plan` 실행 전에 feature 입력 파일을 만들 때 사용한다.
   - 한 줄 입력(`featureSummary`)을 받아 feature 파일을 상세 스펙 형태로 생성한다.
-  - 니즈 게이트(`User`, `Problem`, `Desired Outcome`, `Acceptance Signal`)를 반드시 채운다.
-  - 질문은 최대 1라운드/최대 2문항으로 제한한다.
+  - 니즈 게이트(`User`, `Trigger / Situation`, `Problem`, `Desired Outcome`, `Acceptance Signal`, `Out-of-Scope Boundary`)를 반드시 채운다.
+  - 질문은 최대 2라운드/총 5문항으로 제한한다(1차 최대 3문항, 2차 최대 2문항).
   - 입력이 비어 있고 1회 보완 이후에도 요약이 없으면 `FEATURE_SUMMARY_MISSING`으로 중단한다.
-  - 보완 이후에도 핵심 니즈(`User`, `Problem`, `Desired Outcome`)가 비어 있으면 `FEATURE_NEED_INSUFFICIENT`으로 중단한다.
+  - 보완 이후에도 핵심 니즈(`User`, `Trigger / Situation`, `Problem`, `Desired Outcome`, `Acceptance Signal`, `Out-of-Scope Boundary`)가 비어 있으면 `FEATURE_NEED_INSUFFICIENT`으로 중단한다.
   - 생성 파일은 `Status: READY_FOR_PLAN`으로 저장된다.
   - feature 파일 본문은 한국어로 작성하고, 기계 파싱 토큰(`Status`, `READY_FOR_PLAN`, `PLANNED`)만 영어를 유지한다.
 - `rw-doctor.prompt.md`:
@@ -283,7 +283,7 @@ scripts/
 - preflight를 먼저 눈으로 확인하고 싶을 때만 `rw-doctor`를 수동 실행한다.
 - optional plan approval gate:
   - `.ai/runtime/rw-plan-approval-required.flag`가 있으면 gate ON
-  - 또는 plan 결과가 `PLAN_RISK_LEVEL=HIGH`이거나 `OPEN_QUESTIONS_COUNT>0`이면 gate ON
+  - 또는 plan 결과가 `PLAN_RISK_LEVEL=HIGH`이거나 `OPEN_QUESTIONS_COUNT>=2`이면 gate ON
   - gate ON 상태에서 `.ai/runtime/rw-plan-approved.env`에 `PLAN_APPROVED=1`이 없으면 `PLAN_APPROVAL_REQUIRED`로 중단
   - 승인 시 `./scripts/rw approve-plan` 사용
 - `rw-doctor`, `rw-run`, `rw-review`, `rw-archive`는 동일한 타깃 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/*.env`, legacy `.ai/runtime/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).

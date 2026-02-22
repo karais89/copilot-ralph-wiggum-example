@@ -99,8 +99,8 @@ Step 0 (Mandatory):
    - If `FEATURE_INTAKE_ACTIVE=true` AND `FEATURE_SUMMARY` is empty AND `HITL_MODE=ON`:
      - Ask one question via `#tool:vscode/askQuestions` in the resolved user-document language:
        - header: `feature-summary`
-       - question (Korean): `어떤 기능을 만들까요? 대상 사용자/문제/원하는 결과를 포함해 한 문장으로 알려주세요. (예: 운영자가 기간 필터를 써서 export 명령으로 CSV를 내려받게 하기)`
-       - question (English): `What feature should be built? Include user/problem/outcome in one sentence. (e.g., let operators download CSV via an export command with date filters)`
+       - question (Korean): `어떤 기능을 만들까요? 한 문장으로 알려주세요. 누가(User), 언제/어떤 상황에서(Trigger), 어떤 문제(Problem)를 겪고, 어떤 결과(Desired Outcome)가 나오며, 완료 신호(Acceptance Signal)와 제외 범위(Out-of-Scope Boundary)는 무엇인지 포함해주세요.`
+       - question (English): `What feature should be built? Reply in one sentence that includes User, Trigger/Situation, Problem, Desired Outcome, Acceptance Signal, and Out-of-Scope Boundary.`
        - allowFreeformInput: true
      - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
      - Set `FEATURE_SUMMARY` to the trimmed answer.
@@ -109,8 +109,8 @@ Step 0 (Mandatory):
    - If `FEATURE_INTAKE_ACTIVE=true` AND `FEATURE_SUMMARY` is a placeholder-level summary (for example: `기능 추가`, `개선`, `업데이트`, `new feature`, `improve`) AND `HITL_MODE=ON`:
      - Ask one follow-up question via `#tool:vscode/askQuestions` in the resolved user-document language:
        - header: `feature-summary-clarify`
-       - question (Korean): `아직 모호합니다. 누가 무엇을 하며, 어떤 결과가 나오면 완료인지 한 문장으로 다시 적어주세요.`
-       - question (English): `Still ambiguous. Rewrite in one sentence with who does what and what result means done.`
+       - question (Korean): `아직 모호합니다. 한 문장으로 다시 작성해주세요: User, Trigger/Situation, Problem, Desired Outcome, Acceptance Signal, Out-of-Scope Boundary.`
+       - question (English): `Still ambiguous. Rewrite in one sentence covering User, Trigger/Situation, Problem, Desired Outcome, Acceptance Signal, and Out-of-Scope Boundary.`
        - allowFreeformInput: true
      - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
      - Replace `FEATURE_SUMMARY` with the trimmed follow-up answer.

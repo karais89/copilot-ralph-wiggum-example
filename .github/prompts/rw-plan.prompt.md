@@ -209,7 +209,7 @@ Workflow:
    - If `.ai/runtime/rw-plan-approval-required.flag` exists:
      - `PLAN_APPROVAL_GATE=ON`
      - `PLAN_APPROVAL_REASON=FLAG`
-   - Else if `PLAN_RISK_LEVEL=HIGH` or `OPEN_QUESTIONS_COUNT>0`:
+   - Else if `PLAN_RISK_LEVEL=HIGH` or `OPEN_QUESTIONS_COUNT>=2`:
      - `PLAN_APPROVAL_GATE=ON`
      - `PLAN_APPROVAL_REASON=RISK_OR_OPEN_QUESTIONS`
    - Else:

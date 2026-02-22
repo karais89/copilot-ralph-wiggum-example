@@ -72,7 +72,7 @@ rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  → 
 - Run completion requires explicit `VERIFICATION_EVIDENCE TASK-XX ...` log lines for each dispatched task.
 - Archive threshold is hard-stop; run resumes after manual `rw-archive`.
 - `rw-run` preflight uses doctor-stamp cache first (same target + 10-minute TTL), then falls back to full preflight on cache miss.
-- Plan approval gate can be enabled by runtime flag or automatically when `PLAN_RISK_LEVEL=HIGH` / `OPEN_QUESTIONS_COUNT>0`.
+- Plan approval gate can be enabled by runtime flag or automatically when `PLAN_RISK_LEVEL=HIGH` / `OPEN_QUESTIONS_COUNT>=2`.
 
 ### Branch Strategy (github-flow)
 
