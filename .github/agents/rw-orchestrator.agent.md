@@ -90,11 +90,19 @@ Step 0 (Mandatory):
    - Else if `FEATURE_SUMMARY` is empty AND `HITL_MODE=ON`:
      - Ask one question via `#tool:vscode/askQuestions` in the resolved user-document language:
        - header: `feature-summary`
-       - question (Korean): `어떤 기능을 추가할까요? (예: 날짜 필터가 있는 export 명령어 추가)`
-       - question (English): `What feature should be added? (e.g., add an export command with date filters)`
+       - question (Korean): `어떤 기능을 만들까요? 대상 사용자/문제/원하는 결과를 포함해 한 문장으로 알려주세요. (예: 운영자가 기간 필터를 써서 export 명령으로 CSV를 내려받게 하기)`
+       - question (English): `What feature should be built? Include user/problem/outcome in one sentence. (e.g., let operators download CSV via an export command with date filters)`
        - allowFreeformInput: true
      - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
      - Set `FEATURE_SUMMARY` to the trimmed answer.
+     - If `FEATURE_SUMMARY` is a placeholder-level summary (for example: `기능 추가`, `개선`, `업데이트`, `new feature`, `improve`) AND `HITL_MODE=ON`:
+       - Ask one follow-up question via `#tool:vscode/askQuestions` in the resolved user-document language:
+         - header: `feature-summary-clarify`
+         - question (Korean): `아직 모호합니다. 누가 무엇을 하며, 어떤 결과가 나오면 완료인지 한 문장으로 다시 적어주세요.`
+         - question (English): `Still ambiguous. Rewrite in one sentence with who does what and what result means done.`
+         - allowFreeformInput: true
+       - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+       - Replace `FEATURE_SUMMARY` with the trimmed follow-up answer.
      - If `FEATURE_SUMMARY` is still empty, print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
    - Else if `FEATURE_SUMMARY` is empty AND `HITL_MODE=OFF`:
      - print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
