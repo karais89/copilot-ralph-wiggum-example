@@ -78,16 +78,17 @@ Step 0 (Mandatory):
    - Normalize to empty string if the candidate matches any recognized empty-trigger pattern (case-insensitive, exact match after trimming):
      - Single punctuation or symbol: `?`, `!`, `-`, `.`, `*`
      - Generic launch words (Korean): `시작`, `실행`, `새기능`, `기능`, `추가`, `ㅇ`, `ㄱ`
+     - Generic placeholder phrases (Korean): `기능 추가`, `새 기능`, `기능 개선`, `업데이트`, `개선`, `수정`
      - Generic launch words (English): `start`, `go`, `run`, `new`, `yes`, `ok`, `hi`, `hello`, `hey`
+     - Generic placeholder phrases (English): `feature`, `new feature`, `improve`, `improvement`, `update`, `fix`
    - After normalization, the result is `FEATURE_SUMMARY`.
 11) HITL feature intake gate (runs at top-level, before any phase dispatch):
    - First, evaluate resumable workspace state:
      - `HAS_READY_FEATURE`: any `*.md` in `<FEATURES>` (excluding `FEATURE-TEMPLATE.md` and `README.md`) with exact line `Status: READY_FOR_PLAN`.
      - `HAS_PENDING_OR_IN_PROGRESS`: `<PROGRESS>` has any `pending` or `in-progress` task row.
      - `HAS_UNREVIEWED_COMPLETED`: `<PROGRESS>` has completed tasks with unreviewed candidates.
-   - If `HAS_PENDING_OR_IN_PROGRESS=true` OR `HAS_UNREVIEWED_COMPLETED=true`: skip this step (resume flow must not be blocked by feature intake).
-   - Else if `HAS_READY_FEATURE=true`: skip this step.
-   - Else if `FEATURE_SUMMARY` is empty AND `HITL_MODE=ON`:
+   - Define `FEATURE_INTAKE_ACTIVE=true` only when `HAS_READY_FEATURE=false`, `HAS_PENDING_OR_IN_PROGRESS=false`, and `HAS_UNREVIEWED_COMPLETED=false`.
+   - If `FEATURE_INTAKE_ACTIVE=true` AND `FEATURE_SUMMARY` is empty AND `HITL_MODE=ON`:
      - Ask one question via `#tool:vscode/askQuestions` in the resolved user-document language:
        - header: `feature-summary`
        - question (Korean): `어떤 기능을 만들까요? 대상 사용자/문제/원하는 결과를 포함해 한 문장으로 알려주세요. (예: 운영자가 기간 필터를 써서 export 명령으로 CSV를 내려받게 하기)`
@@ -95,16 +96,17 @@ Step 0 (Mandatory):
        - allowFreeformInput: true
      - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
      - Set `FEATURE_SUMMARY` to the trimmed answer.
-     - If `FEATURE_SUMMARY` is a placeholder-level summary (for example: `기능 추가`, `개선`, `업데이트`, `new feature`, `improve`) AND `HITL_MODE=ON`:
-       - Ask one follow-up question via `#tool:vscode/askQuestions` in the resolved user-document language:
-         - header: `feature-summary-clarify`
-         - question (Korean): `아직 모호합니다. 누가 무엇을 하며, 어떤 결과가 나오면 완료인지 한 문장으로 다시 적어주세요.`
-         - question (English): `Still ambiguous. Rewrite in one sentence with who does what and what result means done.`
-         - allowFreeformInput: true
-       - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
-       - Replace `FEATURE_SUMMARY` with the trimmed follow-up answer.
-     - If `FEATURE_SUMMARY` is still empty, print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
-   - Else if `FEATURE_SUMMARY` is empty AND `HITL_MODE=OFF`:
+   - Else if `FEATURE_INTAKE_ACTIVE=true` AND `FEATURE_SUMMARY` is empty AND `HITL_MODE=OFF`:
+     - print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
+   - If `FEATURE_INTAKE_ACTIVE=true` AND `FEATURE_SUMMARY` is a placeholder-level summary (for example: `기능 추가`, `개선`, `업데이트`, `new feature`, `improve`) AND `HITL_MODE=ON`:
+     - Ask one follow-up question via `#tool:vscode/askQuestions` in the resolved user-document language:
+       - header: `feature-summary-clarify`
+       - question (Korean): `아직 모호합니다. 누가 무엇을 하며, 어떤 결과가 나오면 완료인지 한 문장으로 다시 적어주세요.`
+       - question (English): `Still ambiguous. Rewrite in one sentence with who does what and what result means done.`
+       - allowFreeformInput: true
+     - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+     - Replace `FEATURE_SUMMARY` with the trimmed follow-up answer.
+   - If `FEATURE_INTAKE_ACTIVE=true` AND `FEATURE_SUMMARY` is still empty:
      - print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
 
 Important:
@@ -127,6 +129,7 @@ Procedure:
 3) Call `#tool:agent/runSubagent` with the loaded feature-phase prompt text, injecting:
    - `TARGET_ROOT`
    - `FEATURE_SUMMARY`
+   - `HITL_MODE`
 4) Validate subagent result:
    - Success requires both:
      - `FEATURE_FILE=<path>`
@@ -325,7 +328,7 @@ This phase performs the same work as `rw-review.prompt.md`:
 When this orchestrator starts, it must detect the current phase from workspace state:
 0) If `<PROGRESS>` has `pending`/`in-progress` tasks → start at Phase 2 (Run).
 1) If `<PROGRESS>` has only `completed` tasks and unreviewed candidates exist → start at Phase 3 (Review).
-2) If a `READY_FOR_PLAN` feature file exists and `<PROGRESS>` does not exist or has no task rows → start at Phase 1 (Plan).
+2) If a `READY_FOR_PLAN` feature file exists and Step 0/1 conditions are not true → start at Phase 1 (Plan).
 3) If no `READY_FOR_PLAN` feature file exists and `FEATURE_SUMMARY` is non-empty → start at Phase 0 (Feature).
 4) If `<PROGRESS>` has only reviewed and completed tasks:
    - If `FEATURE_SUMMARY` argument is provided → start at Phase 0 (Feature) for the next feature.
