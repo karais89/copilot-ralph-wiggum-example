@@ -2,7 +2,7 @@
 name: rw-orchestrator
 description: "All-in-one orchestrator: Plan → Run → Review pipeline in a single invocation"
 agent: agent
-argument-hint: "Optional: one-line feature summary (e.g. 'add export command'). If omitted, a READY_FOR_PLAN feature file must already exist in .ai/features/. Target root resolved via .ai/runtime/rw-active-target-id.txt."
+argument-hint: "Optional: one-line feature summary (e.g. 'add export command'). Prefix with --hitl or --h to enable Human-in-the-Loop pauses between phases (e.g. '--h add export command'). If omitted, a READY_FOR_PLAN feature file must already exist in .ai/features/. Target root resolved via .ai/runtime/rw-active-target-id.txt."
 tools:
   - runSubagent
   - runInTerminal
@@ -69,10 +69,13 @@ Step 0 (Mandatory):
    - print `NEXT_COMMAND=rw-plan`
    - stop
 9) Resolve HITL mode:
-   - If `<HITL_FLAG>` exists, set `HITL_MODE=ON`.
+   - If the agent argument starts with `--hitl` or `--h` (case-insensitive), set `HITL_MODE=ON`.
+   - Else if `<HITL_FLAG>` exists, set `HITL_MODE=ON`.
    - Otherwise set `HITL_MODE=OFF`.
    - Print `HITL_MODE=<ON|OFF>`.
-10) Capture `FEATURE_SUMMARY` from agent invocation argument (the optional one-line feature summary; may be empty).
+10) Capture `FEATURE_SUMMARY` from agent invocation argument:
+   - Strip leading `--hitl` or `--h` prefix and any surrounding whitespace to obtain the raw feature summary.
+   - The remaining text (may be empty) is `FEATURE_SUMMARY`.
 
 Important:
 - The orchestrator must never edit product code directly.
