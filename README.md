@@ -68,8 +68,11 @@ rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  → 
 - Single `rw-run` policy (no lite/strict split).
 - `rw-orchestrator` Run phase includes additional inspector subagents/counters (`TASK_INSPECTOR_DISPATCH_COUNT`, `PHASE_INSPECTOR_DISPATCH_COUNT`); standalone `rw-run` does not emit these counters.
 - Review is manual and explicit via `rw-review` (subagent-backed batch review, deterministic parallel gate).
+- Planning enforces `Test Strategy` + tagged `Verification` commands (`[unit]`, `[integration]`, `[acceptance]`) per task.
+- Run completion requires explicit `VERIFICATION_EVIDENCE TASK-XX ...` log lines for each dispatched task.
 - Archive threshold is hard-stop; run resumes after manual `rw-archive`.
 - `rw-run` preflight uses doctor-stamp cache first (same target + 10-minute TTL), then falls back to full preflight on cache miss.
+- Plan approval gate can be enabled by runtime flag or automatically when `PLAN_RISK_LEVEL=HIGH` / `OPEN_QUESTIONS_COUNT>0`.
 
 ### Branch Strategy (github-flow)
 
@@ -287,6 +290,13 @@ For verification, run the core flow directly in Copilot Chat:
 7. `rw-run`
 8. `rw-review`
 
+Task verification convention:
+- Put command tags in each task's `Verification` section:
+  - `[unit] <command>`
+  - `[integration] <command>`
+  - `[acceptance] <command>`
+- For behavior-changing tasks, include both `[unit]` and `[acceptance]`.
+
 ### Default Operation Path (Single Path)
 
 - Default path (always start here):
@@ -357,6 +367,7 @@ For verification, run the core flow directly in Copilot Chat:
 - **RW_TARGET_ROOT_INVALID** — Target root pointer is invalid (empty/non-absolute/missing path)
 - **PLAN_APPROVAL_REQUIRED** — Optional plan-approval gate is ON and no valid approval stamp is present (`./scripts/rw approve-plan`)
 - **rw-run Dispatch Guard** — One subagent dispatch must complete exactly one locked task (`LOCKED_TASK_ID`)
+- **VERIFICATION_EVIDENCE** — Run subagent must append verification evidence per completed task (`UNIT|INTEGRATION|ACCEPTANCE`)
 
 ### Next Command Contract
 

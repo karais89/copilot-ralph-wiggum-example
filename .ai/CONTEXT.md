@@ -25,6 +25,14 @@
   - `completed`
 - Task ID 형식:
   - `TASK-XX` (0-padding 숫자 ID)
+- 태스크 파일 섹션 헤더:
+  - `Title`
+  - `Dependencies`
+  - `Description`
+  - `Acceptance Criteria`
+  - `Files to Create/Modify`
+  - `Test Strategy`
+  - `Verification`
 - 리뷰 로그 마커:
   - `REVIEW_OK`
   - `REVIEW_FAIL`
@@ -32,6 +40,7 @@
   - `REVIEW-ESCALATE-RESOLVED`
   - `REVIEW_FINDING`
   - `REVIEW_ISSUE`
+  - `VERIFICATION_EVIDENCE`
 - 프롬프트 사전 점검 오류 토큰:
   - `LANG_POLICY_MISSING`
   - `PLAN_APPROVAL_REQUIRED`
@@ -42,6 +51,8 @@
   - `FEATURE_MULTI_READY_AUTOSELECTED`
   - `FEATURE_MULTI_READY` (legacy alias)
   - `FEATURE_SUMMARY_MISSING`
+  - `FEATURE_NEED_INSUFFICIENT`
+  - `MISSING_FIELDS=...`
 - 신규 프로젝트 입력 오류 토큰:
   - `PROJECT_IDEA_MISSING`
 - fallback 출력 토큰:

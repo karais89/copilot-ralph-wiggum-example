@@ -11,6 +11,7 @@ Quick summary:
 - Run this manually after `rw-run` to review completed tasks in batch.
 - Dispatch review subagents per task (default sequential; parallel only when explicitly marked safe).
 - Write review outcomes to `PROGRESS` using `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`.
+- Require acceptance-level validation for behavior-changing tasks.
 - Emit one normalized review status token: `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`.
 - Emit structured issue counters: `REVIEW_ISSUE_COUNT`, `REVIEW_P0_COUNT`, `REVIEW_P1_COUNT`.
 - Emit structured findings with severity/file/line fields.
@@ -48,6 +49,7 @@ Rules:
   - `REVIEW-PHASE-COMPLETE-YYYYMMDD-HHMM.md` (or `-v2`, `-v3`, ...)
 - Never fabricate review results.
 - Review all currently `completed` tasks in active Task Status.
+- For behavior-changing tasks, review must include at least one acceptance-level check.
 - This prompt must dispatch `#tool:agent/runSubagent` for per-task validation.
 - Subagents must not modify repository files; orchestrator writes `<PROGRESS>` only after collecting results.
 - Each review candidate task must be dispatched exactly once in the current review run.
@@ -95,6 +97,20 @@ Procedure:
    - print `NEXT_COMMAND=rw-run`
    - stop.
 6) Dispatch review subagents for each candidate task:
+   - Before first dispatch, perform lightweight precheck on every candidate:
+     - task file exists
+     - non-empty `Test Strategy` and `Verification` sections
+     - verification commands are tagged with `[unit]`, `[integration]`, or `[acceptance]`
+     - if acceptance is required by `Test Strategy` (not `N/A`), at least one `[acceptance]` command is present
+   - If any precheck fails:
+     - print `REVIEW_PHASE_PRECHECK_FAIL`
+     - print `REVIEW_STATUS=FAILED`
+     - print `REVIEW_ISSUE_COUNT=0`
+     - print `REVIEW_P0_COUNT=0`
+     - print `REVIEW_P1_COUNT=0`
+     - print `REVIEW_PHASE_NOTE_FILE=none`
+     - print `NEXT_COMMAND=rw-run`
+     - stop.
    - Determine mode using the deterministic policy above.
    - `PARALLEL` mode: fixed batch size 2.
    - `SEQUENTIAL` mode: dispatch one task at a time.
@@ -183,7 +199,10 @@ Inputs:
 Rules:
 - Find and read exactly one matching task file in `<TASKS>/TASK-XX-*.md`.
 - Validate acceptance criteria coverage.
-- Run verification commands listed in that task file.
+- Read `Test Strategy` and `Verification` sections from the task file.
+- Run all verification commands listed in that task file.
+- If `Test Strategy` marks `Acceptance` as required (not `N/A`), at least one `[acceptance]` verification command must pass.
+- If acceptance is required but no runnable/passing `[acceptance]` command exists, return `FAIL` with root cause.
 - Read repository files only as needed for validation.
 - Do not modify any file.
 - Never call `#tool:agent/runSubagent` (nested calls are disallowed).

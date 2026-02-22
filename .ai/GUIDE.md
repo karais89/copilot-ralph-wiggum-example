@@ -77,6 +77,8 @@ scripts/
 - 실행 프롬프트는 단일 `rw-run.prompt.md`만 사용한다.
 - `rw-orchestrator`의 Run 단계는 추가 inspector subagent/counter(`TASK_INSPECTOR_DISPATCH_COUNT`, `PHASE_INSPECTOR_DISPATCH_COUNT`)를 사용하며, standalone `rw-run`에는 해당 카운터가 없다.
 - 리뷰는 별도 수동 단계 `rw-review.prompt.md`로 수행한다.
+- 태스크는 `Test Strategy`와 태그 기반 `Verification`(`unit/integration/acceptance`)을 포함해야 한다.
+- Run 완료는 `VERIFICATION_EVIDENCE TASK-XX ...` 로그 증거가 있어야 인정된다.
 - archive 임계치 도달 시 `rw-run`은 중단하고 `rw-archive`를 수동 실행한다.
 - 대화형 입력 fallback은 `.github/prompts/shared/RW-INTERACTIVE-POLICY.md` 단일 정책을 따른다.
 - target root 해석은 `scripts/orchestration/rw-resolve-target-root.sh`를 공통 기준으로 사용한다.
@@ -281,6 +283,7 @@ scripts/
 - preflight를 먼저 눈으로 확인하고 싶을 때만 `rw-doctor`를 수동 실행한다.
 - optional plan approval gate:
   - `.ai/runtime/rw-plan-approval-required.flag`가 있으면 gate ON
+  - 또는 plan 결과가 `PLAN_RISK_LEVEL=HIGH`이거나 `OPEN_QUESTIONS_COUNT>0`이면 gate ON
   - gate ON 상태에서 `.ai/runtime/rw-plan-approved.env`에 `PLAN_APPROVED=1`이 없으면 `PLAN_APPROVAL_REQUIRED`로 중단
   - 승인 시 `./scripts/rw approve-plan` 사용
 - `rw-doctor`, `rw-run`, `rw-review`, `rw-archive`는 동일한 타깃 포인터 세트(`.ai/runtime/rw-active-target-id.txt`, `.ai/runtime/rw-targets/*.env`, legacy `.ai/runtime/rw-active-target-root.txt`)를 사용해야 한다(루트 불일치 방지).
@@ -312,7 +315,14 @@ scripts/
 ## Description
 ## Acceptance Criteria
 ## Files to Create/Modify
+## Test Strategy
+Unit: ...
+Integration: ...
+Acceptance: ...
 ## Verification
+[unit] <command>
+[integration] <command>
+[acceptance] <command>
 ```
 
 ## PROGRESS 템플릿 (요약)

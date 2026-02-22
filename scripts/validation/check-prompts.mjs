@@ -77,7 +77,10 @@ async function main() {
       ],
     ],
     ["rw-doctor.prompt.md", ["Step 0 (Mandatory):", "RW_DOCTOR_PASS", "RW_DOCTOR_BLOCKED", "NEXT_COMMAND=rw-run"]],
-    ["rw-feature.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-plan"]],
+    [
+      "rw-feature.prompt.md",
+      ["Step 0 (Mandatory):", "FEATURE_NEED_INSUFFICIENT", "Trigger / Situation", "Out-of-Scope Boundary", "NEXT_COMMAND=rw-plan"],
+    ],
     ["rw-init.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND="]],
     ["rw-new-project.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-plan"]],
     ["rw-onboard-project.prompt.md", ["Step 0 (Mandatory):", "CODEBASE_SIGNAL_COUNT", "NEXT_COMMAND=rw-feature"]],
@@ -92,6 +95,9 @@ async function main() {
       "PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>",
       "OPEN_QUESTIONS_COUNT=<n>",
       "PLAN_APPROVAL_GATE=<ON|OFF>",
+      "PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>",
+      "Test Strategy",
+      "[acceptance]",
       "NEXT_COMMAND=rw-run",
     ]],
     ["rw-review.prompt.md", [
@@ -99,12 +105,24 @@ async function main() {
       "NEXT_COMMAND=",
       "REVIEW_STATUS=",
       "REVIEW_PHASE_NOTE_FILE=",
+      "REVIEW_PHASE_PRECHECK_FAIL",
+      "Test Strategy",
+      "[acceptance]",
       "REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<line>|<rule>|<fix>",
       "REVIEW_ISSUE <P0|P1|P2>|<file>|<line>|<rule>|<fix>",
     ]],
     [
       "rw-run.prompt.md",
-      ["Step 0 (Mandatory):", "PLAN_APPROVAL_REQUIRED", "RW_DOCTOR_AUTORUN_BEGIN", "<FEATURES>", "NEXT_COMMAND=", "RW_SUBAGENT_COMPLETION_DELTA_INVALID"],
+      [
+        "Step 0 (Mandatory):",
+        "PLAN_APPROVAL_REQUIRED",
+        "RW_DOCTOR_AUTORUN_BEGIN",
+        "<FEATURES>",
+        "VERIFICATION_EVIDENCE <LOCKED_TASK_ID>",
+        "RW_SUBAGENT_VERIFICATION_EVIDENCE_MISSING",
+        "NEXT_COMMAND=",
+        "RW_SUBAGENT_COMPLETION_DELTA_INVALID",
+      ],
     ],
     ["rw-smoke-test.prompt.md", ["SMOKE_TEST_PASS", "SMOKE_TEST_FAIL", "$PROMPT_ROOT/smoke/SMOKE-CONTRACT.md", "Node.js/TypeScript"]],
   ]);
@@ -149,6 +167,8 @@ async function main() {
     const contextBody = await fs.readFile(contextPath, "utf8");
     requireToken(errors, ".ai/CONTEXT.md", contextBody, "`REVIEW_OK`");
     requireToken(errors, ".ai/CONTEXT.md", contextBody, "`FEATURE_MULTI_READY_AUTOSELECTED`");
+    requireToken(errors, ".ai/CONTEXT.md", contextBody, "`VERIFICATION_EVIDENCE`");
+    requireToken(errors, ".ai/CONTEXT.md", contextBody, "`FEATURE_NEED_INSUFFICIENT`");
   }
 
   const smokeContractPath = path.join(promptsDir, "smoke", "SMOKE-CONTRACT.md");
@@ -167,6 +187,8 @@ async function main() {
       [
         "Never call `#tool:agent/runSubagent`",
         "FEATURE_NEED_INSUFFICIENT",
+        "Trigger / Situation",
+        "Out-of-Scope Boundary",
         "FEATURE_FILE=<path>",
         "FEATURE_STATUS=READY_FOR_PLAN",
       ],
@@ -187,6 +209,8 @@ async function main() {
         "OPEN_QUESTIONS_COUNT=<n>",
         "PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>",
         "PLAN_APPROVAL_GATE=<ON|OFF>",
+        "PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>",
+        "Test Strategy",
         "Bootstrap foundation features (STANDARD): 10~20 tasks",
       ],
     ],
@@ -220,6 +244,10 @@ async function main() {
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "RW_REPLAN_TRIGGERED");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "TASK_INSPECTION_RESULT LOCKED_TASK_ID PASS");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PHASE_INSPECTION_RESULT RUN READY");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "RW_SUBAGENT_VERIFICATION_EVIDENCE_MISSING");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "VERIFICATION_EVIDENCE <LOCKED_TASK_ID>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "Test Strategy");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "REVIEW_SUMMARY total=0 ok=0 fail=0 escalate=0 skipped=<completed-count>");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "REVIEW_PHASE_NOTE_FILE=none");
     if (orchestratorAgent.includes("<FEATURE_PHASE_SUBAGENT_PROMPT>")) {

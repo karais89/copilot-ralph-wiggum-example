@@ -47,13 +47,17 @@ Rules:
 - Do not renumber or edit existing TASK IDs/files unless explicitly asked.
 - Do not implement product code.
 - Resolve user-document language from `.ai/CONTEXT.md` before writing task/progress prose (default Korean if ambiguous).
-- Keep machine/parser tokens and section headers unchanged (`Task Status`, `Log`, `pending`, `Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Verification`).
+- Keep machine/parser tokens and section headers unchanged (`Task Status`, `Log`, `pending`, `Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Test Strategy`, `Verification`).
 - In `.ai/tasks/*.md` and PROGRESS `Title` cells, write human-readable values in the resolved user-document language.
 - Task sizing rule:
   - Each task should be independently deliverable in roughly 30~120 minutes.
   - If likely >120 minutes, split; if <30 minutes and not independently valuable, merge.
-- Verification rule:
-  - Each task must include at least one concrete verification command in `Verification`.
+- Verification/Test strategy rule:
+  - Each task must include a `Test Strategy` section and a `Verification` section.
+  - `Test Strategy` must declare `Unit`, `Integration`, and `Acceptance` as either concrete checks or `N/A - <reason>`.
+  - `Verification` must include concrete commands prefixed by one of: `[unit]`, `[integration]`, `[acceptance]`.
+  - If behavior changes are introduced, both `[unit]` and `[acceptance]` commands are required.
+  - If behavior does not change (docs/config/chore), allow `[acceptance] N/A` only with explicit reason.
 - Optional plan-approval gate rule (default OFF):
   - Gate is ON only when `.ai/runtime/rw-plan-approval-required.flag` exists.
   - When gate is ON, `rw-plan` must prepare a pending approval marker and clear stale approval stamps.
@@ -158,7 +162,7 @@ Workflow:
      - feature source file, `PLAN_MODE`, and `PLAN_ID`
      - goal summary (2-4 bullets)
      - non-negotiable constraints (backward compatibility, scope limits, verification expectations)
-     - verification baseline command guidance
+     - verification baseline command guidance (unit/integration/acceptance coverage)
      - coordination note: complete one task per run dispatch
 9) Append one new Feature Notes line to PLAN.md in this format:
    - YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.
@@ -176,8 +180,13 @@ Workflow:
    - Description
    - Acceptance Criteria
    - Files to Create/Modify
+   - Test Strategy
+      - `Unit: <check or N/A - reason>`
+      - `Integration: <check or N/A - reason>`
+      - `Acceptance: <check or N/A - reason>`
    - Verification
       - Use project-defined commands (do not hardcode language-specific tools unless the project is explicitly language-specific).
+      - Prefix every command with one tag: `[unit]`, `[integration]`, `[acceptance]`.
       - Require evidence format: `command`, `exit code`, `key output`.
       - Include at least one concrete command per task.
    - Description should explicitly instruct implementers to read `TASK-00-READBEFORE.md` before coding.
@@ -197,18 +206,30 @@ Workflow:
    - `Status: READY_FOR_PLAN` -> `Status: PLANNED`
    - Append a short plan output note including task range (`TASK-XX~TASK-YY`) and date.
 17) Resolve plan-approval gate mode:
-   - If `.ai/runtime/rw-plan-approval-required.flag` exists, set `PLAN_APPROVAL_GATE=ON`.
-   - Otherwise set `PLAN_APPROVAL_GATE=OFF`.
+   - If `.ai/runtime/rw-plan-approval-required.flag` exists:
+     - `PLAN_APPROVAL_GATE=ON`
+     - `PLAN_APPROVAL_REASON=FLAG`
+   - Else if `PLAN_RISK_LEVEL=HIGH` or `OPEN_QUESTIONS_COUNT>0`:
+     - `PLAN_APPROVAL_GATE=ON`
+     - `PLAN_APPROVAL_REASON=RISK_OR_OPEN_QUESTIONS`
+   - Else:
+     - `PLAN_APPROVAL_GATE=OFF`
+     - `PLAN_APPROVAL_REASON=OFF`
 18) If `PLAN_APPROVAL_GATE=ON`:
    - Ensure `.ai/runtime/` exists.
    - Write `.ai/runtime/rw-plan-approval-pending.env` with:
      - `PLAN_APPROVAL_REQUIRED=1`
+     - `PLAN_APPROVAL_REASON=<PLAN_APPROVAL_REASON>`
      - `PLANNED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
      - `FEATURE_FILE=<selected feature filename>`
      - `TASK_RANGE=<TASK-XX~TASK-YY>`
+     - `PLAN_RISK_LEVEL=<PLAN_RISK_LEVEL>`
+     - `OPEN_QUESTIONS_COUNT=<OPEN_QUESTIONS_COUNT>`
     - Delete `.ai/runtime/rw-plan-approved.env` if it exists (stale approval invalidation).
     - Do not ask interactive questions in this step.
-19) Replan-flag cleanup:
+19) If `PLAN_APPROVAL_GATE=OFF`:
+   - Delete `.ai/runtime/rw-plan-approval-pending.env` if it exists (stale pending cleanup).
+20) Replan-flag cleanup:
    - If `.ai/runtime/rw-plan-replan.flag` exists and planning succeeded, delete it.
 
 Output format at end:
@@ -229,4 +250,5 @@ Output format at end:
 - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
 - `FEATURE_MULTI_READY_AUTOSELECTED=<filename|none>`
 - `PLAN_APPROVAL_GATE=<ON|OFF>`
+- `PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>`
 - `NEXT_COMMAND=rw-run`

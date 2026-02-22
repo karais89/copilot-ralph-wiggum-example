@@ -48,7 +48,9 @@ Step 0 (Mandatory):
 5) Validate language policy internally and proceed silently (no confirmation line).
 6) Do not modify any file before Step 0 completes, except auto-repair of target-pointer files during path resolution (`TARGET_ACTIVE_ID_FILE`, `TARGET_REGISTRY_DIR/*`, `TARGET_POINTER_FILE`).
 7) Optional plan-approval gate (default OFF):
-   - Gate is ON only when `<PLAN_APPROVAL_GATE_FLAG>` exists.
+   - Gate is ON when either condition is true:
+     - `<PLAN_APPROVAL_GATE_FLAG>` exists, or
+     - `<PLAN_APPROVAL_PENDING>` exists and contains `PLAN_APPROVAL_REQUIRED=1`.
    - If gate is ON, require `<PLAN_APPROVAL_STAMP>` to exist and contain `PLAN_APPROVED=1`.
    - If gate is ON and approval is missing/invalid:
      - print `PLAN_APPROVAL_REQUIRED`
@@ -185,6 +187,8 @@ Repeat:
         - print `NEXT_COMMAND=rw-plan`
         - stop
       - Capture `BEFORE_COMPLETED_SET` from active Task Status (`TASK-XX` where status is `completed`).
+      - Capture `BEFORE_VERIFICATION_EVIDENCE_COUNT` from active `<PROGRESS>` Log lines matching:
+        - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: ...`
   11) Call `#tool:agent/runSubagent` with SUBAGENT_PROMPT exactly as provided below, injecting `LOCKED_TASK_ID`
       - Immediately before call, print `RUNSUBAGENT_DISPATCH_BEGIN <LOCKED_TASK_ID>`
   12) Post-dispatch hard validation (mandatory):
@@ -203,6 +207,13 @@ Repeat:
         - print `ONLY_COMPLETED=<ONLY_COMPLETED>`
         - print `NEXT_COMMAND=rw-run`
         - stop
+      - Capture `AFTER_VERIFICATION_EVIDENCE_COUNT` from active `<PROGRESS>` Log lines matching:
+        - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: ...`
+      - If `AFTER_VERIFICATION_EVIDENCE_COUNT <= BEFORE_VERIFICATION_EVIDENCE_COUNT`:
+        - print `RW_SUBAGENT_VERIFICATION_EVIDENCE_MISSING`
+        - print `LOCKED_TASK_ID=<LOCKED_TASK_ID>`
+        - print `NEXT_COMMAND=rw-run`
+        - stop
       - Increment `RUNSUBAGENT_DISPATCH_COUNT` by 1 and print `RUNSUBAGENT_DISPATCH_OK <LOCKED_TASK_ID>`
   13) Repeat
 
@@ -213,6 +224,7 @@ Repeat:
 - Trust <PROGRESS> over any verbal "done" claim from subagents
 - Never simulate completion. Do not mark tasks `completed` or write commit hashes unless corresponding real code/test changes were executed under `TARGET_ROOT`.
 - Enforce one-dispatch/one-completion invariant: each successful dispatch must add exactly one newly completed task, and it must equal `LOCKED_TASK_ID`.
+- Enforce verification-evidence invariant: each successful dispatch must append at least one new `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> ...` log line.
 - Never append `RUNSUBAGENT_DISPATCH_COUNT` unless the current loop iteration is exiting through Step 8 (all tasks completed with no `pending`/`in-progress` rows).
 - If `pending` or `in-progress` rows remain, continue the loop (or stop only via explicit blocker tokens). Do not emit completion-style summary logs.
 - Never resurrect archived completed tasks to `pending`
@@ -248,6 +260,9 @@ Rules:
 - After implementation, run the task Verification command at least once; on failure, self-fix and re-run verification up to 2 times before reporting.
 - Never fabricate verification output, completion status, or commit evidence.
 - Update <PROGRESS> for `LOCKED_TASK_ID` only (status to `completed`, commit message, and a Log entry).
+- Append verification evidence log lines in `<PROGRESS>` for this task using:
+  - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: command="<cmd>" exit_code=<code> key_output="<summary>"`
+  - Include at least one evidence line; include both `UNIT` and `ACCEPTANCE` when task behavior changes.
 - Do not change status rows for any other task.
 - Commit changes with a conventional commit message focused on user impact.
 - Exit immediately after implementation and commit.

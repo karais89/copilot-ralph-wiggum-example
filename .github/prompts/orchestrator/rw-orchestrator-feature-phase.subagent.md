@@ -27,16 +27,17 @@ Rules:
   - If unresolved and `NON_INTERACTIVE_MODE=true`, infer a minimal summary from latest `<PLAN>` overview or `TARGET_ROOT/README.md`; if both are unavailable, use: `Add a minimal improvement to the existing codebase.`
   - If still unresolved, print `FEATURE_SUMMARY_MISSING` and `NEXT_COMMAND=rw-feature`, then stop.
 - Need-gate (HITL priority):
-  - Build initial `User`, `Problem`, `Desired Outcome`, `Acceptance Signal`.
+  - Build initial `User`, `Trigger / Situation`, `Problem`, `Desired Outcome`, `Acceptance Signal`, `Out-of-Scope Boundary`.
   - Treat a field as ambiguous when it is too generic to implement/test (for example: `improve UX`, `make it better`, `편하게`).
   - If `NON_INTERACTIVE_MODE=false` and any critical field is missing or ambiguous, run staged clarification:
-    - Round A (up to 3 questions): confirm/fill `User`, `Problem`, `Desired Outcome`.
-    - Round B (up to 2 questions): only if still ambiguous after Round A; confirm implementation boundary, completion signal, and constraints needed for planning.
+    - Round A (up to 3 questions): confirm/fill `User`, `Trigger / Situation`, `Problem`, `Desired Outcome`.
+    - Round B (up to 2 questions): only if still ambiguous after Round A; confirm completion signal and out-of-scope boundary needed for planning.
     - Use `#tool:vscode/askQuestions`; if unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
     - Prefer explicit user answers over inferred assumptions.
     - If the budget is exhausted and critical fields remain unresolved, stop with insufficiency tokens below.
-  - If `NON_INTERACTIVE_MODE=true`, fill missing/ambiguous fields with conservative assumptions and mark them under `## Notes`.
-  - Missing critical fields (`User`, `Problem`, `Desired Outcome`) after clarification/defaulting must trigger:
+  - If `NON_INTERACTIVE_MODE=true`, infer from repository evidence first and mark assumptions under `## Notes`.
+  - If `NON_INTERACTIVE_MODE=true` and evidence is insufficient, keep critical fields unresolved (do not fabricate).
+  - Missing critical fields (`User`, `Trigger / Situation`, `Problem`, `Desired Outcome`, `Acceptance Signal`, `Out-of-Scope Boundary`) after clarification/defaulting must trigger:
     - `FEATURE_NEED_INSUFFICIENT`
     - `MISSING_FIELDS=<comma-separated-field-names>`
     - `NEXT_COMMAND=rw-feature`

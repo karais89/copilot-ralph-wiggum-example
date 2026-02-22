@@ -12,7 +12,7 @@ Quick summary:
 - Write exactly one new `.ai/features/YYYYMMDD-HHMM-<slug>.md` file.
 - Set `Status: READY_FOR_PLAN` so `rw-plan` can consume it.
 - Set `Planning Profile: STANDARD` by default (optional override to `FAST_TEST` for quick test planning).
-- Validate the feature need explicitly (`User`, `Problem`, `Desired Outcome`, `Acceptance Signal`).
+- Validate the feature need explicitly (`User`, `Trigger/Situation`, `Problem`, `Desired Outcome`, `Acceptance Signal`, `Out-of-Scope Boundary`).
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
@@ -32,11 +32,13 @@ Rules:
 - Do not create any `TASK-XX` files or PROGRESS log/status entries in rw-feature.
 - Prefer ASCII slug/file names.
 - Keep machine tokens unchanged: `Status`, `READY_FOR_PLAN`, `Planning Profile`, `STANDARD`, `FAST_TEST`.
-- Must resolve the feature need with four fields:
+- Must resolve the feature need with six fields:
   - `User`
+  - `Trigger / Situation`
   - `Problem`
   - `Desired Outcome`
   - `Acceptance Signal`
+  - `Out-of-Scope Boundary`
 - Interactive clarification budget:
   - at most two clarification rounds
   - at most five focused questions total
@@ -63,34 +65,37 @@ Workflow:
    - If `NON_INTERACTIVE_MODE=false` and still missing after that single interaction, stop immediately and output exactly: `FEATURE_SUMMARY_MISSING`.
 5) Build an initial need snapshot from summary + repository context:
    - `User`
+   - `Trigger / Situation`
    - `Problem`
    - `Desired Outcome`
    - `Acceptance Signal`
+   - `Out-of-Scope Boundary`
 6) Need-gate handling:
-   - Missing critical fields are: `User`, `Problem`, `Desired Outcome`.
+   - Missing critical fields are: `User`, `Trigger / Situation`, `Problem`, `Desired Outcome`, `Acceptance Signal`, `Out-of-Scope Boundary`.
    - If `NON_INTERACTIVE_MODE=false` and any critical field is missing or ambiguous, run staged clarification with a strict budget:
-     - Round 1 (up to 3 questions): resolve `User`, `Problem`, `Desired Outcome`.
-     - Round 2 (up to 2 questions): run only when critical ambiguity remains after Round 1; resolve completion signal/scope constraints required for planning.
+     - Round 1 (up to 3 questions): resolve `User`, `Trigger / Situation`, `Problem`, `Desired Outcome`.
+     - Round 2 (up to 2 questions): run only when critical ambiguity remains after Round 1; resolve completion signal and out-of-scope boundary required for planning.
    - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
-   - If `NON_INTERACTIVE_MODE=true`, do not ask; fill missing fields with conservative defaults and mark them as assumptions.
+   - If `NON_INTERACTIVE_MODE=true`, do not ask; infer from repository evidence first.
+   - If `NON_INTERACTIVE_MODE=true` and evidence is insufficient, keep fields unresolved (do not fabricate) and report insufficiency in Step 7.
 7) Re-evaluate need-gate:
    - If any critical field remains missing, stop immediately and output:
      - first line exactly: `FEATURE_NEED_INSUFFICIENT`
      - second line: `MISSING_FIELDS=<comma-separated-field-names>`
-8) If `Acceptance Signal` is still missing, set a safe default:
-   - At least one project-defined canonical verification command succeeds with exit code 0.
-9) Build slug from summary and generate filename `YYYYMMDD-HHMM-<slug>.md` using local time.
+8) Build slug from summary and generate filename `YYYYMMDD-HHMM-<slug>.md` using local time.
    - If same filename already exists, append `-v2`, `-v3`, ...
-10) Create exactly one feature file with this structure:
+9) Create exactly one feature file with this structure:
    - `# FEATURE: <slug>`
    - `Status: READY_FOR_PLAN`
    - `Planning Profile: STANDARD`
    - `## Summary`
    - `## Need Statement`
      - `- User: ...`
+     - `- Trigger / Situation: ...`
      - `- Problem: ...`
      - `- Desired Outcome: ...`
      - `- Acceptance Signal: ...`
+     - `- Out-of-Scope Boundary: ...`
    - `## User Value`
    - `## Goal`
    - `## In Scope`
@@ -103,7 +108,7 @@ Workflow:
    - `## Risks and Open Questions`
    - `## Notes`
    Populate sections in detail using the resolved need fields and defaults. Include concrete, testable bullet points written in the resolved user-document language.
-11) In `Notes`, include:
+10) In `Notes`, include:
    - source (`rw-feature`)
    - created timestamp
    - recommended next step (`rw-plan`)

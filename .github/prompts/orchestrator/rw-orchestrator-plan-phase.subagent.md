@@ -53,6 +53,7 @@ Rules:
     - STANDARD default features: 3~7 tasks
     - Bootstrap foundation features (STANDARD): 10~20 tasks
     - If bootstrap scope is clearly very small/simple, 5 tasks are allowed
+    - each task must include `Test Strategy` and tagged `Verification` commands (`[unit]`, `[integration]`, `[acceptance]`)
   - update `<PROGRESS>` Task Status with new `pending` rows + one log line
   - update selected feature status: `READY_FOR_PLAN` -> `PLANNED`
   - compute and emit plan quality metrics:
@@ -60,8 +61,17 @@ Rules:
     - `PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>`
     - `OPEN_QUESTIONS_COUNT=<n>`
 - Optional approval gate:
-  - if `<PLAN_APPROVAL_GATE_FLAG>` exists, set `PLAN_APPROVAL_GATE=ON`, write `<PLAN_APPROVAL_PENDING>`, and delete stale `<PLAN_APPROVAL_STAMP>`
-  - else `PLAN_APPROVAL_GATE=OFF`
+  - if `<PLAN_APPROVAL_GATE_FLAG>` exists:
+    - `PLAN_APPROVAL_GATE=ON`
+    - `PLAN_APPROVAL_REASON=FLAG`
+  - else if `PLAN_RISK_LEVEL=HIGH` or `OPEN_QUESTIONS_COUNT>0`:
+    - `PLAN_APPROVAL_GATE=ON`
+    - `PLAN_APPROVAL_REASON=RISK_OR_OPEN_QUESTIONS`
+  - else:
+    - `PLAN_APPROVAL_GATE=OFF`
+    - `PLAN_APPROVAL_REASON=OFF`
+  - when `PLAN_APPROVAL_GATE=ON`, write `<PLAN_APPROVAL_PENDING>`, include reason/metrics, and delete stale `<PLAN_APPROVAL_STAMP>`
+  - when `PLAN_APPROVAL_GATE=OFF`, delete stale `<PLAN_APPROVAL_PENDING>` if it exists
 - Replan-flag cleanup:
   - when planning succeeds and `<PLAN_REPLAN_FLAG>` exists, delete it.
 - On success, output:
@@ -77,3 +87,4 @@ Rules:
   - `OPEN_QUESTIONS_COUNT=<n>`
   - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
   - `PLAN_APPROVAL_GATE=<ON|OFF>`
+  - `PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>`

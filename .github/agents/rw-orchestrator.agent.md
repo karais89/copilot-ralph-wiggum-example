@@ -25,6 +25,8 @@ Quick summary:
 - Each phase emits the same tokens as the standalone prompts for compatibility.
 - Plan phase classifies each planning batch as `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>`.
 - Plan artifacts are grouped under `.ai/plans/<plan_id>/` with confidence/risk/open-question metrics.
+- Behavior-changing tasks are expected to carry both unit and acceptance verification evidence.
+- Plan approval gate can activate from runtime flag or plan quality signals (`HIGH` risk / open questions).
 - HITL (Human-in-the-Loop) pauses are ON by default: feature intake question (Step 11) + pauses between phases; use --auto or --no-hitl to disable all pauses and questions.
 - Phase 0/1 are delegated to dedicated subagents to reduce top-level context pressure.
 - Run phase includes extra inspector dispatches and counters (`TASK_INSPECTOR_DISPATCH_COUNT`, `PHASE_INSPECTOR_DISPATCH_COUNT`) that are not part of standalone `rw-run`.
@@ -172,6 +174,7 @@ Procedure:
      - `OPEN_QUESTIONS_COUNT=<n>`
      - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
      - `PLAN_APPROVAL_GATE=<ON|OFF>`
+     - `PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>`
    - If subagent emits a controlled stop token with `NEXT_COMMAND=...`, propagate and stop.
    - Otherwise print `RW_SUBAGENT_PLAN_PHASE_INVALID`, print `NEXT_COMMAND=rw-plan`, stop.
 5) Print `RUNSUBAGENT_PLAN_PHASE_DISPATCH_OK`.
@@ -190,7 +193,9 @@ Procedure:
 Print `ORCHESTRATOR_PHASE=RUN`
 This phase performs the same work as `rw-run.prompt.md`:
 Optional plan-approval gate (default OFF):
-- Gate is ON only when `<PLAN_APPROVAL_GATE_FLAG>` exists.
+- Gate is ON when either condition is true:
+  - `<PLAN_APPROVAL_GATE_FLAG>` exists, or
+  - `<PLAN_APPROVAL_PENDING>` exists and contains `PLAN_APPROVAL_REQUIRED=1`.
 - If gate is ON, require `<PLAN_APPROVAL_STAMP>` to exist and contain `PLAN_APPROVED=1`.
 - If gate is ON and approval is missing/invalid:
   - print `PLAN_APPROVAL_REQUIRED`
@@ -283,12 +288,21 @@ Run loop — Repeat:
        - print `NEXT_COMMAND=rw-plan`
        - stop
      - Capture `BEFORE_COMPLETED_SET`.
+     - Capture `BEFORE_VERIFICATION_EVIDENCE_COUNT` from `<PROGRESS>` Log lines matching:
+       - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: ...`
   10) Call `#tool:agent/runSubagent` with CODER_SUBAGENT_PROMPT (below), injecting `LOCKED_TASK_ID`.
       - Print `RUNSUBAGENT_DISPATCH_BEGIN <LOCKED_TASK_ID>` before call.
   11) Post-dispatch validation:
       - Re-read `<PROGRESS>`, compute `NEWLY_COMPLETED_TASKS`.
       - If `|NEWLY_COMPLETED_TASKS| != 1`: print `RW_SUBAGENT_COMPLETION_DELTA_INVALID`, `NEXT_COMMAND=rw-run`, stop.
       - If `ONLY_COMPLETED != LOCKED_TASK_ID`: print `RW_SUBAGENT_COMPLETED_WRONG_TASK`, `NEXT_COMMAND=rw-run`, stop.
+      - Capture `AFTER_VERIFICATION_EVIDENCE_COUNT` from `<PROGRESS>` Log lines matching:
+        - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: ...`
+      - If `AFTER_VERIFICATION_EVIDENCE_COUNT <= BEFORE_VERIFICATION_EVIDENCE_COUNT`:
+        - print `RW_SUBAGENT_VERIFICATION_EVIDENCE_MISSING`
+        - print `LOCKED_TASK_ID=<LOCKED_TASK_ID>`
+        - print `NEXT_COMMAND=rw-run`
+        - stop
       - Increment `RUNSUBAGENT_DISPATCH_COUNT`, print `RUNSUBAGENT_DISPATCH_OK <LOCKED_TASK_ID>`.
   12) Dispatch task-inspector subagent:
       - Print `RUNSUBAGENT_TASK_INSPECT_DISPATCH_BEGIN <LOCKED_TASK_ID>`.
@@ -339,9 +353,16 @@ This phase performs the same work as `rw-review.prompt.md`:
    - print `NEXT_COMMAND=rw-run`
    - stop
 4) Lightweight phase-level precheck before task review:
-   - For each review candidate, verify task file exists and has non-empty `Verification` section.
+   - For each review candidate, verify task file exists and has non-empty `Test Strategy` and `Verification` sections.
+   - Verify `Verification` commands are tagged with `[unit]`, `[integration]`, or `[acceptance]`.
+   - If `Test Strategy` marks acceptance as required (not `N/A`), require at least one `[acceptance]` command.
    - If any candidate fails this precheck:
      - print `REVIEW_PHASE_PRECHECK_FAIL`
+     - print `REVIEW_STATUS=FAILED`
+     - print `REVIEW_ISSUE_COUNT=0`
+     - print `REVIEW_P0_COUNT=0`
+     - print `REVIEW_P1_COUNT=0`
+     - print `REVIEW_PHASE_NOTE_FILE=none`
      - print `NEXT_COMMAND=rw-run`
      - stop
    - Otherwise print `REVIEW_PHASE_PRECHECK_PASS`.
@@ -437,6 +458,9 @@ Rules:
 - After implementation, run the task Verification command at least once; on failure, self-fix and re-run verification up to 2 times before reporting.
 - Never fabricate verification output, completion status, or commit evidence.
 - Update <PROGRESS> for `LOCKED_TASK_ID` only (status to `completed`, commit message, and a Log entry).
+- Append verification evidence log lines in `<PROGRESS>` for this task using:
+  - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: command="<cmd>" exit_code=<code> key_output="<summary>"`
+  - Include at least one evidence line; include both `UNIT` and `ACCEPTANCE` when task behavior changes.
 - Do not change status rows for any other task.
 - Commit changes with a conventional commit message focused on user impact.
 - Exit immediately after implementation and commit.
@@ -449,11 +473,13 @@ Inputs:
 - progress file: `<PROGRESS>`
 Rules:
 - Find and read exactly one matching task file in `<TASKS>/LOCKED_TASK_ID-*.md`.
-- Validate that acceptance criteria and `Verification` commands are coherent for the implemented scope.
-- Run verification commands from the task file at least once.
+- Validate that acceptance criteria, `Test Strategy`, and `Verification` commands are coherent for the implemented scope.
+- Run all verification commands from the task file.
+- Require tagged verification commands (`[unit]`, `[integration]`, `[acceptance]`).
+- If `Test Strategy` marks acceptance as required (not `N/A`), require at least one passing `[acceptance]` command.
 - Never call `#tool:agent/runSubagent` (nested calls are disallowed).
 - Never fabricate outputs.
-- If verification or acceptance validation fails:
+- If verification, tagging, or acceptance validation fails:
   - reset `LOCKED_TASK_ID` status in `<PROGRESS>` to `pending`
   - append one log entry: `TASK_INSPECT_FAIL LOCKED_TASK_ID: <reason>`
 Output contract (exactly one line):
@@ -468,8 +494,9 @@ Inputs:
 - progress file: `<PROGRESS>`
 - notes dir: `<NOTES>`
 Rules:
-- Review all active `completed` tasks and verify each has a task file with non-empty `Verification` section.
-- Sample-run at least one representative verification command from the current completion batch.
+- Review all active `completed` tasks and verify each has non-empty `Test Strategy` and `Verification` sections.
+- For each completed task, run all tagged verification commands in `Verification`.
+- If `Test Strategy` marks acceptance as required (not `N/A`), require at least one passing `[acceptance]` command for that task.
 - Write one validation report file under `<NOTES>`:
   - `RUN-PHASE-VALIDATION-YYYYMMDD-HHMM.md` (`-v2`, `-v3` on conflict)
   - include: checked task count, pass/fail summary, blocking reasons (if any).
@@ -491,7 +518,10 @@ Inputs:
 Rules:
 - Find and read exactly one matching task file in `<TASKS>/TASK-XX-*.md`.
 - Validate acceptance criteria coverage.
-- Run verification commands listed in that task file.
+- Read `Test Strategy` and `Verification` sections from the task file.
+- Run all verification commands listed in that task file.
+- If `Test Strategy` marks acceptance as required (not `N/A`), at least one `[acceptance]` verification command must pass.
+- If acceptance is required but no runnable/passing `[acceptance]` command exists, return `FAIL` with root cause.
 - Read repository files only as needed for validation.
 - Do not modify any file.
 - Never call `#tool:agent/runSubagent` (nested calls are disallowed).
