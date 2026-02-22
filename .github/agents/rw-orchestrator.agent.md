@@ -165,6 +165,7 @@ Procedure:
      - `PLAN_ID=<id>`
      - `PLAN_ARTIFACT_DIR=<path>`
      - `RESEARCH_FINDINGS_FILE=<path>`
+     - `PLAN_SUMMARY_FILE=<path>`
      - `PLAN_FEATURE_FILE=<filename>`
      - `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
      - `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>`

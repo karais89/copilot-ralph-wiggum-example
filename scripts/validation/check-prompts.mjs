@@ -200,6 +200,7 @@ async function main() {
         "PLAN_ID=<id>",
         "PLAN_ARTIFACT_DIR=<path>",
         "RESEARCH_FINDINGS_FILE=<path>",
+        "PLAN_SUMMARY_FILE=<path>",
         "PLAN_FEATURE_FILE=<filename>",
         "PLAN_TASK_RANGE=<TASK-XX~TASK-YY>",
         "PLAN_MODE=<INITIAL|REPLAN|EXTENSION>",
@@ -238,6 +239,7 @@ async function main() {
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_ID=<id>");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_ARTIFACT_DIR=<path>");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "RESEARCH_FINDINGS_FILE=<path>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_SUMMARY_FILE=<path>");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "OPEN_QUESTIONS_COUNT=<n>");

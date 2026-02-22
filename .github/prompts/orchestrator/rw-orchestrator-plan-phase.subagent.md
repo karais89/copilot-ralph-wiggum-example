@@ -41,6 +41,9 @@ Rules:
     - coverage estimate (`0-100`)
     - confidence (`HIGH|MEDIUM|LOW`)
     - known gaps/open questions
+  - Create/update summary artifact: `<PLANS_DIR>/<PLAN_ID>/plan-summary.yaml` as `PLAN_SUMMARY_FILE` with:
+    - `plan_id`, `feature_file`, `plan_mode`, `task_range`, `planning_profile`
+    - `risk_level`, `confidence`, `open_questions_count`
   - Planning must reference `RESEARCH_FINDINGS_FILE` as primary evidence input for task decomposition.
 - Ensure baseline files:
   - create `<PLAN>` skeleton when missing
@@ -78,6 +81,7 @@ Rules:
   - `PLAN_ID=<id>`
   - `PLAN_ARTIFACT_DIR=<path>`
   - `RESEARCH_FINDINGS_FILE=<path>`
+  - `PLAN_SUMMARY_FILE=<path>`
   - `PLAN_FEATURE_FILE=<filename>`
   - `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
   - `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>`
