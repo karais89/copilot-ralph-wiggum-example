@@ -372,6 +372,14 @@ todo delete <id>             # Delete a todo
 todo stats                   # Show statistics
 todo stats --json            # Machine-readable JSON output
 todo clear                   # Remove completed todos
+todo export                  # Export all todos to todos.csv
+todo export mylist.csv       # Export to a custom file path
+```
+
+```bash
+# Export all todos to CSV
+todo export
+todo export mylist.csv
 ```
 
 ### Tech Stack
