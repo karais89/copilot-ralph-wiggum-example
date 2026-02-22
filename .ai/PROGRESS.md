@@ -24,6 +24,9 @@
 | TASK-18 | Clear 명령 핸들러 | completed | feat(clear): complete clear workflow and harden rw prompts |
 | TASK-19 | CLI에 Clear 명령 등록 | completed | feat(clear): complete clear workflow and harden rw prompts |
 | TASK-20 | Clear 명령 통합 테스트 | completed | feat(clear): complete clear workflow and harden rw prompts |
+| TASK-21 | export 명령 핸들러 구현 | completed | 2811da4 |
+| TASK-22 | CLI에 export 명령 등록 | pending | |
+| TASK-23 | export 명령 통합 테스트 및 문서 업데이트 | pending | |
 
 ## Log
 
@@ -55,3 +58,5 @@
 - **2026-02-13** — REVIEW_OK TASK-18: verification passed
 - **2026-02-13** — REVIEW_OK TASK-19: verification passed
 - **2026-02-13** — REVIEW_OK TASK-20: verification passed
+- **2026-02-22** — Added feature planning tasks TASK-21~TASK-23 for [export-csv-command].
+- **2026-02-22** — TASK-21 completed: `src/commands/export.ts` 구현 — RFC 4180 CSV 직렬화, 이스케이프 처리, 빈 목록 경고, 디렉터리 없음/권한 오류 처리 포함. 빌드 통과.
