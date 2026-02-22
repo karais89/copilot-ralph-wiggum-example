@@ -90,8 +90,9 @@ async function main() {
   for (const fileName of rwPromptFiles) {
     const filePath = path.join(promptsDir, fileName);
     const content = await fs.readFile(filePath, "utf8");
+    const normalized = content.replace(/\r\n/g, "\n");
 
-    const { fields, error } = parseFrontMatter(fileName, content);
+    const { fields, error } = parseFrontMatter(fileName, normalized);
     if (error) {
       errors.push(error);
       continue;
@@ -111,9 +112,9 @@ async function main() {
       }
     }
 
-    requireToken(errors, fileName, content, "Language policy reference:");
+    requireToken(errors, fileName, normalized, "Language policy reference:");
     for (const token of requiredPerFile.get(fileName) ?? []) {
-      requireToken(errors, fileName, content, token);
+      requireToken(errors, fileName, normalized, token);
     }
   }
 
