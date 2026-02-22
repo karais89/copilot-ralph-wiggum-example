@@ -2,7 +2,7 @@
 name: rw-orchestrator
 description: "All-in-one orchestrator: Plan → Run → Review pipeline in a single invocation"
 agent: agent
-argument-hint: "Optional: one-line feature summary (e.g. 'add export command'). Prefix with --hitl or --h to enable Human-in-the-Loop pauses between phases (e.g. '--h add export command'). If omitted, a READY_FOR_PLAN feature file must already exist in .ai/features/. Target root resolved via .ai/runtime/rw-active-target-id.txt."
+argument-hint: "Optional: one-line feature summary (e.g. 'add export command'). HITL pauses between phases are ON by default. Prefix with --auto or --no-hitl to run fully automated without pauses (e.g. '--auto add export command'). If omitted, a READY_FOR_PLAN feature file must already exist in .ai/features/. Target root resolved via .ai/runtime/rw-active-target-id.txt."
 tools:
   - runSubagent
   - runInTerminal
@@ -19,7 +19,7 @@ agents: ['*']
 handoffs:
   - label: "Continue →"
     agent: rw-orchestrator
-    prompt: "--hitl Continue orchestration from current phase."
+    prompt: "Continue orchestration from current phase."
     send: false
 ---
 Language policy reference: `<CONTEXT>`
@@ -27,7 +27,8 @@ Quick summary:
 - All-in-one wrapper that runs Plan → Run → Review in a single invocation.
 - Existing `rw-*` prompts are NOT modified; this orchestrator internalizes their logic.
 - Each phase emits the same tokens as the standalone prompts for compatibility.
-- Optional HITL (Human-in-the-Loop) mode pauses between phases for user confirmation.
+- HITL (Human-in-the-Loop) pauses between phases are ON by default; use --auto or --no-hitl to disable.
+- Phase 0/1 are delegated to dedicated subagents to reduce top-level context pressure.
 - Falls back to manual prompt workflow on any unrecoverable error.
 Path resolution (mandatory before Step 0):
 - Follow `.github/prompts/RW-TARGET-ROOT-RESOLUTION.md` exactly.
@@ -69,12 +70,12 @@ Step 0 (Mandatory):
    - print `NEXT_COMMAND=rw-plan`
    - stop
 9) Resolve HITL mode:
-   - If the agent argument starts with `--hitl` or `--h` (case-insensitive), set `HITL_MODE=ON`.
-   - Else if `<HITL_FLAG>` exists, set `HITL_MODE=ON`.
-   - Otherwise set `HITL_MODE=OFF`.
+   - If the agent argument starts with `--auto` or `--no-hitl` (case-insensitive), set `HITL_MODE=OFF`.
+   - Else if `<HITL_FLAG>` exists and contains `HITL=OFF`, set `HITL_MODE=OFF`.
+   - Otherwise set `HITL_MODE=ON` (default).
    - Print `HITL_MODE=<ON|OFF>`.
 10) Capture `FEATURE_SUMMARY` from agent invocation argument:
-   - Strip leading `--hitl` or `--h` prefix and any surrounding whitespace to obtain the raw feature summary.
+   - Strip leading `--auto`, `--no-hitl`, `--hitl`, or `--h` prefix and any surrounding whitespace to obtain the raw feature summary.
    - The remaining text (may be empty) is `FEATURE_SUMMARY`.
 
 Important:
@@ -87,92 +88,42 @@ Important:
   - `ORCHESTRATOR_PHASE=<PLAN|RUN|REVIEW|COMPLETE>`
 ## Phase 0 — FEATURE
 This phase runs only when no `READY_FOR_PLAN` feature file exists and `FEATURE_SUMMARY` is available.
-This phase performs the same work as `rw-feature.prompt.md`:
-1) Resolve `NON_INTERACTIVE_MODE`:
-   - true only if `TARGET_ROOT/.ai/runtime/rw-noninteractive.flag` exists.
-2) Resolve `FEATURE_SUMMARY`:
-   - Use agent argument if provided.
-   - If missing and `NON_INTERACTIVE_MODE=true`, infer a minimal feature summary from the most recent `.ai/PLAN.md` overview or the repository `README.md`. If neither is readable, use: `Add a minimal improvement to the existing codebase.`
-   - If missing and `NON_INTERACTIVE_MODE=false`, use `#tool:vscode/askQuestions` to ask for a one-line feature summary.
-   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/RW-INTERACTIVE-POLICY.md`.
-   - If still missing after one interaction: print `FEATURE_SUMMARY_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
-3) Ensure `<FEATURES>` directory exists; create if missing.
-4) Build need statement from `FEATURE_SUMMARY` and repository context:
-   - `User`, `Problem`, `Desired Outcome`, `Acceptance Signal`.
-   - If any critical field (`User`, `Problem`, `Desired Outcome`) is missing and `NON_INTERACTIVE_MODE=false`, run at most one clarification round with at most two questions.
-   - If `NON_INTERACTIVE_MODE=true`, fill missing fields with conservative defaults and mark as assumptions.
-5) Re-evaluate need-gate:
-   - If any critical field (`User`, `Problem`, `Desired Outcome`) is still missing:
-     - print `FEATURE_NEED_INSUFFICIENT`
-     - print `MISSING_FIELDS=<comma-separated-field-names>`
-     - print `NEXT_COMMAND=rw-feature`
-     - stop
-6) Generate filename: `YYYYMMDD-HHMM-<slug>.md` (append `-v2`, `-v3` if exists).
-7) Create exactly one feature file under `<FEATURES>` with sections:
-   `# FEATURE: <slug>`, `Status: READY_FOR_PLAN`, `Planning Profile: STANDARD`,
-   `## Summary`, `## Need Statement`, `## User Value`, `## Goal`, `## In Scope`, `## Out of Scope`,
-   `## Functional Requirements`, `## Constraints`, `## Acceptance`,
-   `## Edge Cases and Error Handling`, `## Verification Baseline`, `## Risks and Open Questions`, `## Notes`.
-   - Write user-facing prose in the resolved user-document language (Korean default).
-   - In `Notes`, include: source (`rw-orchestrator/phase-0`), created timestamp, assumptions list if any.
-8) Print output summary:
-   - `FEATURE_FILE=<path>`
-   - `FEATURE_STATUS=READY_FOR_PLAN`
-   - `ORCHESTRATOR_PHASE=PLAN`
-9) Proceed directly to Phase 1 (no HITL gate for Phase 0).
+Execution mode:
+- Dispatch exactly one subagent call with `FEATURE_PHASE_SUBAGENT_PROMPT`.
+- Do not execute feature-phase internals inline in the top-level orchestrator.
+Procedure:
+1) Print `RUNSUBAGENT_FEATURE_PHASE_DISPATCH_BEGIN`.
+2) Call `#tool:agent/runSubagent` with `FEATURE_PHASE_SUBAGENT_PROMPT` (below), injecting:
+   - `TARGET_ROOT`
+   - `FEATURE_SUMMARY`
+3) Validate subagent result:
+   - Success requires both:
+     - `FEATURE_FILE=<path>`
+     - `FEATURE_STATUS=READY_FOR_PLAN`
+   - If subagent emits a controlled stop token with `NEXT_COMMAND=...`, propagate and stop.
+   - Otherwise print `RW_SUBAGENT_FEATURE_PHASE_INVALID`, print `NEXT_COMMAND=rw-feature`, stop.
+4) Print `RUNSUBAGENT_FEATURE_PHASE_DISPATCH_OK`.
+5) Print `ORCHESTRATOR_PHASE=PLAN`.
+6) Proceed directly to Phase 1 (no HITL gate for Phase 0).
 
 ## Phase 1 — PLAN
 Print `ORCHESTRATOR_PHASE=PLAN`
-This phase performs the same work as `rw-plan.prompt.md`:
-1) Feature input resolution:
-   a) Read `<FEATURES>`.
-   b) If `<FEATURES>` is missing or unreadable:
-      - If `FEATURE_SUMMARY` is available: run Phase 0 first.
-      - Otherwise: print `FEATURES_DIR_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
-   c) Build input-file candidates from `<FEATURES>/*.md`, excluding `FEATURE-TEMPLATE.md` and `README.md`.
-   d) If no candidates exist:
-      - If `FEATURE_SUMMARY` is available: run Phase 0 first.
-      - Otherwise: print `FEATURE_FILE_MISSING`, print `NEXT_COMMAND=rw-feature`, stop.
-   e) Select files with exact line: `Status: READY_FOR_PLAN`.
-   f) If no READY candidates exist:
-      - If `FEATURE_SUMMARY` is available: run Phase 0 first.
-      - Otherwise: print `FEATURE_NOT_READY`, print `NEXT_COMMAND=rw-feature`, stop.
-   g) If multiple READY candidates, select latest by lexical sort.
-      - Print `FEATURE_MULTI_READY_AUTOSELECTED=<selected-filename>`.
-   h) Resolve planning profile from selected feature file:
-      - If exact line `Planning Profile: FAST_TEST` exists, set `PLANNING_PROFILE=FAST_TEST`.
-      - Else set `PLANNING_PROFILE=STANDARD`.
-2) Ensure baseline workspace files:
-   - If `<PLAN>` is missing, create minimal skeleton with `# Workspace Plan`, `## Overview`, `## Feature Notes (append-only)`.
-   - If `<PROGRESS>` is missing, create with `# Progress`, `## Task Status` table header, `## Log`.
-3) Deterministic planning (never ask interactive questions):
-   a) Read selected feature file, extract Goal/Constraints/Acceptance.
-   b) Normalize to structured spec if needed (use defaults from `rw-plan` rules).
-   c) Append one Feature Notes line to `<PLAN>`:
-      - `YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.`
-   d) Determine next available TASK number from existing `<TASKS>` files (max + 1).
-   e) Create new atomic task files under `<TASKS>` as `TASK-XX-<slug>.md`.
-      - Task count: `FAST_TEST` → 2~3, `STANDARD` → 3~7.
-      - Each file includes: Title, Dependencies, Description, Acceptance Criteria, Files to Create/Modify, Verification.
-      - Section headers in English, section values in user-document language (Korean default).
-   f) Update `<PROGRESS>` Task Status table with new `pending` rows.
-   g) Add log entry: `YYYY-MM-DD — Added feature planning tasks TASK-XX~TASK-YY for [feature-slug].`
-   h) Update feature file: `Status: READY_FOR_PLAN` → `Status: PLANNED`.
-   i) Resolve optional plan-approval gate:
-      - If `<PLAN_APPROVAL_GATE_FLAG>` exists, set `PLAN_APPROVAL_GATE=ON`; else `PLAN_APPROVAL_GATE=OFF`.
-      - If `PLAN_APPROVAL_GATE=ON`:
-        - Ensure `<RUNTIME_DIR>` exists.
-        - Write `<PLAN_APPROVAL_PENDING>` with:
-          - `PLAN_APPROVAL_REQUIRED=1`
-          - `PLANNED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
-          - `FEATURE_FILE=<selected feature filename>`
-          - `TASK_RANGE=<TASK-XX~TASK-YY>`
-        - Delete `<PLAN_APPROVAL_STAMP>` if it exists (stale approval invalidation).
-4) Print plan output summary:
-   - `PLAN_FEATURE_FILE=<filename>`
-   - `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
-   - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
-   - `PLAN_APPROVAL_GATE=<ON|OFF>`
+Execution mode:
+- Dispatch exactly one subagent call with `PLAN_PHASE_SUBAGENT_PROMPT`.
+- Do not execute plan-phase internals inline in the top-level orchestrator.
+Procedure:
+1) Print `RUNSUBAGENT_PLAN_PHASE_DISPATCH_BEGIN`.
+2) Call `#tool:agent/runSubagent` with `PLAN_PHASE_SUBAGENT_PROMPT` (below), injecting:
+   - `TARGET_ROOT`
+   - `FEATURE_SUMMARY`
+3) Validate subagent result:
+   - Success requires:
+     - `PLAN_FEATURE_FILE=<filename>`
+     - `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
+     - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
+   - If subagent emits a controlled stop token with `NEXT_COMMAND=...`, propagate and stop.
+   - Otherwise print `RW_SUBAGENT_PLAN_PHASE_INVALID`, print `NEXT_COMMAND=rw-plan`, stop.
+4) Print `RUNSUBAGENT_PLAN_PHASE_DISPATCH_OK`.
 5) HITL gate (Phase 1 → Phase 2):
    - If `HITL_MODE=ON`:
      - print `HITL_PAUSE: Plan phase complete. Review tasks in <TASKS> before proceeding.`
@@ -350,6 +301,88 @@ This allows `rw-orchestrator` to be re-invoked after HITL pauses or interruption
 - rw-orchestrator never archives by itself; archive is manual via `rw-archive`.
 - If requirements are missing/changed, stop and print `NEXT_COMMAND=rw-feature`.
 - Keep `PLAN.md` concise; place details in task files.
+- Keep Phase 2 (RUN) and Phase 3 (REVIEW) in top-level orchestrator execution; do not wrap them in extra subagents.
+<FEATURE_PHASE_SUBAGENT_PROMPT>
+You are the Phase 0 (Feature) subagent for `rw-orchestrator`.
+Inputs:
+- `TARGET_ROOT`
+- `FEATURE_SUMMARY` (may be empty)
+Paths:
+- `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
+- `<FEATURES>` = `TARGET_ROOT/.ai/features/`
+- `<PLAN>` = `TARGET_ROOT/.ai/PLAN.md`
+- `<RUNTIME_DIR>` = `TARGET_ROOT/.ai/runtime/`
+Rules:
+- Never call `#tool:agent/runSubagent` (nested subagent calls are disallowed).
+- Read `<CONTEXT>` first; if missing/unreadable, print exactly `LANG_POLICY_MISSING` and `NEXT_COMMAND=rw-feature`, then stop.
+- Perform the same feature-prep contract as `.github/prompts/rw-feature.prompt.md` against `TARGET_ROOT` paths.
+- Resolve `NON_INTERACTIVE_MODE=true` only when `TARGET_ROOT/.ai/runtime/rw-noninteractive.flag` exists.
+- Summary resolution:
+  - Use provided `FEATURE_SUMMARY` first.
+  - If empty and `NON_INTERACTIVE_MODE=true`, infer a minimal summary from latest `<PLAN>` overview or `TARGET_ROOT/README.md`; if both unavailable, use: `Add a minimal improvement to the existing codebase.`
+  - If empty and `NON_INTERACTIVE_MODE=false`, run one question via `#tool:vscode/askQuestions` (fallback once per `.github/prompts/RW-INTERACTIVE-POLICY.md`).
+  - If still empty, print `FEATURE_SUMMARY_MISSING` and `NEXT_COMMAND=rw-feature`, then stop.
+- Need-gate:
+  - Build `User`, `Problem`, `Desired Outcome`, `Acceptance Signal`.
+  - Missing critical fields (`User`, `Problem`, `Desired Outcome`) must trigger:
+    - `FEATURE_NEED_INSUFFICIENT`
+    - `MISSING_FIELDS=<comma-separated-field-names>`
+    - `NEXT_COMMAND=rw-feature`
+    - stop
+- Create exactly one feature file under `<FEATURES>`:
+  - filename pattern: `YYYYMMDD-HHMM-<slug>.md` (`-v2`, `-v3` on conflict)
+  - required machine tokens: `Status: READY_FOR_PLAN`, `Planning Profile: STANDARD`
+  - required sections include:
+    - `## Summary`, `## Need Statement`, `## User Value`, `## Goal`, `## In Scope`, `## Out of Scope`,
+      `## Functional Requirements`, `## Constraints`, `## Acceptance`,
+      `## Edge Cases and Error Handling`, `## Verification Baseline`, `## Risks and Open Questions`, `## Notes`
+- On success, output:
+  - `FEATURE_FILE=<path>`
+  - `FEATURE_STATUS=READY_FOR_PLAN`
+</FEATURE_PHASE_SUBAGENT_PROMPT>
+<PLAN_PHASE_SUBAGENT_PROMPT>
+You are the Phase 1 (Plan) subagent for `rw-orchestrator`.
+Inputs:
+- `TARGET_ROOT`
+- `FEATURE_SUMMARY` (may be empty; use only as fallback trigger to request Phase 0)
+Paths:
+- `<CONTEXT>` = `TARGET_ROOT/.ai/CONTEXT.md`
+- `<PLAN>` = `TARGET_ROOT/.ai/PLAN.md`
+- `<TASKS>` = `TARGET_ROOT/.ai/tasks/`
+- `<PROGRESS>` = `TARGET_ROOT/.ai/PROGRESS.md`
+- `<FEATURES>` = `TARGET_ROOT/.ai/features/`
+- `<RUNTIME_DIR>` = `TARGET_ROOT/.ai/runtime/`
+- `<PLAN_APPROVAL_GATE_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-required.flag`
+- `<PLAN_APPROVAL_PENDING>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-pending.env`
+- `<PLAN_APPROVAL_STAMP>` = `TARGET_ROOT/.ai/runtime/rw-plan-approved.env`
+Rules:
+- Never call `#tool:agent/runSubagent` (nested subagent calls are disallowed).
+- Read `<CONTEXT>` first; if missing/unreadable, print exactly `LANG_POLICY_MISSING` and `NEXT_COMMAND=rw-plan`, then stop.
+- Perform the same planning contract as `.github/prompts/rw-plan.prompt.md` against `TARGET_ROOT` paths.
+- Deterministic mode only: never ask interactive follow-up questions.
+- Feature input resolution:
+  - select from `<FEATURES>/*.md` excluding `FEATURE-TEMPLATE.md` and `README.md`
+  - require exact `Status: READY_FOR_PLAN`
+  - multiple READY files -> lexical latest + print `FEATURE_MULTI_READY_AUTOSELECTED=<selected-filename>`
+  - on unresolved input errors, print matching token and `NEXT_COMMAND=rw-feature`, then stop:
+    - `FEATURES_DIR_MISSING`, `FEATURE_FILE_MISSING`, `FEATURE_NOT_READY`
+- Ensure baseline files:
+  - create `<PLAN>` skeleton when missing
+  - create `<PROGRESS>` skeleton when missing
+- Plan outputs:
+  - append one Feature Notes line to `<PLAN>`
+  - create atomic `TASK-XX-*.md` files in `<TASKS>` (FAST_TEST: 2~3, STANDARD: 3~7)
+  - update `<PROGRESS>` Task Status with new `pending` rows + one log line
+  - update selected feature status: `READY_FOR_PLAN` -> `PLANNED`
+- Optional approval gate:
+  - if `<PLAN_APPROVAL_GATE_FLAG>` exists, set `PLAN_APPROVAL_GATE=ON`, write `<PLAN_APPROVAL_PENDING>`, and delete stale `<PLAN_APPROVAL_STAMP>`
+  - else `PLAN_APPROVAL_GATE=OFF`
+- On success, output:
+  - `PLAN_FEATURE_FILE=<filename>`
+  - `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
+  - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
+  - `PLAN_APPROVAL_GATE=<ON|OFF>`
+</PLAN_PHASE_SUBAGENT_PROMPT>
 <CODER_SUBAGENT_PROMPT>
 You are a senior software engineer coding subagent implementing the PRD in <PLAN>.
 Progress file is <PROGRESS>, and task files are under <TASKS>.
