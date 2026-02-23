@@ -104,6 +104,8 @@ Important:
 - The orchestrator must never edit product code directly.
 - Product code paths are repository-dependent (web/app/game/unity/etc.); do not assume `src/` as the only location.
 - The orchestrator may edit only: <PROGRESS>, <PLAN> (`Feature Notes` append-only runtime notes only), and one run phase completion note in <NOTES>.
+- All file writes and output redirections must stay under `TARGET_ROOT`; never write to `/tmp`, `/var/tmp`, or home-directory paths outside `TARGET_ROOT`.
+- If temporary output capture is needed, use `TARGET_ROOT/.ai/runtime/tmp/` only.
 - Never create/modify `TARGET_ROOT/.ai/tasks/TASK-XX-*.md` during `rw-run`; task decomposition belongs to `rw-plan`.
 - This prompt must run in a top-level Copilot Chat turn.
   - If not top-level, print `TOP_LEVEL_REQUIRED` and stop.
@@ -222,6 +224,7 @@ Repeat:
 - Choose exactly one dispatchable task per iteration and lock it as `LOCKED_TASK_ID`
 - Do not implement code directly; manage the loop only
 - Trust <PROGRESS> over any verbal "done" claim from subagents
+- Keep all writes/redirections inside `TARGET_ROOT`; never write to `/tmp/*`, `/var/tmp/*`, or `$HOME/*` outside `TARGET_ROOT`
 - Never simulate completion. Do not mark tasks `completed` or write commit hashes unless corresponding real code/test changes were executed under `TARGET_ROOT`.
 - Enforce one-dispatch/one-completion invariant: each successful dispatch must add exactly one newly completed task, and it must equal `LOCKED_TASK_ID`.
 - Enforce verification-evidence invariant: each successful dispatch must append at least one new `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> ...` log line.
@@ -248,6 +251,8 @@ Rules:
 - Fully implement only `LOCKED_TASK_ID`.
 - Do not choose or complete a different task.
 - Read/write only files under `TARGET_ROOT` for this run. Do not touch another workspace-level `.ai`.
+- Never redirect command output to external temp paths (`/tmp/*`, `/var/tmp/*`, `$HOME/*` outside `TARGET_ROOT`).
+- If a temporary file is unavoidable, use `TARGET_ROOT/.ai/runtime/tmp/`.
 - Never call `#tool:agent/runSubagent` from this subagent (nested subagent calls are disallowed).
 - Run build/verification commands; if issues are found, fix them all.
 - TDD rule (testable tasks only):

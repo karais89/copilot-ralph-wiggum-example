@@ -120,6 +120,8 @@ Step 0 (Mandatory):
 Important:
 - The orchestrator must never edit product code directly.
 - The orchestrator may edit only: `<PROGRESS>`, `<PLAN>` (`Feature Notes` append-only), `<NOTES>`, feature file status, new `TASK-XX` files during Plan phase, `<PLANS_DIR>`, `<ACTIVE_PLAN_ID_FILE>`, and `<PLAN_REPLAN_FLAG>`.
+- All file writes and output redirections must stay under `TARGET_ROOT`; never write to `/tmp`, `/var/tmp`, or home-directory paths outside `TARGET_ROOT`.
+- If temporary output capture is needed, use `TARGET_ROOT/.ai/runtime/tmp/` only.
 - Never resurrect archived completed tasks to `pending`.
 - On every controlled stop/exit path, print exactly one machine-readable line:
   - `NEXT_COMMAND=<rw-plan|rw-run|rw-review|rw-archive|rw-feature|rw-orchestrator>`
@@ -447,6 +449,8 @@ Rules:
 - Fully implement only `LOCKED_TASK_ID`.
 - Do not choose or complete a different task.
 - Read/write only files under `TARGET_ROOT` for this run. Do not touch another workspace-level `.ai`.
+- Never redirect command output to external temp paths (`/tmp/*`, `/var/tmp/*`, `$HOME/*` outside `TARGET_ROOT`).
+- If a temporary file is unavoidable, use `TARGET_ROOT/.ai/runtime/tmp/`.
 - Never call `#tool:agent/runSubagent` from this subagent (nested subagent calls are disallowed).
 - Run build/verification commands; if issues are found, fix them all.
 - TDD rule (testable tasks only):
