@@ -13,9 +13,6 @@ Paths:
 - `<PLANS_DIR>` = `TARGET_ROOT/.ai/plans/`
 - `<ACTIVE_PLAN_ID_FILE>` = `TARGET_ROOT/.ai/runtime/rw-active-plan-id.txt`
 - `<PLAN_REPLAN_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-replan.flag`
-- `<PLAN_APPROVAL_GATE_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-required.flag`
-- `<PLAN_APPROVAL_PENDING>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-pending.env`
-- `<PLAN_APPROVAL_STAMP>` = `TARGET_ROOT/.ai/runtime/rw-plan-approved.env`
 Rules:
 - Never call `#tool:agent/runSubagent` (nested subagent calls are disallowed).
 - Read `<CONTEXT>` first; if missing/unreadable, print exactly `LANG_POLICY_MISSING` and `NEXT_COMMAND=rw-plan`, then stop.
@@ -63,18 +60,6 @@ Rules:
     - `PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>`
     - `PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>`
     - `OPEN_QUESTIONS_COUNT=<n>`
-- Optional approval gate:
-  - if `<PLAN_APPROVAL_GATE_FLAG>` exists:
-    - `PLAN_APPROVAL_GATE=ON`
-    - `PLAN_APPROVAL_REASON=FLAG`
-  - else if `PLAN_RISK_LEVEL=HIGH` or `OPEN_QUESTIONS_COUNT>=2`:
-    - `PLAN_APPROVAL_GATE=ON`
-    - `PLAN_APPROVAL_REASON=RISK_OR_OPEN_QUESTIONS`
-  - else:
-    - `PLAN_APPROVAL_GATE=OFF`
-    - `PLAN_APPROVAL_REASON=OFF`
-  - when `PLAN_APPROVAL_GATE=ON`, write `<PLAN_APPROVAL_PENDING>`, include reason/metrics, and delete stale `<PLAN_APPROVAL_STAMP>`
-  - when `PLAN_APPROVAL_GATE=OFF`, delete stale `<PLAN_APPROVAL_PENDING>` if it exists
 - Replan-flag cleanup:
   - when planning succeeds and `<PLAN_REPLAN_FLAG>` exists, delete it.
 - On success, output:
@@ -90,5 +75,3 @@ Rules:
   - `PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>`
   - `OPEN_QUESTIONS_COUNT=<n>`
   - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
-  - `PLAN_APPROVAL_GATE=<ON|OFF>`
-  - `PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>`

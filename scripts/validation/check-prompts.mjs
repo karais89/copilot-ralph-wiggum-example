@@ -40,9 +40,7 @@ function parseFrontMatter(filePath, content) {
   const fields = new Map();
   for (const line of block.split("\n")) {
     const idx = line.indexOf(":");
-    if (idx === -1) {
-      continue;
-    }
+    if (idx === -1) continue;
     const key = line.slice(0, idx).trim();
     const value = line.slice(idx + 1).trim().replace(/^"(.*)"$/, "$1");
     fields.set(key, value);
@@ -60,6 +58,7 @@ function requireToken(errors, filePath, content, token) {
 async function main() {
   const repoRoot = await resolveRepoRoot(process.cwd());
   const promptsDir = path.join(repoRoot, ".github", "prompts");
+
   const files = await fs.readdir(promptsDir);
   const rwPromptFiles = files
     .filter((name) => /^rw-.*\.prompt\.md$/.test(name))
@@ -76,46 +75,47 @@ async function main() {
         "NEXT_COMMAND=rw-run",
       ],
     ],
-    ["rw-doctor.prompt.md", ["Step 0 (Mandatory):", "RW_DOCTOR_PASS", "RW_DOCTOR_BLOCKED", "NEXT_COMMAND=rw-run"]],
     [
       "rw-feature.prompt.md",
       ["Step 0 (Mandatory):", "FEATURE_NEED_INSUFFICIENT", "Trigger / Situation", "Out-of-Scope Boundary", "NEXT_COMMAND=rw-plan"],
     ],
-    ["rw-init.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND="]],
     ["rw-new-project.prompt.md", ["Step 0 (Mandatory):", "NEXT_COMMAND=rw-plan"]],
     ["rw-onboard-project.prompt.md", ["Step 0 (Mandatory):", "CODEBASE_SIGNAL_COUNT", "NEXT_COMMAND=rw-feature"]],
-    ["rw-plan.prompt.md", [
-      "Step 0 (Mandatory):",
-      "PLAN_ID=<id>",
-      "PLAN_ARTIFACT_DIR=.ai/plans/<plan_id>/",
-      "RESEARCH_FINDINGS_FILE=.ai/plans/<plan_id>/research_findings_<slug>.yaml",
-      "PLAN_MODE=<INITIAL|REPLAN|EXTENSION>",
-      "TASK_BOOTSTRAP_FILE=.ai/tasks/TASK-00-READBEFORE.md",
-      "PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>",
-      "PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>",
-      "OPEN_QUESTIONS_COUNT=<n>",
-      "PLAN_APPROVAL_GATE=<ON|OFF>",
-      "PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>",
-      "Test Strategy",
-      "[acceptance]",
-      "NEXT_COMMAND=rw-run",
-    ]],
-    ["rw-review.prompt.md", [
-      "Step 0 (Mandatory):",
-      "NEXT_COMMAND=",
-      "REVIEW_STATUS=",
-      "REVIEW_PHASE_NOTE_FILE=",
-      "REVIEW_PHASE_PRECHECK_FAIL",
-      "Test Strategy",
-      "[acceptance]",
-      "REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<line>|<rule>|<fix>",
-      "REVIEW_ISSUE <P0|P1|P2>|<file>|<line>|<rule>|<fix>",
-    ]],
+    [
+      "rw-plan.prompt.md",
+      [
+        "Step 0 (Mandatory):",
+        "PLAN_ID=<id>",
+        "PLAN_ARTIFACT_DIR=.ai/plans/<plan_id>/",
+        "RESEARCH_FINDINGS_FILE=.ai/plans/<plan_id>/research_findings_<slug>.yaml",
+        "PLAN_MODE=<INITIAL|REPLAN|EXTENSION>",
+        "TASK_BOOTSTRAP_FILE=.ai/tasks/TASK-00-READBEFORE.md",
+        "PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>",
+        "PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>",
+        "OPEN_QUESTIONS_COUNT=<n>",
+        "Test Strategy",
+        "[acceptance]",
+        "NEXT_COMMAND=rw-run",
+      ],
+    ],
+    [
+      "rw-review.prompt.md",
+      [
+        "Step 0 (Mandatory):",
+        "NEXT_COMMAND=",
+        "REVIEW_STATUS=",
+        "REVIEW_PHASE_NOTE_FILE=",
+        "REVIEW_PHASE_PRECHECK_FAIL",
+        "Test Strategy",
+        "[acceptance]",
+        "REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<line>|<rule>|<fix>",
+        "REVIEW_ISSUE <P0|P1|P2>|<file>|<line>|<rule>|<fix>",
+      ],
+    ],
     [
       "rw-run.prompt.md",
       [
         "Step 0 (Mandatory):",
-        "PLAN_APPROVAL_REQUIRED",
         "RW_DOCTOR_AUTORUN_BEGIN",
         "<FEATURES>",
         "VERIFICATION_EVIDENCE <LOCKED_TASK_ID>",
@@ -124,7 +124,6 @@ async function main() {
         "RW_SUBAGENT_COMPLETION_DELTA_INVALID",
       ],
     ],
-    ["rw-smoke-test.prompt.md", ["SMOKE_TEST_PASS", "SMOKE_TEST_FAIL", "$PROMPT_ROOT/smoke/SMOKE-CONTRACT.md", "Node.js/TypeScript"]],
   ]);
 
   const errors = [];
@@ -171,16 +170,6 @@ async function main() {
     requireToken(errors, ".ai/CONTEXT.md", contextBody, "`FEATURE_NEED_INSUFFICIENT`");
   }
 
-  const smokeContractPath = path.join(promptsDir, "smoke", "SMOKE-CONTRACT.md");
-  if (!(await exists(smokeContractPath))) {
-    errors.push(".github/prompts/smoke/SMOKE-CONTRACT.md: missing file");
-  } else {
-    const smokeContract = await fs.readFile(smokeContractPath, "utf8");
-    requireToken(errors, ".github/prompts/smoke/SMOKE-CONTRACT.md", smokeContract, "Result artifact contract");
-    requireToken(errors, ".github/prompts/smoke/SMOKE-CONTRACT.md", smokeContract, "last-result.json");
-    requireToken(errors, ".github/prompts/smoke/SMOKE-CONTRACT.md", smokeContract, "last-result.md");
-  }
-
   const subagentPromptContracts = new Map([
     [
       path.join(promptsDir, "orchestrator", "rw-orchestrator-feature-phase.subagent.md"),
@@ -209,8 +198,6 @@ async function main() {
         "PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>",
         "OPEN_QUESTIONS_COUNT=<n>",
         "PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>",
-        "PLAN_APPROVAL_GATE=<ON|OFF>",
-        "PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>",
         "Test Strategy",
         "Bootstrap foundation features (STANDARD): 10~20 tasks",
       ],
@@ -236,20 +223,11 @@ async function main() {
     const orchestratorAgent = await fs.readFile(orchestratorAgentPath, "utf8");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "rw-orchestrator-feature-phase.subagent.md");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "rw-orchestrator-plan-phase.subagent.md");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_ID=<id>");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_ARTIFACT_DIR=<path>");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "RESEARCH_FINDINGS_FILE=<path>");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_SUMMARY_FILE=<path>");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "OPEN_QUESTIONS_COUNT=<n>");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "Follow `.github/prompts/rw-run.prompt.md` contract.");
+    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "Follow `.github/prompts/rw-review.prompt.md` contract.");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "RW_REPLAN_TRIGGERED");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "TASK_INSPECTION_RESULT LOCKED_TASK_ID PASS");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PHASE_INSPECTION_RESULT RUN READY");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "RW_SUBAGENT_VERIFICATION_EVIDENCE_MISSING");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "VERIFICATION_EVIDENCE <LOCKED_TASK_ID>");
-    requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "Test Strategy");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "REVIEW_SUMMARY total=0 ok=0 fail=0 escalate=0 skipped=<completed-count>");
     requireToken(errors, ".github/agents/rw-orchestrator.agent.md", orchestratorAgent, "REVIEW_PHASE_NOTE_FILE=none");
     if (orchestratorAgent.includes("<FEATURE_PHASE_SUBAGENT_PROMPT>")) {
@@ -260,15 +238,14 @@ async function main() {
     }
   }
 
-  const requiredSmokeFiles = [
-    path.join(promptsDir, "smoke", "phases", "phase-01-new-project.md"),
-    path.join(promptsDir, "smoke", "phases", "phase-08-review-2.md"),
-    path.join(promptsDir, "smoke", "templates", "run-task.subagent.md"),
-  ];
-  for (const requiredFile of requiredSmokeFiles) {
-    if (!(await exists(requiredFile))) {
-      errors.push(`${path.relative(repoRoot, requiredFile)}: missing file`);
-    }
+  const smokeScriptPath = path.join(repoRoot, "scripts", "rw-smoke-test.sh");
+  if (!(await exists(smokeScriptPath))) {
+    errors.push("scripts/rw-smoke-test.sh: missing file");
+  } else {
+    const smokeScript = await fs.readFile(smokeScriptPath, "utf8");
+    requireToken(errors, "scripts/rw-smoke-test.sh", smokeScript, "last-result.json");
+    requireToken(errors, "scripts/rw-smoke-test.sh", smokeScript, "write_smoke_result_artifacts");
+    requireToken(errors, "scripts/rw-smoke-test.sh", smokeScript, "Scenario 1: New Project Flow");
   }
 
   const ciWorkflowPath = path.join(repoRoot, ".github", "workflows", "rw-smoke-test.yml");

@@ -19,7 +19,6 @@ Quick summary:
     - Bootstrap foundation features: 10-20 tasks (5 allowed only when clearly very small/simple)
   - `Planning Profile: FAST_TEST`: 2-3 tasks (all feature types, test-speed priority)
 - Ensure new `pending` rows are visible in active `PROGRESS.md` even when archives exist.
-- Optional plan-approval gate support (default OFF unless runtime flag is present).
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
@@ -38,8 +37,6 @@ Target files:
 - .ai/plans/<plan_id>/plan-summary.yaml
 - .ai/runtime/rw-active-plan-id.txt
 - .ai/features/*.md (selected READY_FOR_PLAN file, status update to PLANNED)
-- .ai/runtime/rw-plan-approval-pending.env (optional, when approval gate is ON)
-- .ai/runtime/rw-plan-approved.env (optional cleanup, when approval gate is ON)
 
 Rules:
 - Do not rewrite the whole PLAN.md.
@@ -58,9 +55,6 @@ Rules:
   - `Verification` must include concrete commands prefixed by one of: `[unit]`, `[integration]`, `[acceptance]`.
   - If behavior changes are introduced, both `[unit]` and `[acceptance]` commands are required.
   - If behavior does not change (docs/config/chore), allow `[acceptance] N/A` only with explicit reason.
-- Optional plan-approval gate rule (default OFF):
-  - Gate is ON only when `.ai/runtime/rw-plan-approval-required.flag` exists.
-  - When gate is ON, `rw-plan` must prepare a pending approval marker and clear stale approval stamps.
 - Deterministic planning mode:
   - Never call `#tool:vscode/askQuestions` in `rw-plan`.
   - Never ask interactive follow-up questions in `rw-plan`.
@@ -205,31 +199,7 @@ Workflow:
 16) Update selected `.ai/features/<filename>` file:
    - `Status: READY_FOR_PLAN` -> `Status: PLANNED`
    - Append a short plan output note including task range (`TASK-XX~TASK-YY`) and date.
-17) Resolve plan-approval gate mode:
-   - If `.ai/runtime/rw-plan-approval-required.flag` exists:
-     - `PLAN_APPROVAL_GATE=ON`
-     - `PLAN_APPROVAL_REASON=FLAG`
-   - Else if `PLAN_RISK_LEVEL=HIGH` or `OPEN_QUESTIONS_COUNT>=2`:
-     - `PLAN_APPROVAL_GATE=ON`
-     - `PLAN_APPROVAL_REASON=RISK_OR_OPEN_QUESTIONS`
-   - Else:
-     - `PLAN_APPROVAL_GATE=OFF`
-     - `PLAN_APPROVAL_REASON=OFF`
-18) If `PLAN_APPROVAL_GATE=ON`:
-   - Ensure `.ai/runtime/` exists.
-   - Write `.ai/runtime/rw-plan-approval-pending.env` with:
-     - `PLAN_APPROVAL_REQUIRED=1`
-     - `PLAN_APPROVAL_REASON=<PLAN_APPROVAL_REASON>`
-     - `PLANNED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
-     - `FEATURE_FILE=<selected feature filename>`
-     - `TASK_RANGE=<TASK-XX~TASK-YY>`
-     - `PLAN_RISK_LEVEL=<PLAN_RISK_LEVEL>`
-     - `OPEN_QUESTIONS_COUNT=<OPEN_QUESTIONS_COUNT>`
-    - Delete `.ai/runtime/rw-plan-approved.env` if it exists (stale approval invalidation).
-    - Do not ask interactive questions in this step.
-19) If `PLAN_APPROVAL_GATE=OFF`:
-   - Delete `.ai/runtime/rw-plan-approval-pending.env` if it exists (stale pending cleanup).
-20) Replan-flag cleanup:
+17) Replan-flag cleanup:
    - If `.ai/runtime/rw-plan-replan.flag` exists and planning succeeded, delete it.
 
 Output format at end:
@@ -249,6 +219,4 @@ Output format at end:
 - `OPEN_QUESTIONS_COUNT=<n>`
 - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
 - `FEATURE_MULTI_READY_AUTOSELECTED=<filename|none>`
-- `PLAN_APPROVAL_GATE=<ON|OFF>`
-- `PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>`
 - `NEXT_COMMAND=rw-run`

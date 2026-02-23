@@ -49,14 +49,11 @@
   - `FEATURE_FILE_MISSING`
   - `FEATURE_NOT_READY`
   - `FEATURE_MULTI_READY_AUTOSELECTED`
-  - `FEATURE_MULTI_READY` (legacy alias)
   - `FEATURE_SUMMARY_MISSING`
   - `FEATURE_NEED_INSUFFICIENT`
   - `MISSING_FIELDS=...`
 - 신규 프로젝트 입력 오류 토큰:
   - `PROJECT_IDEA_MISSING`
-- fallback 출력 토큰:
-  - `MANUAL_FALLBACK_REQUIRED`
 - 파일/경로 계약:
   - `.ai/PAUSE.md`
   - `.ai/ARCHIVE_LOCK`
@@ -73,15 +70,10 @@
 
 ## 오케스트레이션 역할 경계
 
-- `rw-init`
-  - 스캐폴딩 전용 비대화형 대안(`CONTEXT`, 최소 `PLAN`/`PROGRESS`, optional `TASK-01`)
-  - 기능 요구사항 정의, 기능 분해, `TASK-02+` 생성 금지
 - `rw-new-project`
-  - `rw-init + discovery + bootstrap foundation 분해` 통합 프롬프트
-  - 빈/템플릿 저장소에서 스캐폴딩 + 프로젝트 방향 확정 + bootstrap feature/task 생성을 한 번에 수행
+  - 빈/템플릿 저장소에서 스캐폴딩 + 프로젝트 방향 확정 + bootstrap feature seed 생성을 한 번에 수행
   - `PLAN` 개요 구체화 + `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md` 작성
-  - bootstrap foundation 범위에서 `TASK-02+` 생성 허용
-  - 일반 기능 분해는 `rw-plan`에서 수행
+  - 태스크 분해는 `rw-plan`에서 수행
 - `rw-feature`
   - 기능 스펙 파일 작성(`.ai/features/*.md`, `Status: READY_FOR_PLAN`)
   - `PLAN`/`PROGRESS`/`tasks` 수정 금지
