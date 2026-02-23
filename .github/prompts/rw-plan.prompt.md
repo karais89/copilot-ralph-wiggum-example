@@ -1,6 +1,6 @@
 ---
 name: rw-plan
-description: "Ralph Plan: add feature notes + create TASK-XX files + sync PROGRESS"
+description: "Ralph Plan: append feature note, create TASK-XX files, and sync PROGRESS for one READY feature"
 agent: agent
 argument-hint: "No inline input. Prepare .ai/features/YYYYMMDD-HHMM-<slug>.md with Status: READY_FOR_PLAN."
 ---
@@ -10,16 +10,9 @@ Language policy reference: `.ai/CONTEXT.md`
 Quick summary:
 - Append one feature note to `PLAN.md`.
 - Determine `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>` before task generation.
-- Generate `PLAN_ID` and persist plan artifacts under `.ai/plans/<plan_id>/`.
-- Record plan quality metrics: `PLAN_RISK_LEVEL`, `PLAN_CONFIDENCE`, `OPEN_QUESTIONS_COUNT`.
+- Generate `PLAN_ID` and plan artifacts under `.ai/plans/<plan_id>/`.
 - Create new atomic `TASK-XX-*.md` files without renumbering existing tasks.
-  - Maintain shared bootstrap context in `.ai/tasks/TASK-00-READBEFORE.md`.
-  - `Planning Profile: STANDARD` (default): existing policy
-    - Default features: 3-7 tasks
-    - Bootstrap foundation features: 10-20 tasks (5 allowed only when clearly very small/simple)
-  - `Planning Profile: FAST_TEST`: 2-3 tasks (all feature types, test-speed priority)
-- Ensure new `pending` rows are visible in active `PROGRESS.md` even when archives exist.
-- Optional plan-approval gate support (default OFF unless runtime flag is present).
+- Keep bootstrap coordination context in `.ai/tasks/TASK-00-READBEFORE.md`.
 
 Step 0 (Mandatory):
 1) Read `.ai/CONTEXT.md` first.
@@ -30,225 +23,119 @@ Step 0 (Mandatory):
 You are adding a new feature to an existing Ralph orchestration workspace.
 
 Target files:
-- .ai/PLAN.md
-- .ai/tasks/TASK-00-READBEFORE.md
-- .ai/tasks/TASK-XX-*.md
-- .ai/PROGRESS.md
-- .ai/plans/<plan_id>/research_findings_<slug>.yaml
-- .ai/plans/<plan_id>/plan-summary.yaml
-- .ai/runtime/rw-active-plan-id.txt
-- .ai/features/*.md (selected READY_FOR_PLAN file, status update to PLANNED)
-- .ai/runtime/rw-plan-approval-pending.env (optional, when approval gate is ON)
-- .ai/runtime/rw-plan-approved.env (optional cleanup, when approval gate is ON)
+- `.ai/PLAN.md`
+- `.ai/tasks/TASK-00-READBEFORE.md`
+- `.ai/tasks/TASK-XX-*.md`
+- `.ai/PROGRESS.md`
+- `.ai/plans/<plan_id>/research_findings_<slug>.yaml`
+- `.ai/plans/<plan_id>/plan-summary.yaml`
+- `.ai/runtime/rw-active-plan-id.txt`
+- `.ai/features/*.md` (selected READY_FOR_PLAN file, update to `Status: PLANNED`)
 
 Rules:
-- Do not rewrite the whole PLAN.md.
-- Update PLAN.md only in `## Feature Notes (append-only)`.
+- Do not rewrite the whole `PLAN.md`.
+- Update `PLAN.md` only in `## Feature Notes (append-only)`.
 - Do not renumber or edit existing TASK IDs/files unless explicitly asked.
 - Do not implement product code.
 - Resolve user-document language from `.ai/CONTEXT.md` before writing task/progress prose (default Korean if ambiguous).
-- Keep machine/parser tokens and section headers unchanged (`Task Status`, `Log`, `pending`, `Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Test Strategy`, `Verification`).
-- In `.ai/tasks/*.md` and PROGRESS `Title` cells, write human-readable values in the resolved user-document language.
+- Keep parser tokens and section headers unchanged (`Task Status`, `Log`, `pending`, `Title`, `Dependencies`, `Description`, `Acceptance Criteria`, `Files to Create/Modify`, `Test Strategy`, `Verification`).
 - Task sizing rule:
   - Each task should be independently deliverable in roughly 30~120 minutes.
   - If likely >120 minutes, split; if <30 minutes and not independently valuable, merge.
 - Verification/Test strategy rule:
-  - Each task must include a `Test Strategy` section and a `Verification` section.
-  - `Test Strategy` must declare `Unit`, `Integration`, and `Acceptance` as either concrete checks or `N/A - <reason>`.
-  - `Verification` must include concrete commands prefixed by one of: `[unit]`, `[integration]`, `[acceptance]`.
+  - Every task must include `Test Strategy` and `Verification`.
+  - `Test Strategy` must include `Unit`, `Integration`, and `Acceptance` entries.
+  - `Verification` commands must be prefixed with `[unit]`, `[integration]`, or `[acceptance]`.
   - If behavior changes are introduced, both `[unit]` and `[acceptance]` commands are required.
-  - If behavior does not change (docs/config/chore), allow `[acceptance] N/A` only with explicit reason.
-- Optional plan-approval gate rule (default OFF):
-  - Gate is ON only when `.ai/runtime/rw-plan-approval-required.flag` exists.
-  - When gate is ON, `rw-plan` must prepare a pending approval marker and clear stale approval stamps.
 - Deterministic planning mode:
   - Never call `#tool:vscode/askQuestions` in `rw-plan`.
-  - Never ask interactive follow-up questions in `rw-plan`.
-  - Resolve selection/clarification with deterministic defaults and continue.
-- Plan mode rule:
-  - `PLAN_MODE=REPLAN` when selected feature file contains exact line `Planning Intent: REPLAN`, or `.ai/runtime/rw-plan-replan.flag` exists.
-  - else `PLAN_MODE=EXTENSION` when active PROGRESS has at least one task row or `.ai/progress-archive/STATUS-*.md` exists.
-  - else `PLAN_MODE=INITIAL`.
-- Plan identity + artifact rule:
-  - Generate `PLAN_ID=YYYYMMDD-HHMM-<feature-slug>` (local time).
-  - Ensure `.ai/plans/<PLAN_ID>/` exists.
-  - Write `.ai/runtime/rw-active-plan-id.txt` with `PLAN_ID`.
-  - Create/update `.ai/plans/<PLAN_ID>/research_findings_<feature-slug>.yaml` with:
-    - objective summary
-    - scanned files/modules
-    - estimated coverage (`0-100`)
-    - confidence (`HIGH|MEDIUM|LOW`)
-    - gaps/open questions
-  - Create/update `.ai/plans/<PLAN_ID>/plan-summary.yaml` with:
-    - `plan_id`, `feature_file`, `plan_mode`, `task_range`, `planning_profile`
-    - `risk_level`, `confidence`, `open_questions_count`
+  - Resolve ambiguity with repository evidence and safe defaults.
 
 Feature input resolution (required):
 1) Read `.ai/features/`.
-2) If `.ai/features/` is missing or unreadable, stop immediately and print:
-   - first line exactly: `FEATURES_DIR_MISSING`
-   - then a short fix guide:
-     - run `.github/prompts/rw-feature.prompt.md` first (recommended)
-     - create directory `.ai/features/`
-     - create one feature file from `.ai/features/FEATURE-TEMPLATE.md`
-     - save as `YYYYMMDD-HHMM-<slug>.md`
-     - set `Status: READY_FOR_PLAN`
-3) Build input-file candidates from `.ai/features/*.md`, excluding:
+2) If `.ai/features/` is missing/unreadable, stop and print:
+   - `FEATURES_DIR_MISSING`
+   - short fix guide to create one READY feature file.
+3) Build candidates from `.ai/features/*.md`, excluding:
    - `FEATURE-TEMPLATE.md`
    - `README.md`
-4) If no input-file candidates exist, stop immediately and print:
-   - first line exactly: `FEATURE_FILE_MISSING`
-   - then a short fix guide:
-     - run `.github/prompts/rw-feature.prompt.md` to create one READY file (recommended)
-     - copy `.ai/features/FEATURE-TEMPLATE.md` to `.ai/features/YYYYMMDD-HHMM-<slug>.md`
-     - set `Status: READY_FOR_PLAN`
-5) From input-file candidates, select files with exact line: `Status: READY_FOR_PLAN`.
-6) If no READY candidates exist, stop immediately and print:
-   - first line exactly: `FEATURE_NOT_READY`
-   - then a short fix guide:
-     - open the latest `YYYYMMDD-HHMM-<slug>.md`
-     - change `Status: DRAFT` (or current value) to `Status: READY_FOR_PLAN`
-7) If multiple READY candidates exist:
-   - Select the latest READY filename by lexical sort and continue.
-   - Print `FEATURE_MULTI_READY_AUTOSELECTED=<selected-filename>`.
-8) If exactly one READY candidate exists, select that file.
-9) Resolve planning profile from selected feature file:
-   - If exact line `Planning Profile: FAST_TEST` exists, set `PLANNING_PROFILE=FAST_TEST`.
-   - Else if exact line `Planning Profile: STANDARD` exists, set `PLANNING_PROFILE=STANDARD`.
-   - Else set `PLANNING_PROFILE=STANDARD` (default).
-10) Expected input filename pattern: `YYYYMMDD-HHMM-<slug>.md`.
-11) In any unresolved error case above, stop immediately without additional clarification questions.
-
-Normalization rules:
-1) Backward compatibility: if resolved input already includes structured sections (`goal`, `constraints`, `acceptance`), preserve and use them.
-2) If resolved input is a one-line summary, normalize to:
-   - Goal: that one-line summary.
-   - Constraints (defaults):
-     - Keep existing commands/behavior backward-compatible.
-     - Minimize scope and file changes to only what is necessary.
-     - Project-defined canonical validation commands must pass (language/toolchain agnostic).
-   - Acceptance (defaults):
-     - User-facing behavior for the goal is implemented and invokable.
-     - Error paths return clear user-friendly messages.
-     - At least one canonical verification command succeeds with exit code 0.
-     - Verification evidence includes command, exit code, and 1-2 key output lines.
+4) If no candidates, stop and print:
+   - `FEATURE_FILE_MISSING`
+   - short fix guide.
+5) Select files with exact line: `Status: READY_FOR_PLAN`.
+6) If no READY file, stop and print:
+   - `FEATURE_NOT_READY`
+   - short fix guide.
+7) If multiple READY files exist:
+   - select lexical latest filename.
+   - print `FEATURE_MULTI_READY_AUTOSELECTED=<selected-filename>`.
+8) Resolve planning profile from selected feature:
+   - `Planning Profile: FAST_TEST` -> `FAST_TEST`
+   - `Planning Profile: STANDARD` or missing -> `STANDARD`
 
 Workflow:
-1) Ensure baseline workspace files exist before planning:
-   - If `.ai/PLAN.md` is missing, create a minimal skeleton with:
-     - `# Workspace Plan`
-     - `## Overview`
-     - one short line: `rw-plan initialized PLAN.md because it was missing.`
-     - `## Feature Notes (append-only)` (empty section)
-   - If `.ai/PROGRESS.md` is missing, create:
-     - `# Progress`
-     - `## Task Status`
-     - `| Task | Title | Status | Commit |`
-     - `|------|-------|--------|--------|`
-     - `## Log`
-   - Then read `.ai/PLAN.md`, `.ai/PROGRESS.md`, and list existing `.ai/tasks/TASK-*.md` filenames. Open only the needed task files.
-2) Resolve feature input using the required precedence rules above.
-3) Deterministic planning:
-   - Do not ask follow-up questions.
-   - Resolve ambiguity from repository context first, then apply safe defaults.
-4) Resolve `PLAN_MODE` using the rule in `Rules`.
-5) Generate `PLAN_ID`, ensure `.ai/plans/<PLAN_ID>/`, and write `.ai/runtime/rw-active-plan-id.txt`.
-6) Build/update research artifact `.ai/plans/<PLAN_ID>/research_findings_<feature-slug>.yaml` from repository evidence.
-7) Build a normalized feature spec (`Goal`, `Constraints`, `Acceptance`) using resolved input and defaults.
-8) Create or update `.ai/tasks/TASK-00-READBEFORE.md` (bootstrap context):
-   - Keep this file concise and reusable across newly created tasks for this planning batch.
-   - Include:
-     - `# TASK-00: Read Before Any Task`
-     - feature source file, `PLAN_MODE`, and `PLAN_ID`
-     - goal summary (2-4 bullets)
-     - non-negotiable constraints (backward compatibility, scope limits, verification expectations)
-     - verification baseline command guidance (unit/integration/acceptance coverage)
-     - coordination note: complete one task per run dispatch
-9) Append one new Feature Notes line to PLAN.md in this format:
-   - YYYY-MM-DD: [feature-slug] Goal/constraints in 1-3 lines. Related tasks: TASK-XX~TASK-YY.
-10) Determine next available TASK number from existing task files (max + 1).
-11) Create new atomic task files for the feature under `.ai/tasks/` as `TASK-XX-<slug>.md`.
-   - Task count policy:
-     - If `PLANNING_PROFILE=FAST_TEST`: 2~3 tasks (including bootstrap foundation features).
-     - If `PLANNING_PROFILE=STANDARD`:
-       - Default features: 3~7 tasks.
-       - Bootstrap foundation features (slug/name indicates bootstrap+foundation): 10~20 tasks.
-       - If bootstrap scope is clearly very small/simple, 5 tasks are allowed.
-   Each file must include:
-   - Title
-   - Dependencies
-   - Description
-   - Acceptance Criteria
-   - Files to Create/Modify
-   - Test Strategy
-      - `Unit: <check or N/A - reason>`
-      - `Integration: <check or N/A - reason>`
-      - `Acceptance: <check or N/A - reason>`
-   - Verification
-      - Use project-defined commands (do not hardcode language-specific tools unless the project is explicitly language-specific).
-      - Prefix every command with one tag: `[unit]`, `[integration]`, `[acceptance]`.
-      - Require evidence format: `command`, `exit code`, `key output`.
-      - Include at least one concrete command per task.
-   - Description should explicitly instruct implementers to read `TASK-00-READBEFORE.md` before coding.
-   - Keep the section headers above exactly as written, but write each section value/prose in the resolved user-document language.
-12) Update `.ai/PROGRESS.md` Task Status table by adding new rows as `pending` with commit `-`.
-   - Keep existing rows unchanged.
-   - If PROGRESS table is archived/compact, still ensure new pending rows are present in the active Task Status section.
-   - Use the same resolved user-document language for each new `Title` value.
-13) Add one new log entry in PROGRESS Log:
-   - YYYY-MM-DD — Added feature planning tasks TASK-XX~TASK-YY for [feature-slug].
-14) Compute plan quality metrics:
-   - `PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>` based on dependency complexity, blast radius, and unresolved assumptions.
-   - `PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>` based on research coverage and requirement clarity.
-   - `OPEN_QUESTIONS_COUNT=<n>` count of unresolved planning questions.
-15) Write/update `.ai/plans/<PLAN_ID>/plan-summary.yaml` with final task range and quality metrics.
-16) Update selected `.ai/features/<filename>` file:
+1) Ensure baseline files exist:
+   - create skeleton `.ai/PLAN.md` if missing, with `## Feature Notes (append-only)`
+   - create skeleton `.ai/PROGRESS.md` if missing (`Task Status` table + `Log`)
+2) Resolve selected feature input file by rules above.
+3) Resolve `PLAN_MODE`:
+   - `REPLAN` when selected feature contains `Planning Intent: REPLAN` OR `.ai/runtime/rw-plan-replan.flag` exists
+   - else `EXTENSION` when active `PROGRESS` already has task rows OR `.ai/progress-archive/STATUS-*.md` exists
+   - else `INITIAL`
+4) Generate `PLAN_ID=YYYYMMDD-HHMM-<feature-slug>` (local time).
+5) Ensure `.ai/plans/<PLAN_ID>/` exists and write `.ai/runtime/rw-active-plan-id.txt`.
+6) Write/update research artifact:
+   - `.ai/plans/<PLAN_ID>/research_findings_<slug>.yaml`
+   - include objective summary, scanned files/modules, estimated coverage (`0-100`), confidence (`HIGH|MEDIUM|LOW`), gaps/open questions.
+7) Build normalized feature spec (`Goal`, `Constraints`, `Acceptance`) from input + defaults.
+8) Create/update `.ai/tasks/TASK-00-READBEFORE.md`:
+   - include feature source, `PLAN_MODE`, `PLAN_ID`
+   - include non-negotiable constraints and verification expectations
+   - include one-task-per-dispatch coordination note
+9) Append one Feature Notes line in `PLAN.md`:
+   - `YYYY-MM-DD: [feature-slug] ... Related tasks: TASK-XX~TASK-YY.`
+10) Determine next available TASK number from existing task files.
+11) Create atomic tasks under `.ai/tasks/`:
+   - `FAST_TEST`: 2~3 tasks
+   - `STANDARD` default features: 3~7 tasks
+   - `STANDARD` bootstrap-foundation: 10~20 tasks (5 allowed only for clearly tiny scope)
+   - each task must include:
+     - `Title`
+     - `Dependencies`
+     - `Description`
+     - `Acceptance Criteria`
+     - `Files to Create/Modify`
+     - `Test Strategy`
+     - `Verification`
+12) Update `.ai/PROGRESS.md` Task Status table:
+   - add new rows as `pending` with commit `-`
+   - keep existing rows unchanged
+13) Append one log line in `PROGRESS`:
+   - `YYYY-MM-DD — Added feature planning tasks TASK-XX~TASK-YY for [feature-slug].`
+14) Compute planning quality:
+   - `PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>`
+   - `PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>`
+   - `OPEN_QUESTIONS_COUNT=<n>`
+15) Write/update `.ai/plans/<PLAN_ID>/plan-summary.yaml`:
+   - `plan_id`, `feature_file`, `plan_mode`, `task_range`, `planning_profile`, `risk_level`, `confidence`, `open_questions_count`
+16) Update selected feature file:
    - `Status: READY_FOR_PLAN` -> `Status: PLANNED`
-   - Append a short plan output note including task range (`TASK-XX~TASK-YY`) and date.
-17) Resolve plan-approval gate mode:
-   - If `.ai/runtime/rw-plan-approval-required.flag` exists:
-     - `PLAN_APPROVAL_GATE=ON`
-     - `PLAN_APPROVAL_REASON=FLAG`
-   - Else if `PLAN_RISK_LEVEL=HIGH` or `OPEN_QUESTIONS_COUNT>=2`:
-     - `PLAN_APPROVAL_GATE=ON`
-     - `PLAN_APPROVAL_REASON=RISK_OR_OPEN_QUESTIONS`
-   - Else:
-     - `PLAN_APPROVAL_GATE=OFF`
-     - `PLAN_APPROVAL_REASON=OFF`
-18) If `PLAN_APPROVAL_GATE=ON`:
-   - Ensure `.ai/runtime/` exists.
-   - Write `.ai/runtime/rw-plan-approval-pending.env` with:
-     - `PLAN_APPROVAL_REQUIRED=1`
-     - `PLAN_APPROVAL_REASON=<PLAN_APPROVAL_REASON>`
-     - `PLANNED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
-     - `FEATURE_FILE=<selected feature filename>`
-     - `TASK_RANGE=<TASK-XX~TASK-YY>`
-     - `PLAN_RISK_LEVEL=<PLAN_RISK_LEVEL>`
-     - `OPEN_QUESTIONS_COUNT=<OPEN_QUESTIONS_COUNT>`
-    - Delete `.ai/runtime/rw-plan-approved.env` if it exists (stale approval invalidation).
-    - Do not ask interactive questions in this step.
-19) If `PLAN_APPROVAL_GATE=OFF`:
-   - Delete `.ai/runtime/rw-plan-approval-pending.env` if it exists (stale pending cleanup).
-20) Replan-flag cleanup:
-   - If `.ai/runtime/rw-plan-replan.flag` exists and planning succeeded, delete it.
+   - append short planning output note with task range/date
+17) Cleanup:
+   - if `.ai/runtime/rw-plan-replan.flag` exists and planning succeeded, delete it.
 
 Output format at end:
 - `PLAN_ID=<id>`
 - `PLAN_ARTIFACT_DIR=.ai/plans/<plan_id>/`
 - `RESEARCH_FINDINGS_FILE=.ai/plans/<plan_id>/research_findings_<slug>.yaml`
-- Feature input source (`.ai/features/<filename>`)
-- Feature note added (exact line)
-- New task range (TASK-XX~TASK-YY)
-- Created task files list
-- `TASK_BOOTSTRAP_FILE=.ai/tasks/TASK-00-READBEFORE.md`
-- PROGRESS rows added count
-- Feature file status update result
+- `PLAN_SUMMARY_FILE=.ai/plans/<plan_id>/plan-summary.yaml`
+- `PLAN_FEATURE_FILE=<filename>`
+- `PLAN_TASK_RANGE=<TASK-XX~TASK-YY>`
 - `PLAN_MODE=<INITIAL|REPLAN|EXTENSION>`
+- `TASK_BOOTSTRAP_FILE=.ai/tasks/TASK-00-READBEFORE.md`
 - `PLAN_RISK_LEVEL=<LOW|MEDIUM|HIGH>`
 - `PLAN_CONFIDENCE=<HIGH|MEDIUM|LOW>`
 - `OPEN_QUESTIONS_COUNT=<n>`
 - `PLANNING_PROFILE_APPLIED=<STANDARD|FAST_TEST>`
 - `FEATURE_MULTI_READY_AUTOSELECTED=<filename|none>`
-- `PLAN_APPROVAL_GATE=<ON|OFF>`
-- `PLAN_APPROVAL_REASON=<FLAG|RISK_OR_OPEN_QUESTIONS|OFF>`
 - `NEXT_COMMAND=rw-run`

@@ -43,7 +43,10 @@ Rules:
   - at most two clarification rounds
   - at most five focused questions total
   - recommended split: Round 1 (up to 3), Round 2 (up to 2 only if ambiguity remains)
-- Interactive fallback must follow `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+- Interactive fallback policy:
+  - try `#tool:vscode/askQuestions` once
+  - if unavailable, ask equivalent question in chat once
+  - if still unresolved, follow prompt-specific stop/default behavior
 - Non-interactive mode is enabled only when `.ai/runtime/rw-noninteractive.flag` exists.
 - In non-interactive mode, never call `#tool:vscode/askQuestions`; fill missing fields with explicit assumptions.
 - Write `.ai/features/*.md` content in the user-document language resolved from `.ai/CONTEXT.md`.
@@ -61,7 +64,7 @@ Workflow:
      - `Add a command to export action-item lists as a markdown report.`
    - If missing and `NON_INTERACTIVE_MODE=false`, use `#tool:vscode/askQuestions` with one open-ended question written in the resolved user-document language from Step 2.
    - Question intent (do not hardcode this English string in output): "What feature should be added? (Example: add export command with date filter)"
-   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback.
    - If `NON_INTERACTIVE_MODE=false` and still missing after that single interaction, stop immediately and output exactly: `FEATURE_SUMMARY_MISSING`.
 5) Build an initial need snapshot from summary + repository context:
    - `User`
@@ -75,7 +78,7 @@ Workflow:
    - If `NON_INTERACTIVE_MODE=false` and any critical field is missing or ambiguous, run staged clarification with a strict budget:
      - Round 1 (up to 3 questions): resolve `User`, `Trigger / Situation`, `Problem`, `Desired Outcome`.
      - Round 2 (up to 2 questions): run only when critical ambiguity remains after Round 1; resolve completion signal and out-of-scope boundary required for planning.
-   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+   - If `NON_INTERACTIVE_MODE=false` and `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback.
    - If `NON_INTERACTIVE_MODE=true`, do not ask; infer from repository evidence first.
    - If `NON_INTERACTIVE_MODE=true` and evidence is insufficient, keep fields unresolved (do not fabricate) and report insufficiency in Step 7.
 7) Re-evaluate need-gate:

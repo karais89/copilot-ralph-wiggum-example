@@ -30,7 +30,10 @@ Rules:
 - Do not edit product code.
 - This prompt must run in a top-level Copilot Chat turn.
   - If not top-level, output `TOP_LEVEL_REQUIRED` and stop.
-- Interactive fallback must follow `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+- Interactive fallback policy:
+  - try `#tool:vscode/askQuestions` once
+  - if unavailable, ask equivalent question in chat once
+  - if still unresolved, use prompt-specific stop behavior
 - Keep machine tokens unchanged (`Task Status`, `Log`, `pending`, `Status`, `READY_FOR_PLAN`, `PLANNED`).
 - Write user-facing prose in language resolved from `.ai/CONTEXT.md` (default Korean if ambiguous).
 - Do not create or modify `TASK-XX` files in this prompt.
@@ -59,7 +62,7 @@ Workflow:
      - ensure one clear intent sentence exists.
      - if seed is empty, ask one plain-language question via `#tool:vscode/askQuestions` first:
        - `무엇을 만들고 싶은지 한 문장으로 알려주세요. 기술/설계 용어는 몰라도 됩니다.`
-     - if `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+     - if `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback.
      - if still unresolved after one fallback, stop and output:
        - `PROJECT_IDEA_MISSING`
    - Round 2 (adaptive clarification):
@@ -72,7 +75,7 @@ Workflow:
        - always allow explicit custom input path (`직접 입력`) when choices are insufficient.
        - include `AI_DECIDE` option for low-risk defaults when appropriate.
        - if `직접 입력` is chosen, ask at most one short follow-up for that item.
-     - if `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+     - if `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback.
      - preferred focus areas (pick only what is needed):
        - primary target user/use context
        - first-release scope boundary (must-have vs later)

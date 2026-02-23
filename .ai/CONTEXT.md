@@ -2,30 +2,25 @@
 
 ## 언어 정책
 
-- 운영 프롬프트 본문 언어(`.github/prompts/rw-*.prompt.md`): 영어(필수)
-- 테스트/리뷰 프롬프트 본문 언어(`.github/prompts/copilot-rw-*.prompt.md`): 실행자 언어 허용(한국어/영어)
-- 프롬프트 사전 점검: 모든 운영 프롬프트(`rw-*`)는 수정 전에 `Step 0 (Mandatory)`로 이 파일을 먼저 읽어야 함
-- 사용자 문서 언어(`.ai/GUIDE.md`, `.ai/PLAN.md`, `.ai/PROGRESS.md`, `.ai/tasks/*.md`, `.ai/notes/*.md`, `.ai/features/*.md`): 한국어 기본
-- 기존(legacy) 문서가 영어인 경우 즉시 전면 번역을 강제하지 않음. 다만 신규 작성/수정 시에는 한국어 우선
-- 커밋 메시지 언어: 영어(Conventional Commits)
-- 언어 충돌 시: 이 파일 규칙을 우선 적용
+- 운영 프롬프트 본문(`.github/prompts/rw-*.prompt.md`): 영어 유지(필수)
+- 사용자 문서(`.ai/*`, `PLAN/PROGRESS/tasks/notes/features`): 한국어 기본
+- 커밋 메시지: 영어 Conventional Commit
+- 모든 운영 프롬프트는 `Step 0 (Mandatory)`에서 이 파일을 먼저 읽어야 함
 
 ## 기계 파싱 토큰 (번역 금지)
 
-아래 값은 오케스트레이션 프롬프트/파서의 계약값이므로 문자열을 그대로 유지해야 합니다.
+아래 토큰은 문자열 그대로 유지한다.
 
-- `.ai/PROGRESS.md` 섹션 헤더:
+- PROGRESS 섹션/헤더
   - `## Task Status`
   - `## Log`
-- `.ai/PROGRESS.md` 테이블 헤더:
   - `| Task | Title | Status | Commit |`
-- `.ai/PROGRESS.md` 상태값:
   - `pending`
   - `in-progress`
   - `completed`
-- Task ID 형식:
-  - `TASK-XX` (0-padding 숫자 ID)
-- 태스크 파일 섹션 헤더:
+- Task ID
+  - `TASK-XX`
+- 태스크 파일 헤더
   - `Title`
   - `Dependencies`
   - `Description`
@@ -33,7 +28,7 @@
   - `Files to Create/Modify`
   - `Test Strategy`
   - `Verification`
-- 리뷰 로그 마커:
+- 리뷰/검증 로그 토큰
   - `REVIEW_OK`
   - `REVIEW_FAIL`
   - `REVIEW-ESCALATE`
@@ -41,72 +36,48 @@
   - `REVIEW_FINDING`
   - `REVIEW_ISSUE`
   - `VERIFICATION_EVIDENCE`
-- 프롬프트 사전 점검 오류 토큰:
+- 공통 오류/가드 토큰
   - `LANG_POLICY_MISSING`
-  - `PLAN_APPROVAL_REQUIRED`
-- feature 파일 입력 오류 토큰:
   - `FEATURES_DIR_MISSING`
   - `FEATURE_FILE_MISSING`
   - `FEATURE_NOT_READY`
   - `FEATURE_MULTI_READY_AUTOSELECTED`
-  - `FEATURE_MULTI_READY` (legacy alias)
   - `FEATURE_SUMMARY_MISSING`
   - `FEATURE_NEED_INSUFFICIENT`
   - `MISSING_FIELDS=...`
-- 신규 프로젝트 입력 오류 토큰:
   - `PROJECT_IDEA_MISSING`
-- fallback 출력 토큰:
-  - `MANUAL_FALLBACK_REQUIRED`
-- 파일/경로 계약:
+- 경로 계약
   - `.ai/PAUSE.md`
   - `.ai/ARCHIVE_LOCK`
   - `.ai/progress-archive/STATUS-*.md`
   - `.ai/progress-archive/LOG-*.md`
   - `.ai/PLAN.md`의 `## Feature Notes (append-only)`
 
-## 프롬프트 작성 규칙
+## 역할 경계
 
-1. 프롬프트 본문은 주 언어 1개만 유지하고 라인 단위 혼용을 피한다.
-2. 모든 운영 프롬프트(`rw-*`)에 `Step 0 (Mandatory)`를 두고 `.ai/CONTEXT.md`를 먼저 읽는다.
-3. `.ai/CONTEXT.md`를 읽을 수 없으면 `LANG_POLICY_MISSING`으로 즉시 중단한다.
-4. 출력/리포트는 섹션 단위로 언어를 통일한다.
-
-## 오케스트레이션 역할 경계
-
-- `rw-init`
-  - 스캐폴딩 전용 비대화형 대안(`CONTEXT`, 최소 `PLAN`/`PROGRESS`, optional `TASK-01`)
-  - 기능 요구사항 정의, 기능 분해, `TASK-02+` 생성 금지
 - `rw-new-project`
-  - `rw-init + discovery + bootstrap foundation 분해` 통합 프롬프트
-  - 빈/템플릿 저장소에서 스캐폴딩 + 프로젝트 방향 확정 + bootstrap feature/task 생성을 한 번에 수행
-  - `PLAN` 개요 구체화 + `.ai/notes/PROJECT-CHARTER-YYYYMMDD.md` 작성
-  - bootstrap foundation 범위에서 `TASK-02+` 생성 허용
-  - 일반 기능 분해는 `rw-plan`에서 수행
+  - 신규/빈 저장소용 초기 스캐폴딩 + 의도 정리 + bootstrap feature seed 생성
+  - 태스크 분해는 하지 않음
+- `rw-onboard-project`
+  - 기존 코드베이스 온보딩(스냅샷/베이스라인 정리)
+  - 기본 handoff는 `rw-feature`
 - `rw-feature`
-  - 기능 스펙 파일 작성(`.ai/features/*.md`, `Status: READY_FOR_PLAN`)
-  - `PLAN`/`PROGRESS`/`tasks` 수정 금지
+  - `.ai/features/*.md`에 `Status: READY_FOR_PLAN` feature 1개 생성
 - `rw-plan`
-  - feature 입력을 `TASK-XX`로 분해
-  - `PLAN`의 `Feature Notes` append + `PROGRESS` 상태 동기화
+  - feature를 `TASK-XX`로 분해
+  - `PLAN Feature Notes` append + `PROGRESS` pending 동기화
 - `rw-run`
-  - 태스크 구현 루프 실행 및 검증
+  - 구현 루프/검증 실행
+  - 한 dispatch당 한 task 완료 불변식 유지
 - `rw-review`
-  - 배치 리뷰 수행(완료 태스크 검증, `REVIEW_OK`/`REVIEW_FAIL`/`REVIEW-ESCALATE` 반영)
+  - 배치 리뷰 실행 (`REVIEW_OK`/`REVIEW_FAIL`/`REVIEW-ESCALATE`)
 - `rw-archive`
-  - `PROGRESS` 아카이브 수행(`.ai/PAUSE.md` 존재 상태에서 수동 실행, `ARCHIVE_LOCK` 사용)
+  - 수동 아카이브 (`.ai/PAUSE.md` 필요, `ARCHIVE_LOCK` 사용)
 
 ## 추가 가드레일
 
-1. 한국어 설명은 허용되지만, 기계 파싱 토큰 자체는 절대 변경하지 않는다.
-2. 문서를 번역하더라도 `Task Status`, `Log`, 상태 enum 값은 이름을 바꾸지 않는다.
-3. append-only 원칙 유지:
-   - `.ai/PLAN.md`: `Feature Notes`에만 append
-   - `.ai/PROGRESS.md` Log: archive 전까지 append 중심으로 유지
-4. 실행/아카이브 안전 규칙:
-   - 동일 워크스페이스에서 오케스트레이터 동시 실행 금지
-   - `rw-archive`는 `.ai/PAUSE.md`가 있는 상태에서만 실행
-   - `rw-archive` 실행 시 `.ai/ARCHIVE_LOCK`를 사용해 동시 archive를 방지
-5. `runSubagent` 미지원 환경에서는 즉시 종료하지 않고 수동 fallback 절차를 출력한 뒤 안전 중지한다.
-6. Strict 복구 규칙:
-   - `REVIEW-ESCALATE TASK-XX ...`가 기록된 태스크를 수동 개입으로 해결했으면, `.ai/PROGRESS.md` Log에
-     `REVIEW-ESCALATE-RESOLVED TASK-XX: <해결 요약>`을 append한 뒤 `rw-run`을 재실행한다.
+1. 기계 파싱 토큰은 한국어로 번역하지 않는다.
+2. `PLAN.md`는 `Feature Notes` append-only 원칙을 지킨다.
+3. `PROGRESS.md` Log는 archive 전까지 append 중심으로 유지한다.
+4. 동일 워크스페이스에서 오케스트레이터 동시 실행을 금지한다.
+5. `REVIEW-ESCALATE TASK-XX ...`를 수동 해결했으면 `REVIEW-ESCALATE-RESOLVED TASK-XX: ...`를 Log에 남기고 `rw-run`을 재실행한다.

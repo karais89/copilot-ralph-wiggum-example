@@ -13,7 +13,7 @@ Repository-specific instructions for Codex agents working in this project.
 - Language/token policy: `.ai/CONTEXT.md`
 - Public project usage docs: `README.md`
 - Orchestration prompts: `.github/prompts/rw-*.prompt.md`
-- Smoke orchestration entry prompt: `.github/prompts/rw-smoke-test.prompt.md`
+- Smoke validation script entry: `scripts/rw-smoke-test.sh`
 - VS Code agent picker entry point: `.github/agents/rw-orchestrator.agent.md`
 - Historical verification reference (non-authoritative): `.ai/RW-VERIFICATION-REPORT.md`
 

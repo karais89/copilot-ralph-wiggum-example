@@ -1,444 +1,127 @@
-# Ralph Wiggum Orchestration — Copilot Example
+# Ralph Wiggum Orchestration Template
 
-An AI-driven software development orchestration technique for **GitHub Copilot** (VS Code). Uses Copilot's `runSubagent` tool to autonomously implement projects through a coordinated system of orchestrator and subagent AI agents.
+Minimal orchestration framework for a Plan -> Run -> Review workflow.
 
-This repository serves two purposes:
+## What Changed
 
-1. **The RW orchestration template** — `rw-orchestrator` agent entrypoint + 9 orchestration prompts + orchestrator phase subagent prompts + smoke-test prompt/modules + structural docs that can be extracted and dropped into any project
-2. **A working example** — A Todo CLI app built entirely by this technique (70+ commits, 20 tasks, zero manual coding)
+This repo now keeps only the core contracts needed for day-to-day execution:
 
-## Quick Start (Minimal Mode)
+- 7 core prompts
+- 1 orchestrator agent entrypoint
+- 2 orchestrator phase subagent prompts
+- slim helper scripts (`status`, `next`)
+- shell-based smoke test as the primary end-to-end verifier
 
-### Option A — VS Code Agent Picker (recommended)
+Removed as redundant:
 
-Open GitHub Copilot Chat and select the **`rw-orchestrator`** agent from the agent picker. Provide an optional one-line feature summary (for example: `--h add export command`). The agent auto-detects the current phase and runs the Plan -> Run -> Review pipeline in one flow.
+- `rw-init`
+- `rw-doctor`
+- prompt-driven smoke module (`rw-smoke-test.prompt.md`, `prompts/smoke/*`)
+- separate target registry script (merged into resolver)
+- plan approval gate flow
 
-```
-[rw-orchestrator] → (feature) → plan → run → review
-                      ↑___________ Continue → (HITL mode) ___________|
-```
+## Core Prompts
 
-### Option B — Manual prompt selection
+- `.github/prompts/rw-new-project.prompt.md`
+- `.github/prompts/rw-onboard-project.prompt.md`
+- `.github/prompts/rw-feature.prompt.md`
+- `.github/prompts/rw-plan.prompt.md`
+- `.github/prompts/rw-run.prompt.md`
+- `.github/prompts/rw-review.prompt.md`
+- `.github/prompts/rw-archive.prompt.md`
 
-If you are new to this project, use only this 4-step loop first:
+Agent entrypoint:
 
-1. Choose an entry prompt:
-   - New/empty repository: `rw-new-project`
-   - Existing codebase: `rw-onboard-project` then `rw-feature`
-2. `rw-plan`
-3. `rw-run`
-4. `rw-review`
+- `.github/agents/rw-orchestrator.agent.md`
 
-For the next feature, repeat:
+Subagent prompt contracts:
 
-`rw-feature -> rw-plan -> rw-run -> rw-review`
-
-Use advanced/exception prompts only when needed:
-- `rw-doctor`: preflight diagnostics only
-- `rw-archive`: only when `rw-run` stops for archive thresholds
-- `rw-init`: scaffold-only fallback
-- `rw-smoke-test`: template/runtime validation (bundled Node.js/TypeScript example scenario)
-
-Optional helper commands:
-- `./scripts/rw next`
-- `./scripts/rw go`
-
-## How It Works
-
-```
-rw-new-project  →  rw-plan  →  rw-run  →  rw-review  →  rw-feature  →  rw-plan  →  rw-run  →  rw-review
-(신규/초기화+feature-seed) (bootstrap 계획) (구현 프롬프트) (리뷰 프롬프트) (기능별)      (계획)        (구현 프롬프트) (리뷰 프롬프트)
-```
-
-`rw-archive` is a manual exception step, only when archive thresholds stop `rw-run`.
-
-1. **`rw-new-project`** — Integrated bootstrap for new/empty repos (`rw-init` + low-friction discovery + bootstrap feature seed generation)
-2. **`rw-onboard-project`** — Existing-codebase onboarding (language-agnostic codebase signal detection + snapshot + handoff to `rw-feature`)
-3. **`rw-doctor`** — Optional standalone preflight diagnostic (rw-run always executes equivalent preflight once before loop)
-4. **`rw-run`** — Runs implementation subagent loop
-5. **`rw-review`** — Dispatches reviewer subagents to validate completed tasks in batch, writes `REVIEW_OK` / `REVIEW_FAIL` / `REVIEW-ESCALATE`, emits `REVIEW_STATUS=<APPROVED|NEEDS_REVISION|FAILED>`, emits structured findings (`REVIEW_FINDING TASK-XX <P0|P1|P2>|<file>|<line>|<rule>|<fix>`), and creates one review phase note in `.ai/notes/` (parallel only when all candidates are explicitly marked `Review Parallel: SAFE`, batch size 2)
-6. **`rw-feature`** — Creates additional feature specification files
-7. **`rw-plan`** — Breaks additional features into atomic tasks
-8. **`rw-archive`** — Archives completed progress when it grows large
-
-`rw-init` remains available as a scaffold-only fallback when you want non-interactive initialization.
-
-### Runtime Policy
-
-- Single `rw-run` policy (no lite/strict split).
-- `rw-orchestrator` Run phase includes additional inspector subagents/counters (`TASK_INSPECTOR_DISPATCH_COUNT`, `PHASE_INSPECTOR_DISPATCH_COUNT`); standalone `rw-run` does not emit these counters.
-- Review is manual and explicit via `rw-review` (subagent-backed batch review, deterministic parallel gate).
-- Planning enforces `Test Strategy` + tagged `Verification` commands (`[unit]`, `[integration]`, `[acceptance]`) per task.
-- Run completion requires explicit `VERIFICATION_EVIDENCE TASK-XX ...` log lines for each dispatched task.
-- Archive threshold is hard-stop; run resumes after manual `rw-archive`.
-- `rw-run` preflight uses doctor-stamp cache first (same target + 10-minute TTL), then falls back to full preflight on cache miss.
-- Plan approval gate can be enabled by runtime flag or automatically when `PLAN_RISK_LEVEL=HIGH` / `OPEN_QUESTIONS_COUNT>=2`.
-
-### Branch Strategy (github-flow)
-
-- Keep `main` always releasable.
-- Do all work on short-lived branches, not directly on `main`.
-- Recommended branch naming: `codex/<short-topic>`.
-- Typical flow:
-  1. Update `main`
-  2. Create `codex/<short-topic>`
-  3. Commit on branch
-  4. Open PR and pass checks
-  5. Squash merge to `main`
-  6. Delete merged branch
-
-### Key Benefits
-
-- **Cost efficiency** — 1 premium request can drive an entire project
-- **Context isolation** — Each subagent gets a fresh context, preventing "message too big" errors
-- **Full traceability** — Every step logged in PROGRESS.md and committed
-- **Autonomous execution** — Can run for hours without supervision
-- **Language/toolchain agnostic** — Prompts target repository-defined commands and structure (works for web, app, and game/Unity projects)
-
-## Use in Your Own Project
-
-### Option 1: Extract Template (Recommended)
-
-```bash
-git clone https://github.com/karais89/copilot-ralph-wiggum-example.git
-cd copilot-ralph-wiggum-example
-
-# Extract only the RW template files into your project
-./scripts/template/extract-template.sh ~/your-project
-
-# Optional: scaffold default user-doc language as English
-# RW_DOC_LANG=en ./scripts/orchestration/rw-bootstrap-scaffold.sh ~/your-project
-```
-
-This copies the full RW template bundle (prompts, smoke modules, scripts, and `.ai` structural files) into your project:
-
-```
-your-project/
-├── .github/agents/
-│   └── rw-orchestrator.agent.md
-├── .github/prompts/           # 9 orchestration prompts + orchestrator phase subagent prompts + rw-smoke-test
-│   ├── rw-init.prompt.md
-│   ├── rw-new-project.prompt.md
-│   ├── rw-onboard-project.prompt.md
-│   ├── rw-doctor.prompt.md
-│   ├── rw-feature.prompt.md
-│   ├── rw-plan.prompt.md
-│   ├── rw-run.prompt.md
-│   ├── rw-review.prompt.md
-│   ├── rw-archive.prompt.md
-│   ├── rw-smoke-test.prompt.md
-│   ├── orchestrator/
-│   │   ├── rw-orchestrator-feature-phase.subagent.md
-│   │   └── rw-orchestrator-plan-phase.subagent.md
-│   ├── shared/
-│   │   ├── RW-INTERACTIVE-POLICY.md
-│   │   └── RW-TARGET-ROOT-RESOLUTION.md
-│   └── smoke/
-├── scripts/
-│   ├── rw
-│   ├── orchestration/
-│   │   ├── rw-resolve-target-root.sh
-│   │   ├── rw-bootstrap-scaffold.sh
-│   │   └── rw-target-registry.sh
-│   ├── validation/
-│   │   ├── validate-smoke-result.sh
-│   │   └── check-prompts.mjs
-└── .ai/                       # Template source files (runtime dirs/files are created during execution)
-    ├── CONTEXT.md             # Language policy & parser tokens
-    ├── GUIDE.md               # Operational guide
-    ├── features/
-    │   ├── FEATURE-TEMPLATE.md
-    │   └── README.md
-    └── templates/
-        ├── CONTEXT-BOOTSTRAP.md
-        ├── PROJECT-CHARTER-TEMPLATE.md
-        ├── BOOTSTRAP-FEATURE-TEMPLATE.md
-        └── SMOKE-RESULT-SCHEMA.json
-```
-
-### Option 2: Manual Copy
-
-Copy these paths from this repo into your project:
-- `.github/prompts/*.prompt.md` (all `rw-*.prompt.md` files, including `rw-smoke-test.prompt.md`)
 - `.github/prompts/orchestrator/rw-orchestrator-feature-phase.subagent.md`
 - `.github/prompts/orchestrator/rw-orchestrator-plan-phase.subagent.md`
-- `.github/agents/rw-orchestrator.agent.md`
-- `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`
+
+## Scripts
+
+Core:
+
+- `scripts/orchestration/rw-bootstrap-scaffold.sh`
+- `scripts/orchestration/rw-resolve-target-root.sh`
+- `scripts/rw-smoke-test.sh`
+- `scripts/validation/check-prompts.mjs`
+
+Support:
+
+- `scripts/rw` (`status`, `next`)
+- `scripts/validation/validate-smoke-result.sh`
+- `scripts/template/extract-template.sh`
+
+## Quick Start
+
+1. Extract template into a target repository:
+
+```bash
+./scripts/template/extract-template.sh /path/to/target
+cd /path/to/target
+```
+
+2. Use either:
+   - `rw-orchestrator` (single-entry autonomous flow), or
+   - manual flow: `rw-new-project` -> `rw-plan` -> `rw-run` -> `rw-review`
+
+3. For existing repositories, start with:
+   - `rw-onboard-project` -> `rw-feature` -> `rw-plan` -> `rw-run` -> `rw-review`
+
+## Target Root Resolution
+
+All runtime prompts resolve target root through:
+
 - `.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md`
 - `scripts/orchestration/rw-resolve-target-root.sh`
-- `scripts/orchestration/rw-bootstrap-scaffold.sh`
-- `scripts/orchestration/rw-target-registry.sh`
-- `scripts/rw`
-- `scripts/validation/validate-smoke-result.sh`
-- `scripts/validation/check-prompts.mjs`
-- `.ai/CONTEXT.md`
-- `.ai/GUIDE.md`
-- `.ai/features/FEATURE-TEMPLATE.md`
-- `.ai/features/README.md`
-- `.ai/templates/CONTEXT-BOOTSTRAP.md`
-- `.ai/templates/PROJECT-CHARTER-TEMPLATE.md`
-- `.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md`
-- `.ai/templates/SMOKE-RESULT-SCHEMA.json`
 
-Then create empty directories: `.ai/tasks/`, `.ai/notes/`, `.ai/progress-archive/`, `.ai/runtime/rw-targets/`
-
-`rw-plan` creates `.ai/plans/<plan-id>/` automatically when the first plan batch runs.
-
-### After Extraction
-
-1. Open your project in VS Code with GitHub Copilot
-2. Open Copilot Chat and choose one entry prompt:
-   - **`rw-new-project`** for new/empty repos (scaffolding + lightweight project-direction discovery + bootstrap feature seed generation)
-   - **`rw-onboard-project`** for existing codebases (language-agnostic codebase detection + `PLAN` snapshot + handoff to `rw-feature`)
-   - `rw-new-project` uses `scripts/orchestration/rw-bootstrap-scaffold.sh` as the default scaffold path.
-   - Entry prompts refresh target pointers automatically:
-     - `workspace-root/.ai/runtime/rw-active-target-id.txt` -> `workspace-root`
-     - `workspace-root/.ai/runtime/rw-targets/workspace-root.env` -> `TARGET_ROOT=<workspace-root>`
-     - `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
-   - `rw-new-project` discovery is adaptive: ask intent first, then generate only high-impact follow-up questions from that intent (safe defaults for unanswered items)
-3. New/empty path only: run **`rw-plan`** to generate bootstrap tasks from the seeded bootstrap feature
-   - For quick smoke tests, set `Planning Profile: FAST_TEST` in the target feature file before running `rw-plan` (generates 2-3 tasks).
-4. Run **`rw-run`** to implement tasks (auto preflight runs once before loop)
-5. Run **`rw-review`** to validate the completed batch
-6. If review leaves pending tasks, re-run **`rw-run`** and then run **`rw-review`** again
-7. Run **`rw-feature`** to define additional product features (or first feature after `rw-onboard-project`)
-8. Run **`rw-plan`** to generate tasks for that feature
-9. Run **`rw-run`**, then run **`rw-review`**
-10. Optional: if you only need scaffold-only setup, run **`rw-init`** instead of step 2
-   - `rw-init` refreshes the same target-pointer trio as `rw-new-project`
-
-### Target Root Resolution
-
-`rw-doctor`, `rw-run`, `rw-review`, and `rw-archive` resolve target root in this order:
-1. `workspace-root/.ai/runtime/rw-active-target-id.txt`
-2. `workspace-root/.ai/runtime/rw-targets/<target-id>.env` (`TARGET_ROOT=...`)
-3. `workspace-root/.ai/runtime/rw-active-target-root.txt` (legacy fallback)
-
-Shared resolver script:
+Default resolution:
 
 ```bash
-./scripts/orchestration/rw-resolve-target-root.sh "$(pwd)"
+./scripts/orchestration/rw-resolve-target-root.sh resolve-active "$(pwd)"
 ```
 
-Resolver contract reference:
-- `.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md`
-
-Manual target switch from workspace root:
+Set active target explicitly:
 
 ```bash
-./scripts/orchestration/rw-target-registry.sh set-active "$(pwd)" my-project "/absolute/path/to/project"
-./scripts/orchestration/rw-target-registry.sh resolve-active "$(pwd)"
+./scripts/orchestration/rw-resolve-target-root.sh set-active "$(pwd)" my-project "/absolute/path/to/project"
 ```
 
-If VS Code workspace root and actual target project root are different, update active target id + registry first, then keep legacy pointer synchronized for compatibility.
+## Helper Script
 
-### Workflow Helper Commands
-
-Use the lightweight helper script to check current state and next action:
+`scripts/rw` is intentionally minimal:
 
 ```bash
 ./scripts/rw status
 ./scripts/rw next
-./scripts/rw go
-./scripts/rw approve-plan
 ```
 
-Optional workspace-root override:
+It reads active workspace state and prints `NEXT_COMMAND` recommendations.
+
+## Validation
+
+Prompt contract validation:
 
 ```bash
-./scripts/rw status /absolute/path/to/workspace-root
-./scripts/rw next /absolute/path/to/workspace-root
-./scripts/rw go /absolute/path/to/workspace-root
+node scripts/validation/check-prompts.mjs
 ```
 
-Single-command prompt aliases:
+End-to-end smoke validation:
 
 ```bash
-./scripts/rw orchestrator
-./scripts/rw new
-./scripts/rw onboard
-./scripts/rw init
-./scripts/rw doctor
-./scripts/rw feature
-./scripts/rw plan
-./scripts/rw run
-./scripts/rw review
-./scripts/rw archive
-./scripts/rw smoke
-./scripts/rw approve-plan
+./scripts/rw-smoke-test.sh
 ```
 
-`./scripts/rw smoke` targets the bundled Node.js/TypeScript example flow (`npm run build`, `node dist/index.js ...`).
-
-`rw next` prints machine-readable recommendation tokens:
-- `NEXT_COMMAND=<rw-new-project|rw-onboard-project|rw-feature|rw-plan|rw-run|rw-review|rw-archive>`
-- `NEXT_REASON=<reason-token>`
-
-`rw go` resolves `NEXT_COMMAND` and prints mapped prompt dispatch info:
-- `COPILOT_PROMPT=<rw-*.prompt target>` or `COPILOT_AGENT=<rw-orchestrator>`
-- `PROMPT_FILE=<workspace/.github/prompts/...>` or `AGENT_FILE=<workspace/.github/agents/...>`
-
-### Verification Guidance
-
-This branch intentionally removes bundled Copilot test prompts (`copilot-rw-*`) to keep operations minimal.
-For verification, run the core flow directly in Copilot Chat:
-
-1. `rw-new-project` (new/empty) or `rw-onboard-project -> rw-feature` (existing)
-2. `rw-plan`
-3. `rw-run`
-4. `rw-review` (batch review after run)
-5. `rw-feature`
-6. `rw-plan`
-7. `rw-run`
-8. `rw-review`
-
-Task verification convention:
-- Put command tags in each task's `Verification` section:
-  - `[unit] <command>`
-  - `[integration] <command>`
-  - `[acceptance] <command>`
-- For behavior-changing tasks, include both `[unit]` and `[acceptance]`.
-
-### Default Operation Path (Single Path)
-
-- Default path (always start here):
-  - `rw-new-project -> rw-plan -> rw-run -> rw-review`
-- Existing codebase start path:
-  - `rw-onboard-project -> rw-feature -> rw-plan -> rw-run -> rw-review`
-- Continue feature work with:
-  - `rw-feature -> rw-plan -> rw-run -> rw-review`
-- Use exception prompts only when needed:
-  - `rw-doctor`: only when checking preflight blockers explicitly
-  - `rw-archive`: only when archive thresholds stop `rw-run`
-
-### Failure Triage (3 Groups)
-
-- `ENV` (environment/tooling/root resolution)
-  - Examples: `RW_ENV_UNSUPPORTED`, `TOP_LEVEL_REQUIRED`, `RW_TARGET_ROOT_INVALID`, `GIT_REPO_MISSING`
-  - Action: fix environment/root/tool availability first, then rerun same command.
-- `FLOW` (workflow order/state mismatch)
-  - Examples: `FEATURE_NOT_READY`, `FEATURE_FILE_MISSING`, `RW_TASK_DEPENDENCY_BLOCKED`, `REVIEW_BLOCKED`
-  - Action: follow `NEXT_COMMAND` and correct status/order before rerun.
-- `DATA` (workspace file readability/format)
-  - Examples: `LANG_POLICY_MISSING`, `RW_CORE_FILE_UNREADABLE`
-  - Action: restore required files/headers/tokens, then rerun.
-
-### Fast Test Default
-
-- For test runs, treat `Planning Profile: FAST_TEST` as the default.
-- Before `rw-plan`, set this line in the selected feature file:
-  - `Planning Profile: FAST_TEST`
-- This keeps planning output in the 2-3 task range for quick validation cycles.
-
-## Orchestration File Reference
-
-### Prompts (`.github/prompts/`)
-
-| Prompt | Purpose |
-|---|---|
-| [`rw-new-project`](.github/prompts/rw-new-project.prompt.md) | Integrated new-project init (`rw-init` + low-friction discovery + bootstrap feature seed generation) |
-| [`rw-onboard-project`](.github/prompts/rw-onboard-project.prompt.md) | Existing-codebase onboarding (language-agnostic codebase detection + `PLAN` snapshot + handoff to `rw-feature`) |
-| [`rw-init`](.github/prompts/rw-init.prompt.md) | Scaffold-only fallback initialization (non-interactive) |
-| [`rw-doctor`](.github/prompts/rw-doctor.prompt.md) | Standalone preflight check for top-level/runSubagent/git/.ai readiness and PASS-stamp write |
-| [`rw-feature`](.github/prompts/rw-feature.prompt.md) | Create feature specification files |
-| [`rw-plan`](.github/prompts/rw-plan.prompt.md) | Generate task breakdown for one READY_FOR_PLAN feature |
-| [`rw-run`](.github/prompts/rw-run.prompt.md) | Orchestration loop for implementation subagent dispatch (target-root pointer file) |
-| [`rw-review`](.github/prompts/rw-review.prompt.md) | Manual reviewer rules for subagent-backed batch validation, normalized `REVIEW_STATUS`, and one review phase note artifact |
-| [`rw-archive`](.github/prompts/rw-archive.prompt.md) | Archive completed progress |
-
-### Workspace (`.ai/`)
-
-| File | Role |
-|---|---|
-| [`CONTEXT.md`](.ai/CONTEXT.md) | Language policy & machine-parseable tokens (read by every orchestration prompt `rw-*` at Step 0) |
-| [`GUIDE.md`](.ai/GUIDE.md) | Operational guide for the RW workflow |
-| [`PLAN.md`](.ai/PLAN.md) | Workspace metadata + append-only Feature Notes (`rw-new-project` creates/updates overview, `rw-plan` appends feature notes) |
-| [`PROGRESS.md`](.ai/PROGRESS.md) | Task status & execution log (`rw-new-project` or `rw-init` creates skeleton, `rw-plan`/`rw-run` update entries) |
-| `tasks/TASK-XX-*.md` | Individual task definitions (bootstrap and additional feature tasks are created by `rw-plan`) |
-| `features/*.md` | Feature specifications (bootstrap feature may be created by `rw-new-project`; additional ones are created by `rw-feature`) |
-| `notes/*.md` | Phase notes created by orchestration (`RUN-PHASE-*`, `REVIEW-PHASE-*`, project charter notes) |
-| `progress-archive/*.md` | Archived progress snapshots created by `rw-archive` |
-| `runtime/rw-active-target-id.txt`, `runtime/rw-targets/*.env`, `runtime/rw-active-target-root.txt` | Target-root pointer set used by `rw-doctor` / `rw-run` / `rw-review` / `rw-archive` |
-| `runtime/rw-active-plan-id.txt` | Active plan pointer written by `rw-plan` / orchestrator plan phase |
-| `plans/<plan-id>/` | Plan artifacts (`research_findings_<slug>.yaml`, `plan-summary.yaml`) |
-
-### Safety Mechanisms
-
-- **Step 0** — Every orchestration prompt (`rw-*`) reads `.ai/CONTEXT.md` first; fails with `LANG_POLICY_MISSING` if missing
-- **rw-doctor** — Standalone preflight diagnostic for top-level turn, runSubagent availability, git readiness, and `.ai` structure
-- **RW_DOCTOR_AUTORUN_BEGIN / RW_DOCTOR_AUTORUN_PASS** — `rw-run` auto-preflight path that runs once before each loop execution
-- **PAUSE.md** — Create `.ai/PAUSE.md` to halt the orchestration loop
-- **ARCHIVE_LOCK** — Prevents concurrent archive operations
-- **REVIEW-ESCALATE** — 3 consecutive review failures trigger escalation and require manual intervention
-- **RW_ENV_UNSUPPORTED** — Explicit signal that autonomous mode is unavailable in the current environment
-- **RW_TARGET_ROOT_INVALID** — Target root pointer is invalid (empty/non-absolute/missing path)
-- **PLAN_APPROVAL_REQUIRED** — Optional plan-approval gate is ON and no valid approval stamp is present (`./scripts/rw approve-plan`)
-- **rw-run Dispatch Guard** — One subagent dispatch must complete exactly one locked task (`LOCKED_TASK_ID`)
-- **VERIFICATION_EVIDENCE** — Run subagent must append verification evidence per completed task (`UNIT|INTEGRATION|ACCEPTANCE`)
-
-### Next Command Contract
-
-- Every operational prompt (`rw-*`) should end with one machine-readable line:
-  - `NEXT_COMMAND=<prompt-name-or-action>`
-- Follow `NEXT_COMMAND` as the primary next step signal for the workflow.
-
-## Example: Todo CLI
-
-This repository includes a complete Todo CLI app as a working example of the RW technique in action. The entire app was built autonomously — from project init to error handling to documentation — across 20 tasks and 70+ commits.
-
-### Quick Start (Example App)
+Result schema check (used by smoke script):
 
 ```bash
-git clone https://github.com/karais89/copilot-ralph-wiggum-example.git
-cd copilot-ralph-wiggum-example
-npm install
-npm run build
-npm link    # optional: enables global 'todo' command
+./scripts/validation/validate-smoke-result.sh <last-result.json> .ai/templates/SMOKE-RESULT-SCHEMA.json
 ```
 
-### Commands
+## Notes
 
-```bash
-todo add "Buy groceries"     # Add a new todo
-todo list                    # List all todos
-todo done <id>               # Toggle completion
-todo delete <id>             # Delete a todo
-todo stats                   # Show statistics
-todo stats --json            # Machine-readable JSON output
-todo clear                   # Remove completed todos
-todo export                  # Export all todos to todos.csv
-todo export mylist.csv       # Export to a custom file path
-```
-
-```bash
-# Export all todos to CSV
-todo export
-todo export mylist.csv
-```
-
-### Tech Stack
-
-- Node.js (>=18), TypeScript (strict), Commander.js, nanoid
-- Local JSON storage (`data/todos.json`)
-- Vitest for testing
-
-### Development Scripts
-
-```bash
-npm run build   # Compile TypeScript
-npm run dev     # Run with tsx (dev mode)
-npm test        # Run tests
-```
-
-## Requirements
-
-- **VS Code** with **GitHub Copilot** (Copilot Chat with `runSubagent` support)
-- For the example Todo CLI: Node.js >= 18
-
-## License
-
-MIT
-
-## Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests.
+- Machine tokens in `.ai/CONTEXT.md` are part of contract and must remain unchanged.
+- `rw-run` keeps one-dispatch/one-completion and verification-evidence invariants.
+- `rw-review` remains the single place for batch review state transitions.

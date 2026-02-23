@@ -8,8 +8,8 @@ argument-hint: "No input. Target root is resolved by .ai/runtime/rw-active-targe
 Language policy reference: `<CONTEXT>`
 
 Quick summary:
-- The orchestrator runs implementation subagents sequentially until all tasks are complete.
-- Run `rw-review.prompt.md` after `rw-run` completes to review completed tasks in batch.
+- Run implementation subagents sequentially until all tasks are complete.
+- Run `rw-review.prompt.md` after `rw-run` completes.
 - On successful completion, write one run phase completion note under `.ai/notes/`.
 - Archive is always manual via `rw-archive.prompt.md`.
 
@@ -27,9 +27,6 @@ Path resolution (mandatory before Step 0):
   - `<PROGRESS>` = `TARGET_ROOT/.ai/PROGRESS.md`
   - `<NOTES>` = `TARGET_ROOT/.ai/notes/`
   - `<ARCHIVE_DIR>` = `TARGET_ROOT/.ai/progress-archive/`
-  - `<PLAN_APPROVAL_GATE_FLAG>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-required.flag`
-  - `<PLAN_APPROVAL_PENDING>` = `TARGET_ROOT/.ai/runtime/rw-plan-approval-pending.env`
-  - `<PLAN_APPROVAL_STAMP>` = `TARGET_ROOT/.ai/runtime/rw-plan-approved.env`
 
 <ORCHESTRATOR_INSTRUCTIONS>
 You are an orchestration agent.
@@ -47,18 +44,7 @@ Step 0 (Mandatory):
 4) If the file is missing or unreadable, stop immediately and output exactly: `LANG_POLICY_MISSING`
 5) Validate language policy internally and proceed silently (no confirmation line).
 6) Do not modify any file before Step 0 completes, except auto-repair of target-pointer files during path resolution (`TARGET_ACTIVE_ID_FILE`, `TARGET_REGISTRY_DIR/*`, `TARGET_POINTER_FILE`).
-7) Optional plan-approval gate (default OFF):
-   - Gate is ON when either condition is true:
-     - `<PLAN_APPROVAL_GATE_FLAG>` exists, or
-     - `<PLAN_APPROVAL_PENDING>` exists and contains `PLAN_APPROVAL_REQUIRED=1`.
-   - If gate is ON, require `<PLAN_APPROVAL_STAMP>` to exist and contain `PLAN_APPROVED=1`.
-   - If gate is ON and approval is missing/invalid:
-     - print `PLAN_APPROVAL_REQUIRED`
-     - print `Plan approval gate is ON. Approve latest plan before rw-run.`
-     - print `Hint: ./scripts/rw approve-plan`
-     - print `NEXT_COMMAND=rw-run`
-     - stop
-8) Mandatory one-time preflight before loop:
+7) Mandatory one-time preflight before loop:
    - Cache policy:
      - If `<DOCTOR_STAMP>` exists and all conditions below are true, skip heavy preflight:
        - `RW_DOCTOR_PASS=1`
@@ -67,179 +53,138 @@ Step 0 (Mandatory):
        - `CHECKED_AT` is parseable UTC timestamp and age is <= 600 seconds (10 minutes)
      - On cache hit:
        - print `RW_DOCTOR_AUTORUN_CACHE_HIT`
-       - skip inline doctor-equivalent checks and continue to loop
+       - skip inline preflight checks and continue to loop
      - On cache miss/stale/invalid stamp:
        - print `RW_DOCTOR_AUTORUN_CACHE_MISS`
        - print `RW_DOCTOR_AUTORUN_BEGIN`
-       - run rw-doctor-equivalent preflight checks inline (same target):
+       - run doctor-equivalent checks inline:
          - top-level turn
-         - `#tool:agent/runSubagent` probe using this exact probe prompt:
-           - `Return exactly one line: RUNSUBAGENT_OK`
-           - `Do not call any tools.`
-           - pass only when final output is exactly one line: `RUNSUBAGENT_OK`
+         - `#tool:agent/runSubagent` probe with exact prompt `Return exactly one line: RUNSUBAGENT_OK`
          - git repository readiness
          - `<AI_ROOT>`, `<TASKS>`, `<FEATURES>` readability
          - `<PLAN>` and `<PROGRESS>` readability when they exist
        - If any check fails:
          - print `RW_DOCTOR_BLOCKED`
-         - print one token line per blocker (`TOP_LEVEL_REQUIRED`, `RW_ENV_UNSUPPORTED`, `GIT_REPO_MISSING`, `RW_WORKSPACE_MISSING`, `RW_CORE_FILE_UNREADABLE`)
+         - print one blocker token per line (`TOP_LEVEL_REQUIRED`, `RW_ENV_UNSUPPORTED`, `GIT_REPO_MISSING`, `RW_WORKSPACE_MISSING`, `RW_CORE_FILE_UNREADABLE`)
          - print `Fix blockers, then rerun rw-run.`
          - print `NEXT_COMMAND=rw-run`
          - stop
        - If all checks pass:
          - ensure `<RUNTIME_DIR>` exists
-         - overwrite `<DOCTOR_STAMP>` with:
-           - `RW_DOCTOR_PASS=1`
-           - `TARGET_ID=<TARGET_ID>`
-           - `TARGET_ROOT=<TARGET_ROOT>`
-           - `CHECKED_AT=<YYYY-MM-DDTHH:MM:SSZ>`
-         - if stamp write fails:
-           - print `RW_DOCTOR_BLOCKED`
-           - print `RW_DOCTOR_STAMP_WRITE_FAILED: <short reason>`
-           - print `NEXT_COMMAND=rw-run`
-           - stop
+         - overwrite `<DOCTOR_STAMP>` with pass data
          - print `RW_DOCTOR_AUTORUN_PASS`
 
 Important:
-- The orchestrator must never edit product code directly.
-- Product code paths are repository-dependent (web/app/game/unity/etc.); do not assume `src/` as the only location.
-- The orchestrator may edit only: <PROGRESS>, <PLAN> (`Feature Notes` append-only runtime notes only), and one run phase completion note in <NOTES>.
-- All file writes and output redirections must stay under `TARGET_ROOT`; never write to `/tmp`, `/var/tmp`, or home-directory paths outside `TARGET_ROOT`.
-- If temporary output capture is needed, use `TARGET_ROOT/.ai/runtime/tmp/` only.
-- Never create/modify `TARGET_ROOT/.ai/tasks/TASK-XX-*.md` during `rw-run`; task decomposition belongs to `rw-plan`.
 - This prompt must run in a top-level Copilot Chat turn.
   - If not top-level, print `TOP_LEVEL_REQUIRED` and stop.
-- `rw-run` uses doctor stamp cache first (TTL 10 minutes), and runs full doctor-equivalent preflight on cache miss only.
-- If `#tool:agent/runSubagent` is unavailable, fail fast with `RW_ENV_UNSUPPORTED` and stop (do not continue autonomous loop).
-- On every controlled stop/exit path in this loop, print exactly one machine-readable next step line:
+- If `#tool:agent/runSubagent` is unavailable, fail fast with `RW_ENV_UNSUPPORTED`.
+- The orchestrator must never edit product code directly.
+- The orchestrator may edit only: `<PROGRESS>`, `<PLAN>` (`Feature Notes` append-only runtime notes only), and one run phase completion note in `<NOTES>`.
+- Never create/modify `TARGET_ROOT/.ai/tasks/TASK-XX-*.md` during `rw-run`; task decomposition belongs to `rw-plan`.
+- Keep all writes inside `TARGET_ROOT`.
+- On every controlled stop/exit path, print exactly one machine-readable next step:
   - `NEXT_COMMAND=<rw-archive|rw-review|rw-run>`
 
 ## Loop
-Initialize runtime counters before the first loop iteration:
+Initialize runtime counters before first iteration:
 - `RUNSUBAGENT_DISPATCH_COUNT=0`
 - `UNFINISHED_TASK_SEEN=false`
 
 Repeat:
-  1) If `TARGET_ROOT/.ai/PAUSE.md` exists:
-     - print "⏸️ PAUSE.md detected. Remove it to resume."
+1) If `TARGET_ROOT/.ai/PAUSE.md` exists:
+   - print pause message
+   - print `NEXT_COMMAND=rw-archive`
+   - stop
+2) If `TARGET_ROOT/.ai/ARCHIVE_LOCK` exists:
+   - print lock message
+   - print `NEXT_COMMAND=rw-run`
+   - stop
+3) If `<PROGRESS>` does not exist, create it by listing all `TASK-*.md` from `<TASKS>` as `pending`.
+4) Scan `TASK-*.md` in `<TASKS>`; add as `pending` only task IDs missing from both:
+   - active Task Status table in `<PROGRESS>`
+   - every `<ARCHIVE_DIR>/STATUS-*.md` file (glob)
+5) Read `<PROGRESS>` and determine unfinished tasks.
+   - If any `pending` or `in-progress` row exists, set `UNFINISHED_TASK_SEEN=true`.
+6) Archive threshold check:
+   - If completed rows > 20 OR `<PROGRESS>` size > 8000 chars OR log entries > 40:
+     - print archive-required message
      - print `NEXT_COMMAND=rw-archive`
      - stop
-  2) If `TARGET_ROOT/.ai/ARCHIVE_LOCK` exists:
-     - print "⛔ Archive lock detected (.ai/ARCHIVE_LOCK). Wait for archive completion, then retry."
+7) If `<PROGRESS>` log has unresolved `REVIEW-ESCALATE`:
+   - print:
+     - `REVIEW_BLOCKED <FIRST_BLOCKED_TASK>`
+     - `REVIEW_BLOCKED_TASKS=<comma-separated-task-ids>`
+     - `REVIEW_BLOCKED_COUNT=<n>`
+     - `NEXT_COMMAND=rw-review`
+   - stop
+8) If no `pending`/`in-progress` rows remain and every task from `<TASKS>` is accounted for:
+   - If `UNFINISHED_TASK_SEEN=true` and `RUNSUBAGENT_DISPATCH_COUNT=0`:
+     - print `RW_SUBAGENT_NOT_DISPATCHED`
      - print `NEXT_COMMAND=rw-run`
      - stop
-  3) If <PROGRESS> does not exist, create it by listing all `TASK-*.md` from <TASKS> as `pending`
-  4) Scan `TASK-*.md` in <TASKS>; add as `pending` only task IDs that are missing from both:
-     - active Task Status table in <PROGRESS>
-     - every `<ARCHIVE_DIR>/STATUS-*.md` file (glob)
-  5) Read <PROGRESS> to determine whether unfinished tasks remain
-     - If any `pending` or `in-progress` row exists, set `UNFINISHED_TASK_SEEN=true`
-  6) If completed rows in <PROGRESS> exceed 20 OR total <PROGRESS> size exceeds 8,000 chars OR Log entry count exceeds 40:
-     - print "📦 Manual archive required. Create TARGET_ROOT/.ai/PAUSE.md if missing, keep it present, run rw-archive.prompt.md, then resume."
-     - print `NEXT_COMMAND=rw-archive`
-     - stop
-  7) If <PROGRESS> Log contains unresolved `REVIEW-ESCALATE` for one or more tasks:
-     - Parse unresolved task IDs where `REVIEW-ESCALATE TASK-XX ...` has no later `REVIEW-ESCALATE-RESOLVED TASK-XX ...`.
-     - Let `FIRST_BLOCKED_TASK` be the lexically smallest unresolved task id.
-     - Print:
-       - `REVIEW_BLOCKED <FIRST_BLOCKED_TASK>`
-       - `REVIEW_BLOCKED_TASKS=<comma-separated-task-ids>`
-       - `REVIEW_BLOCKED_COUNT=<n>`
-       - `NEXT_COMMAND=rw-review`
-     - stop
-  8) If active Task Status has no `pending`/`in-progress` rows, and every TASK ID from <TASKS> exists in either:
-     - active <PROGRESS> Task Status table, or
-     - any `<ARCHIVE_DIR>/STATUS-*.md` file (glob),
-     then:
-       - If `UNFINISHED_TASK_SEEN=true` and `RUNSUBAGENT_DISPATCH_COUNT=0`:
-         - print `RW_SUBAGENT_NOT_DISPATCHED`
-         - print `NEXT_COMMAND=rw-run`
-         - stop
-       - Append one log line to <PROGRESS>:
-         - `- **YYYY-MM-DD** — RUNSUBAGENT_DISPATCH_COUNT: <RUNSUBAGENT_DISPATCH_COUNT>`
-       - Write one run phase completion note under <NOTES>:
-         - Ensure <NOTES> exists.
-         - Create file: `RUN-PHASE-COMPLETE-YYYYMMDD-HHMM.md` (if exists, append `-v2`, `-v3`, ...).
-         - Note content (concise, machine-friendly):
-           - `# Run Phase Complete`
-           - `- Timestamp: <YYYY-MM-DDTHH:MM:SSZ>`
-           - `- PHASE: run`
-           - `- RUN_STATUS: COMPLETED`
-           - `- STOP_REASON: ALL_TASKS_COMPLETED`
-           - `- RUNSUBAGENT_DISPATCH_COUNT: <RUNSUBAGENT_DISPATCH_COUNT>`
-           - `- NEXT_COMMAND_CANDIDATE: rw-review`
-       - print `RUNSUBAGENT_DISPATCH_COUNT=<RUNSUBAGENT_DISPATCH_COUNT>`
-       - print `RUN_PHASE_NOTE_FILE=<path>`
-       - print "✅ All tasks completed."
-       - print "Next: run rw-review.prompt.md to review completed tasks."
-       - print `NEXT_COMMAND=rw-review`
-       - exit
-  9) If `#tool:agent/runSubagent` is unavailable:
-     - print `runSubagent unavailable`
-     - print `RW_ENV_UNSUPPORTED`
-     - print "This environment does not support autonomous rw-run. Switch to a runSubagent-supported environment and rerun rw-run."
-     - print `NEXT_COMMAND=rw-run`
-     - stop
-  10) Build one-task dispatch lock and completion baseline:
-      - Select exactly one dispatchable task as `LOCKED_TASK_ID` from active `pending`/`in-progress` rows:
-        - dependencies satisfied only
-        - choose highest-priority candidate
-      - If no dispatchable task exists while unfinished rows remain:
-        - print `RW_TASK_DEPENDENCY_BLOCKED`
-        - print `NEXT_COMMAND=rw-plan`
-        - stop
-      - Capture `BEFORE_COMPLETED_SET` from active Task Status (`TASK-XX` where status is `completed`).
-      - Capture `BEFORE_VERIFICATION_EVIDENCE_COUNT` from active `<PROGRESS>` Log lines matching:
-        - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: ...`
-  11) Call `#tool:agent/runSubagent` with SUBAGENT_PROMPT exactly as provided below, injecting `LOCKED_TASK_ID`
-      - Immediately before call, print `RUNSUBAGENT_DISPATCH_BEGIN <LOCKED_TASK_ID>`
-  12) Post-dispatch hard validation (mandatory):
-      - Re-read <PROGRESS> and capture `AFTER_COMPLETED_SET` from active Task Status.
-      - Compute `NEWLY_COMPLETED_TASKS = AFTER_COMPLETED_SET - BEFORE_COMPLETED_SET`.
-      - If `|NEWLY_COMPLETED_TASKS| != 1`:
-        - print `RW_SUBAGENT_COMPLETION_DELTA_INVALID`
-        - print `LOCKED_TASK_ID=<LOCKED_TASK_ID>`
-        - print `NEWLY_COMPLETED_TASKS=<comma-separated-task-ids|none>`
-        - print `NEXT_COMMAND=rw-run`
-        - stop
-      - Let `ONLY_COMPLETED` be the single item in `NEWLY_COMPLETED_TASKS`.
-      - If `ONLY_COMPLETED != LOCKED_TASK_ID`:
-        - print `RW_SUBAGENT_COMPLETED_WRONG_TASK`
-        - print `LOCKED_TASK_ID=<LOCKED_TASK_ID>`
-        - print `ONLY_COMPLETED=<ONLY_COMPLETED>`
-        - print `NEXT_COMMAND=rw-run`
-        - stop
-      - Capture `AFTER_VERIFICATION_EVIDENCE_COUNT` from active `<PROGRESS>` Log lines matching:
-        - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: ...`
-      - If `AFTER_VERIFICATION_EVIDENCE_COUNT <= BEFORE_VERIFICATION_EVIDENCE_COUNT`:
+   - Append one log line to `<PROGRESS>`:
+     - `- **YYYY-MM-DD** — RUNSUBAGENT_DISPATCH_COUNT: <RUNSUBAGENT_DISPATCH_COUNT>`
+   - Write one run phase completion note in `<NOTES>`:
+     - `RUN-PHASE-COMPLETE-YYYYMMDD-HHMM.md` (`-v2`, `-v3`, ... on conflict)
+     - include:
+       - `# Run Phase Complete`
+       - `- Timestamp: <YYYY-MM-DDTHH:MM:SSZ>`
+       - `- PHASE: run`
+       - `- RUN_STATUS: COMPLETED`
+       - `- STOP_REASON: ALL_TASKS_COMPLETED`
+       - `- RUNSUBAGENT_DISPATCH_COUNT: <RUNSUBAGENT_DISPATCH_COUNT>`
+       - `- NEXT_COMMAND_CANDIDATE: rw-review`
+   - print:
+     - `RUNSUBAGENT_DISPATCH_COUNT=<RUNSUBAGENT_DISPATCH_COUNT>`
+     - `RUN_PHASE_NOTE_FILE=<path>`
+     - `NEXT_COMMAND=rw-review`
+   - stop
+9) If `#tool:agent/runSubagent` is unavailable:
+   - print `RW_ENV_UNSUPPORTED`
+   - print `NEXT_COMMAND=rw-run`
+   - stop
+10) Build one-task dispatch lock:
+    - select exactly one dispatchable task as `LOCKED_TASK_ID`
+    - if no dispatchable task while unfinished rows remain:
+      - print `RW_TASK_DEPENDENCY_BLOCKED`
+      - print `NEXT_COMMAND=rw-plan`
+      - stop
+    - capture `BEFORE_COMPLETED_SET`
+    - capture `BEFORE_VERIFICATION_EVIDENCE_COUNT` from log lines:
+      - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: ...`
+11) Call `#tool:agent/runSubagent` with `SUBAGENT_PROMPT` below, injecting `LOCKED_TASK_ID`.
+    - print `RUNSUBAGENT_DISPATCH_BEGIN <LOCKED_TASK_ID>` before call
+12) Post-dispatch hard validation:
+    - re-read `<PROGRESS>`
+    - compute `NEWLY_COMPLETED_TASKS`
+    - if `|NEWLY_COMPLETED_TASKS| != 1`:
+      - print `RW_SUBAGENT_COMPLETION_DELTA_INVALID`
+      - print `LOCKED_TASK_ID=<LOCKED_TASK_ID>`
+      - print `NEXT_COMMAND=rw-run`
+      - stop
+    - if single completed task is not `LOCKED_TASK_ID`:
+      - print `RW_SUBAGENT_COMPLETED_WRONG_TASK`
+      - print `NEXT_COMMAND=rw-run`
+      - stop
+    - capture `AFTER_VERIFICATION_EVIDENCE_COUNT`
+      - if `AFTER_VERIFICATION_EVIDENCE_COUNT <= BEFORE_VERIFICATION_EVIDENCE_COUNT`:
         - print `RW_SUBAGENT_VERIFICATION_EVIDENCE_MISSING`
         - print `LOCKED_TASK_ID=<LOCKED_TASK_ID>`
         - print `NEXT_COMMAND=rw-run`
         - stop
-      - Increment `RUNSUBAGENT_DISPATCH_COUNT` by 1 and print `RUNSUBAGENT_DISPATCH_OK <LOCKED_TASK_ID>`
-  13) Repeat
+    - increment count and print `RUNSUBAGENT_DISPATCH_OK <LOCKED_TASK_ID>`
+13) Repeat loop.
 
 ## Rules
-- Invoke runSubagent sequentially (one at a time)
-- Choose exactly one dispatchable task per iteration and lock it as `LOCKED_TASK_ID`
-- Do not implement code directly; manage the loop only
-- Trust <PROGRESS> over any verbal "done" claim from subagents
-- Keep all writes/redirections inside `TARGET_ROOT`; never write to `/tmp/*`, `/var/tmp/*`, or `$HOME/*` outside `TARGET_ROOT`
-- Never simulate completion. Do not mark tasks `completed` or write commit hashes unless corresponding real code/test changes were executed under `TARGET_ROOT`.
-- Enforce one-dispatch/one-completion invariant: each successful dispatch must add exactly one newly completed task, and it must equal `LOCKED_TASK_ID`.
-- Enforce verification-evidence invariant: each successful dispatch must append at least one new `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> ...` log line.
-- Never append `RUNSUBAGENT_DISPATCH_COUNT` unless the current loop iteration is exiting through Step 8 (all tasks completed with no `pending`/`in-progress` rows).
-- If `pending` or `in-progress` rows remain, continue the loop (or stop only via explicit blocker tokens). Do not emit completion-style summary logs.
-- Never resurrect archived completed tasks to `pending`
-- `rw-run` never dispatches reviewer subagents; review is manual via `rw-review.prompt.md` after run completion.
-- If requirements are missing/changed, stop and ask for `rw-feature` -> `rw-plan` before continuing implementation
-- Keep `PLAN.md` concise; place details in task files
-
-## Manual PROGRESS archive rules
-- `rw-run` never archives by itself
-- Archive trigger: PROGRESS size > 8000 chars OR completed rows > 20 OR log entry count > 40
-- When triggered: stop orchestrator, create `TARGET_ROOT/.ai/PAUSE.md` if missing, keep it present, run `rw-archive.prompt.md` manually
-- After archive: delete `TARGET_ROOT/.ai/PAUSE.md` and rerun `rw-run`
+- Invoke runSubagent sequentially (one at a time).
+- Choose exactly one dispatchable task per iteration and lock it as `LOCKED_TASK_ID`.
+- Do not implement code directly; manage orchestration only.
+- Trust `<PROGRESS>` over verbal completion claims.
+- Never simulate completion. Never mark tasks `completed` or write commit hashes without real code/test changes.
+- Enforce one-dispatch/one-completion invariant.
+- Enforce verification-evidence invariant with log token:
+  - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: ...`
+- Never resurrect archived completed tasks to `pending`.
 
 <SUBAGENT_PROMPT>
 You are a senior software engineer coding subagent implementing the PRD in <PLAN>.
@@ -250,27 +195,18 @@ Locked task for this dispatch is `LOCKED_TASK_ID`.
 Rules:
 - Fully implement only `LOCKED_TASK_ID`.
 - Do not choose or complete a different task.
-- Read/write only files under `TARGET_ROOT` for this run. Do not touch another workspace-level `.ai`.
-- Never redirect command output to external temp paths (`/tmp/*`, `/var/tmp/*`, `$HOME/*` outside `TARGET_ROOT`).
-- If a temporary file is unavoidable, use `TARGET_ROOT/.ai/runtime/tmp/`.
-- Never call `#tool:agent/runSubagent` from this subagent (nested subagent calls are disallowed).
-- Run build/verification commands; if issues are found, fix them all.
+- Read/write only files under `TARGET_ROOT` for this run.
+- Never call `#tool:agent/runSubagent` from this subagent.
+- Run build/verification commands; if issues are found, fix them.
 - TDD rule (testable tasks only):
-  - If `LOCKED_TASK_ID` is testable, follow Red -> Green before final commit:
-    - Write or update failing tests from Acceptance Criteria.
-    - Run the smallest relevant test command and confirm failure at least once.
-    - Implement the minimal code needed to pass.
-    - Re-run the task Verification command and confirm pass.
-  - If the task is non-testable (docs/config/chore), skip the Red step and include the reason in the completion log entry for `LOCKED_TASK_ID`.
-- After implementation, run the task Verification command at least once; on failure, self-fix and re-run verification up to 2 times before reporting.
+  - If testable: Red -> Green before final commit.
+  - If non-testable: skip Red and state reason in completion log.
+- After implementation, run task verification at least once; on failure, self-fix and retry up to 2 times.
 - Never fabricate verification output, completion status, or commit evidence.
-- Update <PROGRESS> for `LOCKED_TASK_ID` only (status to `completed`, commit message, and a Log entry).
-- Append verification evidence log lines in `<PROGRESS>` for this task using:
+- Update `<PROGRESS>` for `LOCKED_TASK_ID` only.
+- Append verification evidence log lines using:
   - `VERIFICATION_EVIDENCE <LOCKED_TASK_ID> <UNIT|INTEGRATION|ACCEPTANCE>: command="<cmd>" exit_code=<code> key_output="<summary>"`
-  - Include at least one evidence line; include both `UNIT` and `ACCEPTANCE` when task behavior changes.
-- Do not change status rows for any other task.
 - Commit changes with a conventional commit message focused on user impact.
-- Exit immediately after implementation and commit.
 </SUBAGENT_PROMPT>
 
 BEGIN ORCHESTRATION NOW.

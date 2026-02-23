@@ -41,7 +41,10 @@ You will ONLY edit these files:
 - `<ARCHIVE_DIR>/README.md` (optional)
 
 Rules:
-- Interactive fallback must follow `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+- Interactive fallback policy:
+  - try `#tool:vscode/askQuestions` once
+  - if unavailable, ask equivalent question in chat once
+  - if still unresolved, follow prompt-specific cancel/stop behavior
 - On every exit path, print one final machine-readable line:
   - `NEXT_COMMAND=<rw-run|rw-archive>`
 - First, inspect active `<PROGRESS>` and compute:
@@ -55,7 +58,7 @@ Rules:
 - If `archive_needed=false`, resolve force-run once via `#tool:vscode/askQuestions` single choice (in resolved user-document language from `<CONTEXT>`):
   - `Force archive now`
   - `Skip archive (recommended)`
-  - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+  - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback.
   - If `Force archive now` is selected, set `force_archive=true` and continue.
   - If `Skip archive` is selected or no valid selection is obtained after that single interaction:
     - do not create `<ARCHIVE_LOCK>`
@@ -68,7 +71,7 @@ Rules:
   - If `<PAUSE>` is missing, resolve once via `#tool:vscode/askQuestions` single choice (in resolved user-document language from `<CONTEXT>`):
     - `Create TARGET_ROOT/.ai/PAUSE.md and continue rw-archive`
     - `Cancel`
-  - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+  - If `#tool:vscode/askQuestions` is unavailable, apply one-time chat fallback.
   - If user selects create, create `<PAUSE>` with:
     - one timestamp line
     - one ownership marker line: `created-by: rw-archive-preflight`

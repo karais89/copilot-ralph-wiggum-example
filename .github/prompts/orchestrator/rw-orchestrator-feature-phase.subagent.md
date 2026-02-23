@@ -23,7 +23,7 @@ Rules:
 - Summary resolution (user-first):
   - Use provided `FEATURE_SUMMARY` first.
   - Treat summary as unresolved only when it is empty.
-  - If unresolved and `NON_INTERACTIVE_MODE=false`, use Round A budget to ask one open-ended summary question via `#tool:vscode/askQuestions` in the resolved user-document language (fallback once per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`).
+  - If unresolved and `NON_INTERACTIVE_MODE=false`, use Round A budget to ask one open-ended summary question via `#tool:vscode/askQuestions` in the resolved user-document language (fallback to one chat question once when unavailable).
   - If unresolved and `NON_INTERACTIVE_MODE=true`, infer a minimal summary from latest `<PLAN>` overview or `TARGET_ROOT/README.md`; if both are unavailable, use: `Add a minimal improvement to the existing codebase.`
   - If still unresolved, print `FEATURE_SUMMARY_MISSING` and `NEXT_COMMAND=rw-feature`, then stop.
 - Need-gate (HITL priority):
@@ -32,7 +32,7 @@ Rules:
   - If `NON_INTERACTIVE_MODE=false` and any critical field is missing or ambiguous, run staged clarification:
     - Round A (up to 3 questions): confirm/fill `User`, `Trigger / Situation`, `Problem`, `Desired Outcome`.
     - Round B (up to 2 questions): only if still ambiguous after Round A; confirm completion signal and out-of-scope boundary needed for planning.
-    - Use `#tool:vscode/askQuestions`; if unavailable, apply one-time chat fallback exactly per `.github/prompts/shared/RW-INTERACTIVE-POLICY.md`.
+    - Use `#tool:vscode/askQuestions`; if unavailable, apply one-time chat fallback.
     - Prefer explicit user answers over inferred assumptions.
     - If the budget is exhausted and critical fields remain unresolved, stop with insufficiency tokens below.
   - If `NON_INTERACTIVE_MODE=true`, infer from repository evidence first and mark assumptions under `## Notes`.

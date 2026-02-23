@@ -3,21 +3,12 @@
 # extract-template.sh
 #
 # Extracts the Ralph Wiggum orchestration template files into a target directory.
-# The extracted files can be dropped into any new project to enable the RW workflow.
-#
-# Usage:
-#   ./scripts/template/extract-template.sh <target-directory>
-#
-# Example:
-#   ./scripts/template/extract-template.sh ~/my-new-project
-#   cd ~/my-new-project && git init
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# --- Argument check ---
 if [ $# -lt 1 ]; then
   echo "Usage: $0 <target-directory>"
   echo ""
@@ -37,7 +28,6 @@ if [ -d "$TARGET/.github/prompts" ] || [ -d "$TARGET/.github/agents" ] || [ -d "
   fi
 fi
 
-# --- Create directory structure ---
 echo "📁 Creating directory structure in $TARGET ..."
 
 mkdir -p "$TARGET/.github/prompts"
@@ -54,60 +44,52 @@ mkdir -p "$TARGET/.ai/notes"
 mkdir -p "$TARGET/.ai/progress-archive"
 mkdir -p "$TARGET/.ai/runtime/rw-targets"
 
-# --- Copy prompt files ---
 echo "📋 Copying orchestration prompts ..."
 
-cp "$REPO_ROOT/.github/prompts/rw-init.prompt.md"        "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-new-project.prompt.md" "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/rw-onboard-project.prompt.md" "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/rw-doctor.prompt.md"      "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/rw-feature.prompt.md"      "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/rw-plan.prompt.md"    "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/rw-run.prompt.md"     "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/rw-review.prompt.md"       "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/rw-archive.prompt.md"      "$TARGET/.github/prompts/"
-cp "$REPO_ROOT/.github/prompts/rw-smoke-test.prompt.md"   "$TARGET/.github/prompts/"
+cp "$REPO_ROOT/.github/prompts/rw-feature.prompt.md" "$TARGET/.github/prompts/"
+cp "$REPO_ROOT/.github/prompts/rw-plan.prompt.md" "$TARGET/.github/prompts/"
+cp "$REPO_ROOT/.github/prompts/rw-run.prompt.md" "$TARGET/.github/prompts/"
+cp "$REPO_ROOT/.github/prompts/rw-review.prompt.md" "$TARGET/.github/prompts/"
+cp "$REPO_ROOT/.github/prompts/rw-archive.prompt.md" "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/prompts/orchestrator/rw-orchestrator-feature-phase.subagent.md" "$TARGET/.github/prompts/orchestrator/"
 cp "$REPO_ROOT/.github/prompts/orchestrator/rw-orchestrator-plan-phase.subagent.md" "$TARGET/.github/prompts/orchestrator/"
-cp "$REPO_ROOT/.github/prompts/shared/RW-INTERACTIVE-POLICY.md"  "$TARGET/.github/prompts/shared/"
 cp "$REPO_ROOT/.github/prompts/shared/RW-TARGET-ROOT-RESOLUTION.md" "$TARGET/.github/prompts/shared/"
-cp -R "$REPO_ROOT/.github/prompts/smoke" "$TARGET/.github/prompts/"
 cp "$REPO_ROOT/.github/agents/rw-orchestrator.agent.md" "$TARGET/.github/agents/"
 
-# --- Copy shared utility scripts ---
 echo "🛠️  Copying shared utility scripts ..."
+
 cp "$REPO_ROOT/scripts/orchestration/rw-resolve-target-root.sh" "$TARGET/scripts/orchestration/"
 cp "$REPO_ROOT/scripts/orchestration/rw-bootstrap-scaffold.sh" "$TARGET/scripts/orchestration/"
-cp "$REPO_ROOT/scripts/orchestration/rw-target-registry.sh" "$TARGET/scripts/orchestration/"
 cp "$REPO_ROOT/scripts/rw" "$TARGET/scripts/"
+cp "$REPO_ROOT/scripts/rw-smoke-test.sh" "$TARGET/scripts/"
 cp "$REPO_ROOT/scripts/validation/validate-smoke-result.sh" "$TARGET/scripts/validation/"
 cp "$REPO_ROOT/scripts/validation/check-prompts.mjs" "$TARGET/scripts/validation/"
+
 chmod +x "$TARGET/scripts/orchestration/rw-resolve-target-root.sh"
 chmod +x "$TARGET/scripts/orchestration/rw-bootstrap-scaffold.sh"
-chmod +x "$TARGET/scripts/orchestration/rw-target-registry.sh"
 chmod +x "$TARGET/scripts/rw"
+chmod +x "$TARGET/scripts/rw-smoke-test.sh"
 chmod +x "$TARGET/scripts/validation/validate-smoke-result.sh"
 
-# --- Copy .ai structural files ---
 echo "📄 Copying .ai structural files ..."
 
-cp "$REPO_ROOT/.ai/CONTEXT.md"                   "$TARGET/.ai/"
-cp "$REPO_ROOT/.ai/GUIDE.md"                     "$TARGET/.ai/"
+cp "$REPO_ROOT/.ai/CONTEXT.md" "$TARGET/.ai/"
+cp "$REPO_ROOT/.ai/GUIDE.md" "$TARGET/.ai/"
 cp "$REPO_ROOT/.ai/features/FEATURE-TEMPLATE.md" "$TARGET/.ai/features/"
-cp "$REPO_ROOT/.ai/features/README.md"           "$TARGET/.ai/features/"
+cp "$REPO_ROOT/.ai/features/README.md" "$TARGET/.ai/features/"
 cp "$REPO_ROOT/.ai/templates/CONTEXT-BOOTSTRAP.md" "$TARGET/.ai/templates/"
 cp "$REPO_ROOT/.ai/templates/PROJECT-CHARTER-TEMPLATE.md" "$TARGET/.ai/templates/"
 cp "$REPO_ROOT/.ai/templates/BOOTSTRAP-FEATURE-TEMPLATE.md" "$TARGET/.ai/templates/"
 cp "$REPO_ROOT/.ai/templates/SMOKE-RESULT-SCHEMA.json" "$TARGET/.ai/templates/"
 
-# --- Add .gitkeep to empty directories ---
 touch "$TARGET/.ai/tasks/.gitkeep"
 touch "$TARGET/.ai/notes/.gitkeep"
 touch "$TARGET/.ai/progress-archive/.gitkeep"
 touch "$TARGET/.ai/runtime/.gitkeep"
 touch "$TARGET/.ai/runtime/rw-targets/.gitkeep"
 
-# --- Summary ---
 echo ""
 echo "✅ Ralph Wiggum template extracted to: $TARGET"
 echo ""
@@ -115,29 +97,21 @@ echo "Extracted files:"
 echo "  .github/agents/"
 echo "    rw-orchestrator.agent.md"
 echo "  .github/prompts/"
-echo "    rw-init.prompt.md"
 echo "    rw-new-project.prompt.md"
 echo "    rw-onboard-project.prompt.md"
-echo "    rw-doctor.prompt.md"
 echo "    rw-feature.prompt.md"
 echo "    rw-plan.prompt.md"
 echo "    rw-run.prompt.md"
 echo "    rw-review.prompt.md"
 echo "    rw-archive.prompt.md"
-echo "    rw-smoke-test.prompt.md"
 echo "    orchestrator/rw-orchestrator-feature-phase.subagent.md"
 echo "    orchestrator/rw-orchestrator-plan-phase.subagent.md"
-echo "    shared/RW-INTERACTIVE-POLICY.md"
 echo "    shared/RW-TARGET-ROOT-RESOLUTION.md"
-echo "    smoke/"
-echo "      SMOKE-CONTRACT.md"
-echo "      phases/phase-*.md"
-echo "      templates/*.subagent.md"
 echo "  scripts/"
 echo "    orchestration/rw-resolve-target-root.sh"
 echo "    orchestration/rw-bootstrap-scaffold.sh"
-echo "    orchestration/rw-target-registry.sh"
 echo "    rw"
+echo "    rw-smoke-test.sh"
 echo "    validation/validate-smoke-result.sh"
 echo "    validation/check-prompts.mjs"
 echo "  .ai/"
@@ -149,19 +123,16 @@ echo "    templates/CONTEXT-BOOTSTRAP.md"
 echo "    templates/PROJECT-CHARTER-TEMPLATE.md"
 echo "    templates/BOOTSTRAP-FEATURE-TEMPLATE.md"
 echo "    templates/SMOKE-RESULT-SCHEMA.json"
-echo "    tasks/           (empty)"
-echo "    notes/           (empty)"
+echo "    tasks/ (empty)"
+echo "    notes/ (empty)"
 echo "    progress-archive/ (empty)"
 echo "    runtime/rw-targets/ (empty)"
 echo ""
 echo "Next steps:"
 echo "  1. cd $TARGET"
 echo "  2. Open VS Code with Copilot Chat"
-echo "  3. Recommended: run rw-orchestrator agent from Agent Picker (optional arg: '--h <feature-summary>')"
-echo "  4. Manual flow alternative: rw-new-project -> rw-plan -> rw-run -> rw-review"
-echo "     - Existing-codebase path: rw-onboard-project -> rw-feature -> rw-plan."
-echo "     - Optional helper: ./scripts/rw next (or ./scripts/rw go)"
+echo "  3. Run rw-orchestrator from Agent Picker (optional arg: '--h <feature-summary>')"
+echo "  4. Manual flow: rw-new-project -> rw-plan -> rw-run -> rw-review"
+echo "     - Existing-codebase path: rw-onboard-project -> rw-feature -> rw-plan"
+echo "     - Helper: ./scripts/rw next"
 echo "     - Prompt integrity check: node ./scripts/validation/check-prompts.mjs"
-echo "  5. Optional: run rw-doctor.prompt.md if you want standalone preflight diagnostics"
-echo "  6. Optional: use rw-init.prompt.md only when scaffold-only setup is needed"
-echo "  7. Optional: run rw-smoke-test.prompt.md for end-to-end smoke validation"
