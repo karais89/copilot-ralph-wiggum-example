@@ -14,7 +14,7 @@ read_first_nonempty() {
 
 validate_target_id() {
   local target_id="$1"
-  printf '%s\n' "$target_id" | rg -q '^[A-Za-z0-9][A-Za-z0-9._-]{1,63}$' || fail "invalid target id: $target_id"
+  printf '%s\n' "$target_id" | grep -qE '^[A-Za-z0-9][A-Za-z0-9._-]{1,63}$' || fail "invalid target id: $target_id"
 }
 
 validate_target_root() {

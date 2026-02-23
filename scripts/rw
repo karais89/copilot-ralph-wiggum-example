@@ -239,7 +239,7 @@ collect_ready_feature_files() {
   if [ ! -d "$features_dir" ]; then
     return
   fi
-  rg -l --glob '*.md' '^Status:[[:space:]]*READY_FOR_PLAN[[:space:]]*$' "$features_dir" 2>/dev/null || true
+  grep -rl --include='*.md' '^Status:[[:space:]]*READY_FOR_PLAN[[:space:]]*$' "$features_dir" 2>/dev/null || true
 }
 
 select_next_command() {
